@@ -1,0 +1,1121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="HilbertGenerators" version="121">
+  <gspn name="expT2" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="4.55" y="12.0"/>
+      <place domain="CC" label-y="-1.5" name="P0" x="10.0" y="8.0"/>
+      <place domain="CC" name="P1" x="10.0" y="16.0"/>
+      <color-var domain="CC" name="x" x="14.125" y="3.0"/>
+      <color-class definition="circular c{1..10}" name="CC" x="13.4375" y="1.0"/>
+    </nodes>
+    <edges>
+      <arc head="P0" kind="OUTPUT" mult="&lt;x&gt;" mult-k="1.2424804687500002" mult-x="0.0" mult-y="-1.0" tail="T0">
+        <point x="7.5" y="9.0"/>
+      </arc>
+      <arc head="T0" kind="INPUT" mult="&lt;x++&gt;" mult-k="0.5383789062500001" tail="P0"/>
+      <arc head="P1" kind="OUTPUT" mult="&lt;x&gt;" mult-k="1.2950195312499995" mult-x="-0.5" mult-y="0.5" tail="T0">
+        <point x="7.5" y="17.0"/>
+      </arc>
+      <arc head="T0" kind="INPUT" mult="&lt;x++&gt;" mult-k="0.49990234375" mult-x="0.49941406249999964" mult-y="-0.5003906249999996" tail="P1"/>
+    </edges>
+  </gspn>
+  <unfolding name="UnfoldingT2" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <bindings-list/>
+    <offset-list>
+      <offset dx="6" dy="0"/>
+      <offset dx="3" dy="0"/>
+      <offset dx="0" dy="3"/>
+      <offset dx="3" dy="0"/>
+    </offset-list>
+    <subnet netname="expT2"/>
+  </unfolding>
+  <gspn name="expT3" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="4.55" y="12.0"/>
+      <place domain="CC" label-y="-1.5" name="P0" x="10.0" y="8.0"/>
+      <place domain="CC" name="P1" x="10.0" y="16.0"/>
+      <color-var domain="CC" name="x" x="14.125" y="3.0"/>
+      <color-class definition="circular c{1..16}" name="CC" x="13.4375" y="1.0"/>
+      <place domain="CC" name="P2" x="20.0" y="12.0"/>
+    </nodes>
+    <edges>
+      <arc head="P0" kind="OUTPUT" mult="&lt;x&gt;" mult-k="1.2424804687500002" mult-x="0.0" mult-y="-1.0" tail="T0">
+        <point x="7.5" y="9.0"/>
+      </arc>
+      <arc head="T0" kind="INPUT" mult="&lt;x++&gt;" mult-k="0.5383789062500001" tail="P0"/>
+      <arc head="P1" kind="OUTPUT" mult="&lt;x&gt;" mult-k="1.2950195312499995" mult-x="-0.5" mult-y="0.5" tail="T0">
+        <point x="7.5" y="17.0"/>
+      </arc>
+      <arc head="T0" kind="INPUT" mult="&lt;x++&gt;" mult-k="0.49990234375" mult-x="0.49941406249999964" mult-y="-0.5003906249999996" tail="P1"/>
+      <arc head="T0" kind="INPUT" mult="&lt;x&gt;" mult-k="0.6057617187500001" mult-x="0.5099601715675561" mult-y="-0.693891101579581" tail="P2">
+        <point x="12.0" y="12.5"/>
+      </arc>
+      <arc head="P2" kind="OUTPUT" mult="&lt;x++&gt;" mult-k="1.40537109375" tail="T0">
+        <point x="11.5" y="14.0"/>
+        <point x="16.24953780806364" y="13.500048651782775"/>
+      </arc>
+    </edges>
+  </gspn>
+  <unfolding name="UnfoldingT3" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <bindings-list/>
+    <offset-list>
+      <offset dx="0" dy="3"/>
+      <offset dx="3" dy="0"/>
+      <offset dx="0" dy="3"/>
+      <offset dx="3" dy="0"/>
+    </offset-list>
+    <subnet netname="expT3"/>
+  </unfolding>
+  <gspn name="pairKN" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <color-class definition="circular s{1..5}" name="S" x="3.8125" y="1.0"/>
+      <color-class definition="c{1..3}" name="C" x="3.6875" y="2.0"/>
+      <color-var domain="S" name="s" x="17.4375" y="1.0"/>
+      <color-var domain="C" name="c" x="17.4375" y="2.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="6.55" y="9.0"/>
+      <place domain="CxS" name="P0" x="14.0" y="9.0"/>
+      <color-class definition="C * S" name="CxS" x="3.4375" y="4.0"/>
+    </nodes>
+    <edges>
+      <arc head="T0" kind="INPUT" mult="&lt;c,s&gt;" mult-k="0.76650390625" mult-x="0.07689796916000446" mult-y="0.884598646106669" tail="P0">
+        <point x="10.5" y="7.0"/>
+      </arc>
+      <arc head="P0" kind="OUTPUT" mult="&lt;c,s++&gt;" tail="T0">
+        <point x="11.0" y="12.0"/>
+      </arc>
+    </edges>
+  </gspn>
+  <unfolding name="unfPairKN" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <bindings-list/>
+    <offset-list>
+      <offset dx="0" dy="6"/>
+      <offset dx="3" dy="0"/>
+      <offset dx="0" dy="6"/>
+      <offset dx="3" dy="0"/>
+    </offset-list>
+    <subnet netname="pairKN"/>
+  </unfolding>
+  <gspn name="seqP20" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place name="P0" x="6.0" y="5.0"/>
+      <place name="P1" x="6.0" y="9.0"/>
+      <place name="P2" x="12.0" y="5.0"/>
+      <place name="P3" x="12.0" y="9.0"/>
+      <place name="P4" x="18.0" y="5.0"/>
+      <place name="P5" x="18.0" y="9.0"/>
+      <place name="P6" x="24.0" y="5.0"/>
+      <place name="P7" x="24.0" y="9.0"/>
+      <place name="P8" x="30.0" y="5.0"/>
+      <place name="P9" x="30.0" y="9.0"/>
+      <place name="P10" x="36.0" y="5.0"/>
+      <place name="P11" x="36.0" y="9.0"/>
+      <place name="P12" x="42.0" y="5.0"/>
+      <place name="P13" x="42.0" y="9.0"/>
+      <place name="P14" x="48.0" y="5.0"/>
+      <place name="P15" x="48.0" y="9.0"/>
+      <place name="P16" x="54.0" y="5.0"/>
+      <place name="P17" x="54.0" y="9.0"/>
+      <place name="P18" x="60.0" y="5.0"/>
+      <place name="P19" x="60.0" y="9.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="3.55" y="7.0"/>
+      <transition name="T1" nservers-x="0.5" type="EXP" x="9.55" y="7.0"/>
+      <transition name="T2" nservers-x="0.5" type="EXP" x="15.55" y="7.0"/>
+      <transition name="T3" nservers-x="0.5" type="EXP" x="21.55" y="7.0"/>
+      <transition name="T4" nservers-x="0.5" type="EXP" x="27.55" y="7.0"/>
+      <transition name="T5" nservers-x="0.5" type="EXP" x="33.55" y="7.0"/>
+      <transition name="T6" nservers-x="0.5" type="EXP" x="39.55" y="7.0"/>
+      <transition name="T7" nservers-x="0.5" type="EXP" x="45.55" y="7.0"/>
+      <transition name="T8" nservers-x="0.5" type="EXP" x="51.55" y="7.0"/>
+      <transition name="T9" nservers-x="0.5" type="EXP" x="57.55" y="7.0"/>
+    </nodes>
+    <edges>
+      <arc head="P0" kind="OUTPUT" tail="T0"/>
+      <arc head="T1" kind="INPUT" tail="P0"/>
+      <arc head="P2" kind="OUTPUT" tail="T1"/>
+      <arc head="T2" kind="INPUT" tail="P2"/>
+      <arc head="P4" kind="OUTPUT" tail="T2"/>
+      <arc head="T3" kind="INPUT" tail="P4"/>
+      <arc head="P6" kind="OUTPUT" tail="T3"/>
+      <arc head="T4" kind="INPUT" tail="P6"/>
+      <arc head="P8" kind="OUTPUT" tail="T4"/>
+      <arc head="T5" kind="INPUT" tail="P8"/>
+      <arc head="P10" kind="OUTPUT" tail="T5"/>
+      <arc head="T6" kind="INPUT" tail="P10"/>
+      <arc head="P12" kind="OUTPUT" tail="T6"/>
+      <arc head="T7" kind="INPUT" tail="P12"/>
+      <arc head="P14" kind="OUTPUT" tail="T7"/>
+      <arc head="T8" kind="INPUT" tail="P14"/>
+      <arc head="P16" kind="OUTPUT" tail="T8"/>
+      <arc head="T9" kind="INPUT" tail="P16"/>
+      <arc head="P18" kind="OUTPUT" tail="T9"/>
+      <arc broken="true" head="T0" kind="INPUT" tail="P18">
+        <point x="64.0" y="8.5"/>
+        <point x="1.5" y="4.0"/>
+      </arc>
+      <arc head="P1" kind="OUTPUT" tail="T0"/>
+      <arc head="T1" kind="INPUT" tail="P1"/>
+      <arc head="P3" kind="OUTPUT" tail="T1"/>
+      <arc head="T2" kind="INPUT" tail="P3"/>
+      <arc head="P5" kind="OUTPUT" tail="T2"/>
+      <arc head="T3" kind="INPUT" tail="P5"/>
+      <arc head="P7" kind="OUTPUT" tail="T3"/>
+      <arc head="T4" kind="INPUT" tail="P7"/>
+      <arc head="P9" kind="OUTPUT" tail="T4"/>
+      <arc head="T5" kind="INPUT" tail="P9"/>
+      <arc head="P11" kind="OUTPUT" tail="T5"/>
+      <arc head="T6" kind="INPUT" tail="P11"/>
+      <arc head="P13" kind="OUTPUT" tail="T6"/>
+      <arc head="T7" kind="INPUT" tail="P13"/>
+      <arc head="P15" kind="OUTPUT" tail="T7"/>
+      <arc head="T8" kind="INPUT" tail="P15"/>
+      <arc head="P17" kind="OUTPUT" tail="T8"/>
+      <arc head="T9" kind="INPUT" tail="P17"/>
+      <arc head="P19" kind="OUTPUT" tail="T9"/>
+      <arc broken="true" head="T0" kind="INPUT" tail="P19">
+        <point x="63.5" y="8.5"/>
+        <point x="1.5" y="12.5"/>
+      </arc>
+    </edges>
+  </gspn>
+  <gspn name="seqP30" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place name="P0" x="6.0" y="5.0"/>
+      <place name="P1" x="6.0" y="9.0"/>
+      <place name="P2" x="12.0" y="5.0"/>
+      <place name="P3" x="12.0" y="9.0"/>
+      <place name="P4" x="18.0" y="5.0"/>
+      <place name="P5" x="18.0" y="9.0"/>
+      <place name="P6" x="24.0" y="5.0"/>
+      <place name="P7" x="24.0" y="9.0"/>
+      <place name="P8" x="30.0" y="5.0"/>
+      <place name="P9" x="30.0" y="9.0"/>
+      <place name="P10" x="36.0" y="5.0"/>
+      <place name="P11" x="36.0" y="9.0"/>
+      <place name="P12" x="42.0" y="5.0"/>
+      <place name="P13" x="42.0" y="9.0"/>
+      <place name="P14" x="48.0" y="5.0"/>
+      <place name="P15" x="48.0" y="9.0"/>
+      <place name="P16" x="54.0" y="5.0"/>
+      <place name="P17" x="54.0" y="9.0"/>
+      <place name="P18" x="60.0" y="5.0"/>
+      <place name="P19" x="60.0" y="9.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="3.55" y="7.0"/>
+      <transition name="T1" nservers-x="0.5" type="EXP" x="9.55" y="7.0"/>
+      <transition name="T2" nservers-x="0.5" type="EXP" x="15.55" y="7.0"/>
+      <transition name="T3" nservers-x="0.5" type="EXP" x="21.55" y="7.0"/>
+      <transition name="T4" nservers-x="0.5" type="EXP" x="27.55" y="7.0"/>
+      <transition name="T5" nservers-x="0.5" type="EXP" x="33.55" y="7.0"/>
+      <transition name="T6" nservers-x="0.5" type="EXP" x="39.55" y="7.0"/>
+      <transition name="T7" nservers-x="0.5" type="EXP" x="45.55" y="7.0"/>
+      <transition name="T8" nservers-x="0.5" type="EXP" x="51.55" y="7.0"/>
+      <transition name="T9" nservers-x="0.5" type="EXP" x="57.55" y="7.0"/>
+      <place name="P20" x="6.0" y="18.0"/>
+      <place name="P21" x="6.0" y="22.0"/>
+      <place name="P22" x="12.0" y="18.0"/>
+      <place name="P23" x="12.0" y="22.0"/>
+      <place name="P24" x="18.0" y="18.0"/>
+      <place name="P25" x="18.0" y="22.0"/>
+      <place name="P26" x="24.0" y="18.0"/>
+      <place name="P27" x="24.0" y="22.0"/>
+      <place name="P28" x="30.0" y="18.0"/>
+      <place name="P29" x="30.0" y="22.0"/>
+      <transition name="T10" nservers-x="0.5" type="EXP" x="3.55" y="20.0"/>
+      <transition name="T11" nservers-x="0.5" type="EXP" x="9.55" y="20.0"/>
+      <transition name="T12" nservers-x="0.5" type="EXP" x="15.55" y="20.0"/>
+      <transition name="T13" nservers-x="0.5" type="EXP" x="21.55" y="20.0"/>
+      <transition name="T14" nservers-x="0.5" type="EXP" x="27.55" y="20.0"/>
+    </nodes>
+    <edges>
+      <arc head="P0" kind="OUTPUT" tail="T0"/>
+      <arc head="T1" kind="INPUT" tail="P0"/>
+      <arc head="P2" kind="OUTPUT" tail="T1"/>
+      <arc head="T2" kind="INPUT" tail="P2"/>
+      <arc head="P4" kind="OUTPUT" tail="T2"/>
+      <arc head="T3" kind="INPUT" tail="P4"/>
+      <arc head="P6" kind="OUTPUT" tail="T3"/>
+      <arc head="T4" kind="INPUT" tail="P6"/>
+      <arc head="P8" kind="OUTPUT" tail="T4"/>
+      <arc head="T5" kind="INPUT" tail="P8"/>
+      <arc head="P10" kind="OUTPUT" tail="T5"/>
+      <arc head="T6" kind="INPUT" tail="P10"/>
+      <arc head="P12" kind="OUTPUT" tail="T6"/>
+      <arc head="T7" kind="INPUT" tail="P12"/>
+      <arc head="P14" kind="OUTPUT" tail="T7"/>
+      <arc head="T8" kind="INPUT" tail="P14"/>
+      <arc head="P16" kind="OUTPUT" tail="T8"/>
+      <arc head="T9" kind="INPUT" tail="P16"/>
+      <arc head="P18" kind="OUTPUT" tail="T9"/>
+      <arc head="P1" kind="OUTPUT" tail="T0"/>
+      <arc head="T1" kind="INPUT" tail="P1"/>
+      <arc head="P3" kind="OUTPUT" tail="T1"/>
+      <arc head="T2" kind="INPUT" tail="P3"/>
+      <arc head="P5" kind="OUTPUT" tail="T2"/>
+      <arc head="T3" kind="INPUT" tail="P5"/>
+      <arc head="P7" kind="OUTPUT" tail="T3"/>
+      <arc head="T4" kind="INPUT" tail="P7"/>
+      <arc head="P9" kind="OUTPUT" tail="T4"/>
+      <arc head="T5" kind="INPUT" tail="P9"/>
+      <arc head="P11" kind="OUTPUT" tail="T5"/>
+      <arc head="T6" kind="INPUT" tail="P11"/>
+      <arc head="P13" kind="OUTPUT" tail="T6"/>
+      <arc head="T7" kind="INPUT" tail="P13"/>
+      <arc head="P15" kind="OUTPUT" tail="T7"/>
+      <arc head="T8" kind="INPUT" tail="P15"/>
+      <arc head="P17" kind="OUTPUT" tail="T8"/>
+      <arc head="T9" kind="INPUT" tail="P17"/>
+      <arc head="P19" kind="OUTPUT" tail="T9"/>
+      <arc broken="true" head="T10" kind="INPUT" tail="P18">
+        <point x="64.0" y="8.0"/>
+        <point x="1.5" y="18.5"/>
+      </arc>
+      <arc broken="true" head="T10" kind="INPUT" tail="P19">
+        <point x="63.5" y="8.0"/>
+        <point x="1.5" y="24.0"/>
+      </arc>
+      <arc head="P20" kind="OUTPUT" tail="T10"/>
+      <arc head="T11" kind="INPUT" tail="P20"/>
+      <arc head="P22" kind="OUTPUT" tail="T11"/>
+      <arc head="T12" kind="INPUT" tail="P22"/>
+      <arc head="P24" kind="OUTPUT" tail="T12"/>
+      <arc head="T13" kind="INPUT" tail="P24"/>
+      <arc head="P26" kind="OUTPUT" tail="T13"/>
+      <arc head="T14" kind="INPUT" tail="P26"/>
+      <arc head="P28" kind="OUTPUT" tail="T14"/>
+      <arc head="P21" kind="OUTPUT" tail="T10"/>
+      <arc head="T11" kind="INPUT" tail="P21"/>
+      <arc head="P23" kind="OUTPUT" tail="T11"/>
+      <arc head="T12" kind="INPUT" tail="P23"/>
+      <arc head="P25" kind="OUTPUT" tail="T12"/>
+      <arc head="T13" kind="INPUT" tail="P25"/>
+      <arc head="P27" kind="OUTPUT" tail="T13"/>
+      <arc head="T14" kind="INPUT" tail="P27"/>
+      <arc head="P29" kind="OUTPUT" tail="T14"/>
+      <arc broken="true" head="T0" kind="INPUT" tail="P29">
+        <point x="34.0" y="21.0"/>
+        <point x="1.5" y="10.5"/>
+      </arc>
+      <arc broken="true" head="T0" kind="INPUT" tail="P28">
+        <point x="33.5" y="21.0"/>
+        <point x="1.5" y="5.5"/>
+      </arc>
+    </edges>
+  </gspn>
+  <gspn name="weightedForkAndJoin" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place name="P0" x="7.0" y="7.0"/>
+      <place name="P1" x="7.0" y="12.0"/>
+      <place name="P2" x="16.0" y="7.0"/>
+      <place name="P3" x="16.0" y="12.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="2.55" y="10.0"/>
+      <transition name="T1" nservers-x="0.5" type="EXP" x="12.55" y="10.0"/>
+      <transition name="T2" nservers-x="0.5" type="EXP" x="21.55" y="10.0"/>
+      <place name="P4" x="25.0" y="7.0"/>
+      <place name="P5" x="25.0" y="12.0"/>
+      <constant consttype="INTEGER" name="n" value="3" x="25.0" y="2.0"/>
+    </nodes>
+    <edges>
+      <arc head="P0" kind="OUTPUT" mult="n" tail="T0"/>
+      <arc head="T1" kind="INPUT" mult="n" tail="P0"/>
+      <arc head="P2" kind="OUTPUT" mult="n" tail="T1"/>
+      <arc head="T2" kind="INPUT" mult="n" tail="P2"/>
+      <arc head="P4" kind="OUTPUT" tail="T2"/>
+      <arc head="T0" kind="INPUT" mult-k="0.50009765625" tail="P4">
+        <point x="13.5" y="2.0"/>
+        <point x="3.5" y="2.5"/>
+      </arc>
+      <arc head="P1" kind="OUTPUT" mult="n" tail="T0"/>
+      <arc head="T1" kind="INPUT" mult="n" tail="P1"/>
+      <arc head="P3" kind="OUTPUT" mult="n" tail="T1"/>
+      <arc head="T2" kind="INPUT" mult="n" tail="P3"/>
+      <arc head="P5" kind="OUTPUT" tail="T2"/>
+      <arc head="T0" kind="INPUT" mult-k="0.50009765625" tail="P5">
+        <point x="13.5" y="18.5"/>
+        <point x="3.0" y="18.5"/>
+      </arc>
+    </edges>
+  </gspn>
+  <gspn name="PT 1" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place name="P0" x="8.0" y="8.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="12.55" y="8.0"/>
+      <place name="P1" x="16.0" y="8.0"/>
+      <transition name="T1" nservers-x="0.5" type="EXP" x="21.55" y="6.0"/>
+      <transition name="T2" nservers-x="0.5" type="EXP" x="21.55" y="10.0"/>
+      <constant consttype="INTEGER" name="N" value="5" x="3.125" y="2.0"/>
+    </nodes>
+    <edges>
+      <arc head="T0" kind="INPUT" mult="N" tail="P0"/>
+      <arc head="P1" kind="OUTPUT" mult="N" tail="T0"/>
+      <arc head="T1" kind="INPUT" tail="P1"/>
+      <arc head="T2" kind="INPUT" tail="P1"/>
+      <arc head="P0" kind="OUTPUT" tail="T2">
+        <point x="8.5" y="15.0"/>
+      </arc>
+      <arc head="P0" kind="OUTPUT" tail="T1">
+        <point x="9.5" y="3.0"/>
+      </arc>
+    </edges>
+  </gspn>
+  <gspn name="semiflowMult" show-color-cmd="false" show-fluid-cmd="false" show-timed-cmd="false" view-rates="false">
+    <nodes>
+      <place label-x="-0.5" label-y="-1.5" marking="12" name="P0" x="7.0" y="6.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="12.55" y="6.0"/>
+      <place name="P1" x="17.0" y="6.0"/>
+      <transition name="T1" nservers-x="0.5" type="EXP" x="21.55" y="3.0"/>
+      <transition name="T2" nservers-x="0.5" type="EXP" x="21.55" y="9.0"/>
+      <place name="P2" x="25.0" y="3.0"/>
+      <place name="P3" x="25.0" y="9.0"/>
+      <transition name="T3" nservers-x="0.5" type="EXP" x="30.55" y="3.0"/>
+      <transition name="T4" nservers-x="0.5" type="EXP" x="30.55" y="9.0"/>
+      <place name="P4" x="35.0" y="6.0"/>
+      <transition name="T5" nservers-x="0.5" type="EXP" x="40.55" y="6.0"/>
+      <place label-x="-1.0" label-y="-1.5" marking="6" name="P5" x="7.0" y="24.0"/>
+      <transition name="T6" nservers-x="0.5" type="EXP" x="12.55" y="24.0"/>
+      <place name="P6" x="16.0" y="20.0"/>
+      <place name="P7" x="16.0" y="26.0"/>
+      <transition name="T7" nservers-x="0.5" type="EXP" x="21.55" y="20.0"/>
+      <transition name="T8" nservers-x="0.5" type="EXP" x="21.55" y="26.0"/>
+      <place name="P8" x="26.0" y="18.0"/>
+      <place name="P9" x="26.0" y="22.0"/>
+      <transition name="T9" nservers-x="0.5" type="EXP" x="31.55" y="20.0"/>
+      <place name="P10" x="26.0" y="26.0"/>
+      <transition name="T10" nservers-x="0.5" type="EXP" x="31.55" y="26.0"/>
+      <place name="P11" x="36.0" y="24.0"/>
+      <transition name="T11" nservers-x="0.5" type="EXP" x="41.55" y="24.0"/>
+    </nodes>
+    <edges>
+      <arc head="T0" kind="INPUT" mult="4" mult-k="0.54951171875" tail="P0">
+        <point x="12.5501708984375" y="7.0"/>
+      </arc>
+      <arc head="P1" kind="OUTPUT" mult="3" tail="T0"/>
+      <arc head="T1" kind="INPUT" mult="3" tail="P1"/>
+      <arc head="P2" kind="OUTPUT" mult="2" tail="T1"/>
+      <arc head="T3" kind="INPUT" mult="2" tail="P2"/>
+      <arc head="P4" kind="OUTPUT" tail="T3"/>
+      <arc head="T5" kind="INPUT" tail="P4"/>
+      <arc head="T2" kind="INPUT" mult="3" tail="P1"/>
+      <arc head="P3" kind="OUTPUT" mult="2" tail="T2"/>
+      <arc head="T4" kind="INPUT" mult="2" tail="P3"/>
+      <arc head="P4" kind="OUTPUT" tail="T4"/>
+      <arc head="P0" kind="OUTPUT" mult="4" tail="T5">
+        <point x="43.5" y="7.0"/>
+        <point x="43.5" y="14.5"/>
+        <point x="8.0" y="14.5"/>
+      </arc>
+      <arc head="T6" kind="INPUT" tail="P5"/>
+      <arc head="P7" kind="OUTPUT" tail="T6"/>
+      <arc head="T8" kind="INPUT" tail="P7"/>
+      <arc head="P10" kind="OUTPUT" tail="T8"/>
+      <arc head="T10" kind="INPUT" tail="P10"/>
+      <arc head="P11" kind="OUTPUT" tail="T10"/>
+      <arc head="T11" kind="INPUT" mult="2" tail="P11"/>
+      <arc head="P6" kind="OUTPUT" mult="5" tail="T6"/>
+      <arc head="T7" kind="INPUT" mult="2" tail="P6"/>
+      <arc head="P8" kind="OUTPUT" tail="T7"/>
+      <arc head="T9" kind="INPUT" mult="5" tail="P8"/>
+      <arc head="P9" kind="OUTPUT" tail="T7"/>
+      <arc head="T9" kind="INPUT" mult="5" tail="P9"/>
+      <arc head="P11" kind="OUTPUT" mult="2" mult-x="0.5" mult-y="-1.0" tail="T9"/>
+      <arc head="P5" kind="OUTPUT" tail="T11">
+        <point x="45.0" y="25.0"/>
+        <point x="45.0" y="31.5"/>
+        <point x="8.0" y="31.5"/>
+      </arc>
+    </edges>
+  </gspn>
+  <gspn name="SafeBus-03">
+    <nodes>
+      <place label-x="0.7116666666666667" label-y="0.25333333333333335" name="ACK" x="5.0" y="5.0"/>
+      <place label-x="1.045" label-y="0.25333333333333335" marking="1" name="R_tout" x="5.0" y="5.0"/>
+      <place label-x="0.8991666666666667" label-y="0.25333333333333335" name="T_out" x="5.0" y="5.0"/>
+      <place label-x="0.9824999999999999" label-y="0.25333333333333335" name="S_tout" x="5.0" y="5.0"/>
+      <place label-x="2.1283333333333334" label-y="0.25333333333333335" name="wait_ack_2_1" x="5.0" y="5.0"/>
+      <place label-x="2.1283333333333334" label-y="0.25333333333333335" name="wait_ack_3_1" x="5.0" y="5.0"/>
+      <place label-x="2.1283333333333334" label-y="0.25333333333333335" name="wait_ack_1_2" x="5.0" y="5.0"/>
+      <place label-x="2.1283333333333334" label-y="0.25333333333333335" name="wait_ack_3_2" x="5.0" y="5.0"/>
+      <place label-x="2.1283333333333334" label-y="0.25333333333333335" name="wait_ack_1_3" x="5.0" y="5.0"/>
+      <place label-x="2.1283333333333334" label-y="0.25333333333333335" name="wait_ack_2_3" x="5.0" y="5.0"/>
+      <place label-x="1.1075" label-y="0.25333333333333335" name="MSG_1" x="5.0" y="5.0"/>
+      <place label-x="1.1075" label-y="0.25333333333333335" name="MSG_2" x="5.0" y="5.0"/>
+      <place label-x="1.1075" label-y="0.25333333333333335" name="MSG_3" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" marking="1" name="Cpt2_1" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" name="Cpt2_2" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" name="Cpt2_3" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_1_1" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_2_1" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_3_1" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_1_2" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_2_2" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_3_2" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_1_3" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_2_3" x="5.0" y="5.0"/>
+      <place label-x="1.545" label-y="0.25333333333333335" name="AMC_3_3" x="5.0" y="5.0"/>
+      <place label-x="2.0866666666666664" label-y="0.25333333333333335" name="cable_used_1" x="5.0" y="5.0"/>
+      <place label-x="2.0866666666666664" label-y="0.25333333333333335" name="cable_used_2" x="5.0" y="5.0"/>
+      <place label-x="2.0866666666666664" label-y="0.25333333333333335" name="cable_used_3" x="5.0" y="5.0"/>
+      <place label-x="0.9616666666666667" label-y="0.25333333333333335" marking="1" name="FMCb" x="5.0" y="5.0"/>
+      <place label-x="1.1491666666666667" label-y="0.25333333333333335" name="RMC_1" x="5.0" y="5.0"/>
+      <place label-x="1.1491666666666667" label-y="0.25333333333333335" name="RMC_2" x="5.0" y="5.0"/>
+      <place label-x="1.1491666666666667" label-y="0.25333333333333335" name="RMC_3" x="5.0" y="5.0"/>
+      <place label-x="1.1283333333333332" label-y="0.25333333333333335" name="FMC_1" x="5.0" y="5.0"/>
+      <place label-x="1.1283333333333332" label-y="0.25333333333333335" name="FMC_2" x="5.0" y="5.0"/>
+      <place label-x="1.1283333333333332" label-y="0.25333333333333335" name="FMC_3" x="5.0" y="5.0"/>
+      <place label-x="1.5866666666666667" label-y="0.25333333333333335" marking="1" name="cable_free" x="5.0" y="5.0"/>
+      <place label-x="1.1283333333333332" label-y="0.25333333333333335" name="PMC_1" x="5.0" y="5.0"/>
+      <place label-x="1.1283333333333332" label-y="0.25333333333333335" name="PMC_2" x="5.0" y="5.0"/>
+      <place label-x="1.1283333333333332" label-y="0.25333333333333335" name="PMC_3" x="5.0" y="5.0"/>
+      <place label-x="1.1491666666666667" label-y="0.25333333333333335" marking="1" name="listen_1" x="5.0" y="5.0"/>
+      <place label-x="1.1491666666666667" label-y="0.25333333333333335" marking="1" name="listen_2" x="5.0" y="5.0"/>
+      <place label-x="1.1491666666666667" label-y="0.25333333333333335" marking="1" name="listen_3" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" marking="1" name="msgl_1" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" marking="1" name="msgl_2" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" marking="1" name="msgl_3" x="5.0" y="5.0"/>
+      <place label-x="2.0658333333333334" label-y="0.25333333333333335" name="wait_cable_1" x="5.0" y="5.0"/>
+      <place label-x="2.0658333333333334" label-y="0.25333333333333335" name="wait_cable_2" x="5.0" y="5.0"/>
+      <place label-x="2.0658333333333334" label-y="0.25333333333333335" name="wait_cable_3" x="5.0" y="5.0"/>
+      <place label-x="1.8575" label-y="0.25333333333333335" name="wait_msg_1" x="5.0" y="5.0"/>
+      <place label-x="1.8575" label-y="0.25333333333333335" name="wait_msg_2" x="5.0" y="5.0"/>
+      <place label-x="1.8575" label-y="0.25333333333333335" name="wait_msg_3" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" marking="1" name="Cpt1_1" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" name="Cpt1_2" x="5.0" y="5.0"/>
+      <place label-x="1.0033333333333332" label-y="0.25333333333333335" name="Cpt1_3" x="5.0" y="5.0"/>
+      <place label-x="1.67" label-y="0.25333333333333335" name="loop_em_1" x="5.0" y="5.0"/>
+      <place label-x="1.67" label-y="0.25333333333333335" name="loop_em_2" x="5.0" y="5.0"/>
+      <place label-x="1.67" label-y="0.25333333333333335" name="loop_em_3" x="5.0" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_emit_3_3_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_1_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_3_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_2_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.2916666666666665" label-y="-0.41666666666666663" name="I_refused_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.2916666666666665" label-y="-0.41666666666666663" name="I_refused_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.2916666666666665" label-y="-0.41666666666666663" name="I_refused_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_emit_2_2_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_emit_1_1_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_emit_3_3_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_emit_1_1_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_emit_2_2_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_free_2_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_free_1_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_free_3_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_free_1_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_free_3_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_free_2_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5208333333333335" label-y="-0.41666666666666663" name="I_rec1_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5208333333333335" label-y="-0.41666666666666663" name="I_rec1_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5208333333333335" label-y="-0.41666666666666663" name="I_rec1_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5208333333333335" label-y="-0.41666666666666663" name="I_rec2_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_2_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_1_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_3_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_1_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_3_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_2_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask2_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5208333333333335" label-y="-0.41666666666666663" name="I_rec2_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5208333333333335" label-y="-0.41666666666666663" name="I_rec2_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_3_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="0.7916666666666667" label-y="-0.41666666666666663" name="Gto_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="0.7916666666666667" label-y="-0.41666666666666663" name="Gto_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="0.7916666666666667" label-y="-0.41666666666666663" name="Gto_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.3541666666666667" label-y="-0.41666666666666663" name="loss_m_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.3541666666666667" label-y="-0.41666666666666663" name="loss_m_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.3541666666666667" label-y="-0.41666666666666663" name="loss_m_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_2_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_1_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.5833333333333335" label-y="-0.41666666666666663" name="I_ask1_3_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_2_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_3_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_2_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_2_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_2_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_1_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_1_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_1_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_3_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_3_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_3_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_2_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_3_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_2_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_1_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_1_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_1_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_reemit_2_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_reemit_1_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_reemit_3_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_reemit_1_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_reemit_3_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.0833333333333335" label-y="-0.41666666666666663" name="I_reemit_2_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.7291666666666665" label-y="-0.41666666666666663" name="C_free_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_2_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_1_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_3_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_2_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_1_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_3_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_2_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.8125" label-y="-0.41666666666666663" name="C_provide_1_1_1" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.7291666666666665" label-y="-0.41666666666666663" name="C_free_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="1.7291666666666665" label-y="-0.41666666666666663" name="C_free_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="0.8541666666666667" label-y="-0.41666666666666663" name="loss_a" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_3_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_3_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_3_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_2_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_2_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_2_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_1_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_2_1_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_1_1_3_3" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+      <transition delay="1.000000e+00" delay-x="0.0" delay-y="0.5416666666666666" label-x="2.9791666666666665" label-y="-0.41666666666666663" name="C_refuse_3_3_2_2" nservers="1" nservers-x="0.5" rotation="1.5707963267948966" type="EXP" x="5.55" y="5.0"/>
+    </nodes>
+    <edges>
+      <arc head="I_emit_3_3_1" head-magnet="0" kind="INPUT" tail="PMC_3" tail-magnet="0"/>
+      <arc head="I_emit_3_3_1" head-magnet="0" kind="INPUT" tail="msgl_1" tail-magnet="0"/>
+      <arc head="I_emit_3_3_1" head-magnet="0" kind="INPUT" tail="wait_cable_3" tail-magnet="0"/>
+      <arc head="wait_ack_3_1" head-magnet="0" kind="OUTPUT" tail="I_emit_3_3_1" tail-magnet="0"/>
+      <arc head="MSG_1" head-magnet="0" kind="OUTPUT" tail="I_emit_3_3_1" tail-magnet="0"/>
+      <arc head="msgl_1" head-magnet="0" kind="OUTPUT" tail="I_emit_3_3_1" tail-magnet="0"/>
+      <arc head="I_ask1_1_2" head-magnet="0" kind="INPUT" tail="listen_1" tail-magnet="0"/>
+      <arc head="I_ask1_1_2" head-magnet="0" kind="INPUT" tail="Cpt1_2" tail-magnet="0"/>
+      <arc head="AMC_1_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_2" tail-magnet="0"/>
+      <arc head="wait_cable_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_2" tail-magnet="0"/>
+      <arc head="Cpt1_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_2" tail-magnet="0"/>
+      <arc head="I_ask1_3_1" head-magnet="0" kind="INPUT" tail="listen_3" tail-magnet="0"/>
+      <arc head="I_ask1_3_1" head-magnet="0" kind="INPUT" tail="Cpt1_1" tail-magnet="0"/>
+      <arc head="AMC_3_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_1" tail-magnet="0"/>
+      <arc head="wait_cable_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_1" tail-magnet="0"/>
+      <arc head="Cpt1_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_1" tail-magnet="0"/>
+      <arc head="I_ask1_2_1" head-magnet="0" kind="INPUT" tail="listen_2" tail-magnet="0"/>
+      <arc head="I_ask1_2_1" head-magnet="0" kind="INPUT" tail="Cpt1_1" tail-magnet="0"/>
+      <arc head="AMC_2_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_1" tail-magnet="0"/>
+      <arc head="wait_cable_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_1" tail-magnet="0"/>
+      <arc head="Cpt1_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_1" tail-magnet="0"/>
+      <arc head="I_ask1_1_1" head-magnet="0" kind="INPUT" tail="listen_1" tail-magnet="0"/>
+      <arc head="I_ask1_1_1" head-magnet="0" kind="INPUT" tail="Cpt1_1" tail-magnet="0"/>
+      <arc head="AMC_1_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_1" tail-magnet="0"/>
+      <arc head="wait_cable_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_1" tail-magnet="0"/>
+      <arc head="Cpt1_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_1" tail-magnet="0"/>
+      <arc head="I_refused_3_3" head-magnet="0" kind="INPUT" tail="RMC_3" tail-magnet="0"/>
+      <arc head="I_refused_3_3" head-magnet="0" kind="INPUT" tail="wait_cable_3" tail-magnet="0"/>
+      <arc head="wait_msg_3" head-magnet="0" kind="OUTPUT" tail="I_refused_3_3" tail-magnet="0"/>
+      <arc head="I_refused_2_2" head-magnet="0" kind="INPUT" tail="RMC_2" tail-magnet="0"/>
+      <arc head="I_refused_2_2" head-magnet="0" kind="INPUT" tail="wait_cable_2" tail-magnet="0"/>
+      <arc head="wait_msg_2" head-magnet="0" kind="OUTPUT" tail="I_refused_2_2" tail-magnet="0"/>
+      <arc head="I_refused_1_1" head-magnet="0" kind="INPUT" tail="RMC_1" tail-magnet="0"/>
+      <arc head="I_refused_1_1" head-magnet="0" kind="INPUT" tail="wait_cable_1" tail-magnet="0"/>
+      <arc head="wait_msg_1" head-magnet="0" kind="OUTPUT" tail="I_refused_1_1" tail-magnet="0"/>
+      <arc head="I_emit_2_2_3" head-magnet="0" kind="INPUT" tail="PMC_2" tail-magnet="0"/>
+      <arc head="I_emit_2_2_3" head-magnet="0" kind="INPUT" tail="msgl_3" tail-magnet="0"/>
+      <arc head="I_emit_2_2_3" head-magnet="0" kind="INPUT" tail="wait_cable_2" tail-magnet="0"/>
+      <arc head="wait_ack_2_3" head-magnet="0" kind="OUTPUT" tail="I_emit_2_2_3" tail-magnet="0"/>
+      <arc head="MSG_3" head-magnet="0" kind="OUTPUT" tail="I_emit_2_2_3" tail-magnet="0"/>
+      <arc head="msgl_3" head-magnet="0" kind="OUTPUT" tail="I_emit_2_2_3" tail-magnet="0"/>
+      <arc head="I_emit_1_1_3" head-magnet="0" kind="INPUT" tail="PMC_1" tail-magnet="0"/>
+      <arc head="I_emit_1_1_3" head-magnet="0" kind="INPUT" tail="msgl_3" tail-magnet="0"/>
+      <arc head="I_emit_1_1_3" head-magnet="0" kind="INPUT" tail="wait_cable_1" tail-magnet="0"/>
+      <arc head="wait_ack_1_3" head-magnet="0" kind="OUTPUT" tail="I_emit_1_1_3" tail-magnet="0"/>
+      <arc head="MSG_3" head-magnet="0" kind="OUTPUT" tail="I_emit_1_1_3" tail-magnet="0"/>
+      <arc head="msgl_3" head-magnet="0" kind="OUTPUT" tail="I_emit_1_1_3" tail-magnet="0"/>
+      <arc head="I_emit_3_3_2" head-magnet="0" kind="INPUT" tail="PMC_3" tail-magnet="0"/>
+      <arc head="I_emit_3_3_2" head-magnet="0" kind="INPUT" tail="msgl_2" tail-magnet="0"/>
+      <arc head="I_emit_3_3_2" head-magnet="0" kind="INPUT" tail="wait_cable_3" tail-magnet="0"/>
+      <arc head="wait_ack_3_2" head-magnet="0" kind="OUTPUT" tail="I_emit_3_3_2" tail-magnet="0"/>
+      <arc head="MSG_2" head-magnet="0" kind="OUTPUT" tail="I_emit_3_3_2" tail-magnet="0"/>
+      <arc head="msgl_2" head-magnet="0" kind="OUTPUT" tail="I_emit_3_3_2" tail-magnet="0"/>
+      <arc head="I_emit_1_1_2" head-magnet="0" kind="INPUT" tail="PMC_1" tail-magnet="0"/>
+      <arc head="I_emit_1_1_2" head-magnet="0" kind="INPUT" tail="msgl_2" tail-magnet="0"/>
+      <arc head="I_emit_1_1_2" head-magnet="0" kind="INPUT" tail="wait_cable_1" tail-magnet="0"/>
+      <arc head="wait_ack_1_2" head-magnet="0" kind="OUTPUT" tail="I_emit_1_1_2" tail-magnet="0"/>
+      <arc head="MSG_2" head-magnet="0" kind="OUTPUT" tail="I_emit_1_1_2" tail-magnet="0"/>
+      <arc head="msgl_2" head-magnet="0" kind="OUTPUT" tail="I_emit_1_1_2" tail-magnet="0"/>
+      <arc head="I_ask1_2_2" head-magnet="0" kind="INPUT" tail="listen_2" tail-magnet="0"/>
+      <arc head="I_ask1_2_2" head-magnet="0" kind="INPUT" tail="Cpt1_2" tail-magnet="0"/>
+      <arc head="AMC_2_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_2" tail-magnet="0"/>
+      <arc head="wait_cable_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_2" tail-magnet="0"/>
+      <arc head="Cpt1_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_2" tail-magnet="0"/>
+      <arc head="I_emit_2_2_1" head-magnet="0" kind="INPUT" tail="PMC_2" tail-magnet="0"/>
+      <arc head="I_emit_2_2_1" head-magnet="0" kind="INPUT" tail="msgl_1" tail-magnet="0"/>
+      <arc head="I_emit_2_2_1" head-magnet="0" kind="INPUT" tail="wait_cable_2" tail-magnet="0"/>
+      <arc head="wait_ack_2_1" head-magnet="0" kind="OUTPUT" tail="I_emit_2_2_1" tail-magnet="0"/>
+      <arc head="MSG_1" head-magnet="0" kind="OUTPUT" tail="I_emit_2_2_1" tail-magnet="0"/>
+      <arc head="msgl_1" head-magnet="0" kind="OUTPUT" tail="I_emit_2_2_1" tail-magnet="0"/>
+      <arc head="I_free_2_3" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="I_free_2_3" head-magnet="0" kind="INPUT" tail="wait_ack_2_3" tail-magnet="0"/>
+      <arc head="I_free_2_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="FMC_2" head-magnet="0" kind="OUTPUT" tail="I_free_2_3" tail-magnet="0"/>
+      <arc head="listen_2" head-magnet="0" kind="OUTPUT" tail="I_free_2_3" tail-magnet="0"/>
+      <arc head="I_free_1_3" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="I_free_1_3" head-magnet="0" kind="INPUT" tail="wait_ack_1_3" tail-magnet="0"/>
+      <arc head="I_free_1_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="FMC_1" head-magnet="0" kind="OUTPUT" tail="I_free_1_3" tail-magnet="0"/>
+      <arc head="listen_1" head-magnet="0" kind="OUTPUT" tail="I_free_1_3" tail-magnet="0"/>
+      <arc head="I_free_3_2" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="I_free_3_2" head-magnet="0" kind="INPUT" tail="wait_ack_3_2" tail-magnet="0"/>
+      <arc head="I_free_3_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="FMC_3" head-magnet="0" kind="OUTPUT" tail="I_free_3_2" tail-magnet="0"/>
+      <arc head="listen_3" head-magnet="0" kind="OUTPUT" tail="I_free_3_2" tail-magnet="0"/>
+      <arc head="I_free_1_2" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="I_free_1_2" head-magnet="0" kind="INPUT" tail="wait_ack_1_2" tail-magnet="0"/>
+      <arc head="I_free_1_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="FMC_1" head-magnet="0" kind="OUTPUT" tail="I_free_1_2" tail-magnet="0"/>
+      <arc head="listen_1" head-magnet="0" kind="OUTPUT" tail="I_free_1_2" tail-magnet="0"/>
+      <arc head="I_free_3_1" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="I_free_3_1" head-magnet="0" kind="INPUT" tail="wait_ack_3_1" tail-magnet="0"/>
+      <arc head="I_free_3_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="FMC_3" head-magnet="0" kind="OUTPUT" tail="I_free_3_1" tail-magnet="0"/>
+      <arc head="listen_3" head-magnet="0" kind="OUTPUT" tail="I_free_3_1" tail-magnet="0"/>
+      <arc head="I_free_2_1" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="I_free_2_1" head-magnet="0" kind="INPUT" tail="wait_ack_2_1" tail-magnet="0"/>
+      <arc head="I_free_2_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="FMC_2" head-magnet="0" kind="OUTPUT" tail="I_free_2_1" tail-magnet="0"/>
+      <arc head="listen_2" head-magnet="0" kind="OUTPUT" tail="I_free_2_1" tail-magnet="0"/>
+      <arc head="I_rec1_3_3" head-magnet="0" kind="INPUT" tail="MSG_3" tail-magnet="0"/>
+      <arc head="I_rec1_3_3" head-magnet="0" kind="INPUT" tail="listen_3" tail-magnet="0"/>
+      <arc head="ACK" head-magnet="0" kind="OUTPUT" tail="I_rec1_3_3" tail-magnet="0"/>
+      <arc head="listen_3" head-magnet="0" kind="OUTPUT" tail="I_rec1_3_3" tail-magnet="0"/>
+      <arc head="I_rec1_2_2" head-magnet="0" kind="INPUT" tail="MSG_2" tail-magnet="0"/>
+      <arc head="I_rec1_2_2" head-magnet="0" kind="INPUT" tail="listen_2" tail-magnet="0"/>
+      <arc head="ACK" head-magnet="0" kind="OUTPUT" tail="I_rec1_2_2" tail-magnet="0"/>
+      <arc head="listen_2" head-magnet="0" kind="OUTPUT" tail="I_rec1_2_2" tail-magnet="0"/>
+      <arc head="I_rec1_1_1" head-magnet="0" kind="INPUT" tail="MSG_1" tail-magnet="0"/>
+      <arc head="I_rec1_1_1" head-magnet="0" kind="INPUT" tail="listen_1" tail-magnet="0"/>
+      <arc head="ACK" head-magnet="0" kind="OUTPUT" tail="I_rec1_1_1" tail-magnet="0"/>
+      <arc head="listen_1" head-magnet="0" kind="OUTPUT" tail="I_rec1_1_1" tail-magnet="0"/>
+      <arc head="I_rec2_1_1" head-magnet="0" kind="INPUT" tail="MSG_1" tail-magnet="0"/>
+      <arc head="I_rec2_1_1" head-magnet="0" kind="INPUT" tail="wait_msg_1" tail-magnet="0"/>
+      <arc head="ACK" head-magnet="0" kind="OUTPUT" tail="I_rec2_1_1" tail-magnet="0"/>
+      <arc head="loop_em_1" head-magnet="0" kind="OUTPUT" tail="I_rec2_1_1" tail-magnet="0"/>
+      <arc head="I_ask2_3_3" head-magnet="0" kind="INPUT" tail="Cpt1_3" tail-magnet="0"/>
+      <arc head="I_ask2_3_3" head-magnet="0" kind="INPUT" tail="loop_em_3" tail-magnet="0"/>
+      <arc head="AMC_3_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_3" tail-magnet="0"/>
+      <arc head="wait_cable_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_3" tail-magnet="0"/>
+      <arc head="Cpt1_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_3" tail-magnet="0"/>
+      <arc head="I_ask2_2_3" head-magnet="0" kind="INPUT" tail="Cpt1_3" tail-magnet="0"/>
+      <arc head="I_ask2_2_3" head-magnet="0" kind="INPUT" tail="loop_em_2" tail-magnet="0"/>
+      <arc head="AMC_2_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_3" tail-magnet="0"/>
+      <arc head="wait_cable_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_3" tail-magnet="0"/>
+      <arc head="Cpt1_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_3" tail-magnet="0"/>
+      <arc head="I_ask2_1_3" head-magnet="0" kind="INPUT" tail="Cpt1_3" tail-magnet="0"/>
+      <arc head="I_ask2_1_3" head-magnet="0" kind="INPUT" tail="loop_em_1" tail-magnet="0"/>
+      <arc head="AMC_1_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_3" tail-magnet="0"/>
+      <arc head="wait_cable_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_3" tail-magnet="0"/>
+      <arc head="Cpt1_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_3" tail-magnet="0"/>
+      <arc head="I_ask2_3_2" head-magnet="0" kind="INPUT" tail="Cpt1_2" tail-magnet="0"/>
+      <arc head="I_ask2_3_2" head-magnet="0" kind="INPUT" tail="loop_em_3" tail-magnet="0"/>
+      <arc head="AMC_3_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_2" tail-magnet="0"/>
+      <arc head="wait_cable_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_2" tail-magnet="0"/>
+      <arc head="Cpt1_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_2" tail-magnet="0"/>
+      <arc head="I_ask2_2_2" head-magnet="0" kind="INPUT" tail="Cpt1_2" tail-magnet="0"/>
+      <arc head="I_ask2_2_2" head-magnet="0" kind="INPUT" tail="loop_em_2" tail-magnet="0"/>
+      <arc head="AMC_2_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_2" tail-magnet="0"/>
+      <arc head="wait_cable_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_2" tail-magnet="0"/>
+      <arc head="Cpt1_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_2" tail-magnet="0"/>
+      <arc head="I_ask2_1_2" head-magnet="0" kind="INPUT" tail="Cpt1_2" tail-magnet="0"/>
+      <arc head="I_ask2_1_2" head-magnet="0" kind="INPUT" tail="loop_em_1" tail-magnet="0"/>
+      <arc head="AMC_1_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_2" tail-magnet="0"/>
+      <arc head="wait_cable_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_2" tail-magnet="0"/>
+      <arc head="Cpt1_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_2" tail-magnet="0"/>
+      <arc head="I_ask2_3_1" head-magnet="0" kind="INPUT" tail="Cpt1_1" tail-magnet="0"/>
+      <arc head="I_ask2_3_1" head-magnet="0" kind="INPUT" tail="loop_em_3" tail-magnet="0"/>
+      <arc head="AMC_3_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_1" tail-magnet="0"/>
+      <arc head="wait_cable_3" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_1" tail-magnet="0"/>
+      <arc head="Cpt1_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_3_1" tail-magnet="0"/>
+      <arc head="I_ask2_2_1" head-magnet="0" kind="INPUT" tail="Cpt1_1" tail-magnet="0"/>
+      <arc head="I_ask2_2_1" head-magnet="0" kind="INPUT" tail="loop_em_2" tail-magnet="0"/>
+      <arc head="AMC_2_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_1" tail-magnet="0"/>
+      <arc head="wait_cable_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_1" tail-magnet="0"/>
+      <arc head="Cpt1_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_2_1" tail-magnet="0"/>
+      <arc head="I_ask2_1_1" head-magnet="0" kind="INPUT" tail="Cpt1_1" tail-magnet="0"/>
+      <arc head="I_ask2_1_1" head-magnet="0" kind="INPUT" tail="loop_em_1" tail-magnet="0"/>
+      <arc head="AMC_1_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_1" tail-magnet="0"/>
+      <arc head="wait_cable_1" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_1" tail-magnet="0"/>
+      <arc head="Cpt1_2" head-magnet="0" kind="OUTPUT" tail="I_ask2_1_1" tail-magnet="0"/>
+      <arc head="I_rec2_3_3" head-magnet="0" kind="INPUT" tail="MSG_3" tail-magnet="0"/>
+      <arc head="I_rec2_3_3" head-magnet="0" kind="INPUT" tail="wait_msg_3" tail-magnet="0"/>
+      <arc head="ACK" head-magnet="0" kind="OUTPUT" tail="I_rec2_3_3" tail-magnet="0"/>
+      <arc head="loop_em_3" head-magnet="0" kind="OUTPUT" tail="I_rec2_3_3" tail-magnet="0"/>
+      <arc head="I_rec2_2_2" head-magnet="0" kind="INPUT" tail="MSG_2" tail-magnet="0"/>
+      <arc head="I_rec2_2_2" head-magnet="0" kind="INPUT" tail="wait_msg_2" tail-magnet="0"/>
+      <arc head="ACK" head-magnet="0" kind="OUTPUT" tail="I_rec2_2_2" tail-magnet="0"/>
+      <arc head="loop_em_2" head-magnet="0" kind="OUTPUT" tail="I_rec2_2_2" tail-magnet="0"/>
+      <arc head="C_provide_3_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_provide_3_3_3" head-magnet="0" kind="INPUT" tail="AMC_3_3" tail-magnet="0"/>
+      <arc head="C_provide_3_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_3_3_3" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_provide_3_3_3" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_3_3_3" tail-magnet="0"/>
+      <arc head="PMC_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_3_3" tail-magnet="0"/>
+      <arc head="Gto_3" head-magnet="0" kind="INPUT" tail="S_tout" tail-magnet="0"/>
+      <arc head="Gto_3" head-magnet="0" kind="INPUT" tail="FMC_3" tail-magnet="0"/>
+      <arc head="R_tout" head-magnet="0" kind="OUTPUT" tail="Gto_3" tail-magnet="0"/>
+      <arc head="FMC_3" head-magnet="0" kind="OUTPUT" tail="Gto_3" tail-magnet="0"/>
+      <arc head="Gto_2" head-magnet="0" kind="INPUT" tail="S_tout" tail-magnet="0"/>
+      <arc head="Gto_2" head-magnet="0" kind="INPUT" tail="FMC_2" tail-magnet="0"/>
+      <arc head="R_tout" head-magnet="0" kind="OUTPUT" tail="Gto_2" tail-magnet="0"/>
+      <arc head="FMC_2" head-magnet="0" kind="OUTPUT" tail="Gto_2" tail-magnet="0"/>
+      <arc head="Gto_1" head-magnet="0" kind="INPUT" tail="S_tout" tail-magnet="0"/>
+      <arc head="Gto_1" head-magnet="0" kind="INPUT" tail="FMC_1" tail-magnet="0"/>
+      <arc head="R_tout" head-magnet="0" kind="OUTPUT" tail="Gto_1" tail-magnet="0"/>
+      <arc head="FMC_1" head-magnet="0" kind="OUTPUT" tail="Gto_1" tail-magnet="0"/>
+      <arc head="loss_m_3" head-magnet="0" kind="INPUT" tail="R_tout" tail-magnet="0"/>
+      <arc head="loss_m_3" head-magnet="0" kind="INPUT" tail="MSG_3" tail-magnet="0"/>
+      <arc head="T_out" head-magnet="0" kind="OUTPUT" tail="loss_m_3" tail-magnet="0"/>
+      <arc head="S_tout" head-magnet="0" kind="OUTPUT" tail="loss_m_3" tail-magnet="0"/>
+      <arc head="loss_m_2" head-magnet="0" kind="INPUT" tail="R_tout" tail-magnet="0"/>
+      <arc head="loss_m_2" head-magnet="0" kind="INPUT" tail="MSG_2" tail-magnet="0"/>
+      <arc head="T_out" head-magnet="0" kind="OUTPUT" tail="loss_m_2" tail-magnet="0"/>
+      <arc head="S_tout" head-magnet="0" kind="OUTPUT" tail="loss_m_2" tail-magnet="0"/>
+      <arc head="loss_m_1" head-magnet="0" kind="INPUT" tail="R_tout" tail-magnet="0"/>
+      <arc head="loss_m_1" head-magnet="0" kind="INPUT" tail="MSG_1" tail-magnet="0"/>
+      <arc head="T_out" head-magnet="0" kind="OUTPUT" tail="loss_m_1" tail-magnet="0"/>
+      <arc head="S_tout" head-magnet="0" kind="OUTPUT" tail="loss_m_1" tail-magnet="0"/>
+      <arc head="I_ask1_3_3" head-magnet="0" kind="INPUT" tail="listen_3" tail-magnet="0"/>
+      <arc head="I_ask1_3_3" head-magnet="0" kind="INPUT" tail="Cpt1_3" tail-magnet="0"/>
+      <arc head="AMC_3_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_3" tail-magnet="0"/>
+      <arc head="wait_cable_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_3" tail-magnet="0"/>
+      <arc head="Cpt1_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_3" tail-magnet="0"/>
+      <arc head="I_ask1_2_3" head-magnet="0" kind="INPUT" tail="listen_2" tail-magnet="0"/>
+      <arc head="I_ask1_2_3" head-magnet="0" kind="INPUT" tail="Cpt1_3" tail-magnet="0"/>
+      <arc head="AMC_2_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_3" tail-magnet="0"/>
+      <arc head="wait_cable_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_3" tail-magnet="0"/>
+      <arc head="Cpt1_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_2_3" tail-magnet="0"/>
+      <arc head="I_ask1_1_3" head-magnet="0" kind="INPUT" tail="listen_1" tail-magnet="0"/>
+      <arc head="I_ask1_1_3" head-magnet="0" kind="INPUT" tail="Cpt1_3" tail-magnet="0"/>
+      <arc head="AMC_1_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_3" tail-magnet="0"/>
+      <arc head="wait_cable_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_3" tail-magnet="0"/>
+      <arc head="Cpt1_1" head-magnet="0" kind="OUTPUT" tail="I_ask1_1_3" tail-magnet="0"/>
+      <arc head="I_ask1_3_2" head-magnet="0" kind="INPUT" tail="listen_3" tail-magnet="0"/>
+      <arc head="I_ask1_3_2" head-magnet="0" kind="INPUT" tail="Cpt1_2" tail-magnet="0"/>
+      <arc head="AMC_3_2" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_2" tail-magnet="0"/>
+      <arc head="wait_cable_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_2" tail-magnet="0"/>
+      <arc head="Cpt1_3" head-magnet="0" kind="OUTPUT" tail="I_ask1_3_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_1_1" head-magnet="0" kind="INPUT" tail="AMC_2_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_1_1" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_1_1" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_1_1" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_2_2" head-magnet="0" kind="INPUT" tail="AMC_1_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_2_2" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_2_2" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_2_2" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_2_2" head-magnet="0" kind="INPUT" tail="AMC_3_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_2_2" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_2_2" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_2_2" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_2_2" head-magnet="0" kind="INPUT" tail="AMC_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_2_2" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_2_2" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_2_2" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_2_2" head-magnet="0" kind="INPUT" tail="AMC_1_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_2_2" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_2_2" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_2_2" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_2_2" head-magnet="0" kind="INPUT" tail="AMC_3_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_2_2" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_2_2" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_2_2" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_2_2" head-magnet="0" kind="INPUT" tail="AMC_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_2_2" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_2_2" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_2_2" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_2_2" head-magnet="0" kind="INPUT" tail="AMC_1_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_2_2" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_2_2" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_2_2" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_1_1" head-magnet="0" kind="INPUT" tail="AMC_3_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_1_1" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_1_1" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_1_1" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_1_1" head-magnet="0" kind="INPUT" tail="AMC_2_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_1_1" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_1_1" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_1_1" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_1_1" head-magnet="0" kind="INPUT" tail="AMC_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_1_1" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_1_1" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_1_1" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_1_1" head-magnet="0" kind="INPUT" tail="AMC_3_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_1_1" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_1_1" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_1_1" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_2_2" head-magnet="0" kind="INPUT" tail="AMC_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_2_2" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_2_2" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_2_2" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_2_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_1_1" head-magnet="0" kind="INPUT" tail="AMC_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_1_1" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_1_1" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_1_1" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_1_1" head-magnet="0" kind="INPUT" tail="AMC_3_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_1_1" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_1_1" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_1_1" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_1_1" head-magnet="0" kind="INPUT" tail="AMC_2_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_1_1" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_1_1" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_1_1" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_1_1" head-magnet="0" kind="INPUT" tail="AMC_1_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_1_1" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_1_1" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_1_1" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_1_1" tail-magnet="0"/>
+      <arc head="I_reemit_2_3" head-magnet="0" kind="INPUT" tail="T_out" tail-magnet="0"/>
+      <arc head="I_reemit_2_3" head-magnet="0" kind="INPUT" tail="wait_ack_2_3" tail-magnet="0"/>
+      <arc head="wait_ack_2_3" head-magnet="0" kind="OUTPUT" tail="I_reemit_2_3" tail-magnet="0"/>
+      <arc head="MSG_3" head-magnet="0" kind="OUTPUT" tail="I_reemit_2_3" tail-magnet="0"/>
+      <arc head="I_reemit_1_3" head-magnet="0" kind="INPUT" tail="T_out" tail-magnet="0"/>
+      <arc head="I_reemit_1_3" head-magnet="0" kind="INPUT" tail="wait_ack_1_3" tail-magnet="0"/>
+      <arc head="wait_ack_1_3" head-magnet="0" kind="OUTPUT" tail="I_reemit_1_3" tail-magnet="0"/>
+      <arc head="MSG_3" head-magnet="0" kind="OUTPUT" tail="I_reemit_1_3" tail-magnet="0"/>
+      <arc head="I_reemit_3_2" head-magnet="0" kind="INPUT" tail="T_out" tail-magnet="0"/>
+      <arc head="I_reemit_3_2" head-magnet="0" kind="INPUT" tail="wait_ack_3_2" tail-magnet="0"/>
+      <arc head="wait_ack_3_2" head-magnet="0" kind="OUTPUT" tail="I_reemit_3_2" tail-magnet="0"/>
+      <arc head="MSG_2" head-magnet="0" kind="OUTPUT" tail="I_reemit_3_2" tail-magnet="0"/>
+      <arc head="I_reemit_1_2" head-magnet="0" kind="INPUT" tail="T_out" tail-magnet="0"/>
+      <arc head="I_reemit_1_2" head-magnet="0" kind="INPUT" tail="wait_ack_1_2" tail-magnet="0"/>
+      <arc head="wait_ack_1_2" head-magnet="0" kind="OUTPUT" tail="I_reemit_1_2" tail-magnet="0"/>
+      <arc head="MSG_2" head-magnet="0" kind="OUTPUT" tail="I_reemit_1_2" tail-magnet="0"/>
+      <arc head="I_reemit_3_1" head-magnet="0" kind="INPUT" tail="T_out" tail-magnet="0"/>
+      <arc head="I_reemit_3_1" head-magnet="0" kind="INPUT" tail="wait_ack_3_1" tail-magnet="0"/>
+      <arc head="wait_ack_3_1" head-magnet="0" kind="OUTPUT" tail="I_reemit_3_1" tail-magnet="0"/>
+      <arc head="MSG_1" head-magnet="0" kind="OUTPUT" tail="I_reemit_3_1" tail-magnet="0"/>
+      <arc head="I_reemit_2_1" head-magnet="0" kind="INPUT" tail="T_out" tail-magnet="0"/>
+      <arc head="I_reemit_2_1" head-magnet="0" kind="INPUT" tail="wait_ack_2_1" tail-magnet="0"/>
+      <arc head="wait_ack_2_1" head-magnet="0" kind="OUTPUT" tail="I_reemit_2_1" tail-magnet="0"/>
+      <arc head="MSG_1" head-magnet="0" kind="OUTPUT" tail="I_reemit_2_1" tail-magnet="0"/>
+      <arc head="C_free_1_1" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_free_1_1" head-magnet="0" kind="INPUT" tail="FMC_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_free_1_1" tail-magnet="0"/>
+      <arc head="cable_free" head-magnet="0" kind="OUTPUT" tail="C_free_1_1" tail-magnet="0"/>
+      <arc head="C_provide_2_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_provide_2_3_3" head-magnet="0" kind="INPUT" tail="AMC_2_3" tail-magnet="0"/>
+      <arc head="C_provide_2_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_2_3_3" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_provide_2_3_3" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_2_3_3" tail-magnet="0"/>
+      <arc head="PMC_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_3_3" tail-magnet="0"/>
+      <arc head="C_provide_1_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_provide_1_3_3" head-magnet="0" kind="INPUT" tail="AMC_1_3" tail-magnet="0"/>
+      <arc head="C_provide_1_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_1_3_3" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_3_3" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_1_3_3" tail-magnet="0"/>
+      <arc head="PMC_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_3_3" tail-magnet="0"/>
+      <arc head="C_provide_3_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_provide_3_2_2" head-magnet="0" kind="INPUT" tail="AMC_3_2" tail-magnet="0"/>
+      <arc head="C_provide_3_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_3_2_2" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_2_2" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_3_2_2" tail-magnet="0"/>
+      <arc head="PMC_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_2_2" tail-magnet="0"/>
+      <arc head="C_provide_2_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_provide_2_2_2" head-magnet="0" kind="INPUT" tail="AMC_2_2" tail-magnet="0"/>
+      <arc head="C_provide_2_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_2_2_2" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_provide_2_2_2" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_2_2_2" tail-magnet="0"/>
+      <arc head="PMC_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_2_2" tail-magnet="0"/>
+      <arc head="C_provide_1_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_provide_1_2_2" head-magnet="0" kind="INPUT" tail="AMC_1_2" tail-magnet="0"/>
+      <arc head="C_provide_1_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_1_2_2" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_provide_1_2_2" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_1_2_2" tail-magnet="0"/>
+      <arc head="PMC_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_2_2" tail-magnet="0"/>
+      <arc head="C_provide_3_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_provide_3_1_1" head-magnet="0" kind="INPUT" tail="AMC_3_1" tail-magnet="0"/>
+      <arc head="C_provide_3_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_3_1_1" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_provide_3_1_1" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_3_1_1" tail-magnet="0"/>
+      <arc head="PMC_3" head-magnet="0" kind="OUTPUT" tail="C_provide_3_1_1" tail-magnet="0"/>
+      <arc head="C_provide_2_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_provide_2_1_1" head-magnet="0" kind="INPUT" tail="AMC_2_1" tail-magnet="0"/>
+      <arc head="C_provide_2_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_2_1_1" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_1_1" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_2_1_1" tail-magnet="0"/>
+      <arc head="PMC_2" head-magnet="0" kind="OUTPUT" tail="C_provide_2_1_1" tail-magnet="0"/>
+      <arc head="C_provide_1_1_1" head-magnet="0" kind="INPUT" tail="Cpt2_1" tail-magnet="0"/>
+      <arc head="C_provide_1_1_1" head-magnet="0" kind="INPUT" tail="AMC_1_1" tail-magnet="0"/>
+      <arc head="C_provide_1_1_1" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="C_provide_1_1_1" head-magnet="0" kind="INPUT" tail="cable_free" tail-magnet="0"/>
+      <arc head="Cpt2_2" head-magnet="0" kind="OUTPUT" tail="C_provide_1_1_1" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_1_1" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_provide_1_1_1" tail-magnet="0"/>
+      <arc head="PMC_1" head-magnet="0" kind="OUTPUT" tail="C_provide_1_1_1" tail-magnet="0"/>
+      <arc head="C_free_3_3" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_free_3_3" head-magnet="0" kind="INPUT" tail="FMC_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_free_3_3" tail-magnet="0"/>
+      <arc head="cable_free" head-magnet="0" kind="OUTPUT" tail="C_free_3_3" tail-magnet="0"/>
+      <arc head="C_free_2_2" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_free_2_2" head-magnet="0" kind="INPUT" tail="FMC_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_free_2_2" tail-magnet="0"/>
+      <arc head="cable_free" head-magnet="0" kind="OUTPUT" tail="C_free_2_2" tail-magnet="0"/>
+      <arc head="loss_a" head-magnet="0" kind="INPUT" tail="ACK" tail-magnet="0"/>
+      <arc head="loss_a" head-magnet="0" kind="INPUT" tail="R_tout" tail-magnet="0"/>
+      <arc head="T_out" head-magnet="0" kind="OUTPUT" tail="loss_a" tail-magnet="0"/>
+      <arc head="S_tout" head-magnet="0" kind="OUTPUT" tail="loss_a" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_3_3" head-magnet="0" kind="INPUT" tail="AMC_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_3_3" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_3_3" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_3_3" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_3_3" head-magnet="0" kind="INPUT" tail="AMC_2_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_3_3" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_3_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_3_3" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_3_3" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_3_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_3_3" head-magnet="0" kind="INPUT" tail="AMC_1_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_3_3" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_3_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_3_3" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_3_3" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_3_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_3_3" head-magnet="0" kind="INPUT" tail="AMC_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_3_3" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_2_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_3_3" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_3_3" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_2_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_3_3" head-magnet="0" kind="INPUT" tail="AMC_2_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_3_3" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_2_2_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_3_3" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_3_3" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_2_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_3_3" head-magnet="0" kind="INPUT" tail="AMC_1_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_3_3" head-magnet="0" kind="INPUT" tail="cable_used_2" tail-magnet="0"/>
+      <arc head="C_refuse_1_2_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_3_3" tail-magnet="0"/>
+      <arc head="cable_used_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_3_3" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_2_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_3_3" head-magnet="0" kind="INPUT" tail="AMC_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_3_3" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_3_1_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_3_3" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_3_3" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_1_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_3_3" head-magnet="0" kind="INPUT" tail="AMC_2_3" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_3_3" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_2_1_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_3_3" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_3_3" tail-magnet="0"/>
+      <arc head="RMC_2" head-magnet="0" kind="OUTPUT" tail="C_refuse_2_1_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_3_3" head-magnet="0" kind="INPUT" tail="Cpt2_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_3_3" head-magnet="0" kind="INPUT" tail="AMC_1_3" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_3_3" head-magnet="0" kind="INPUT" tail="cable_used_1" tail-magnet="0"/>
+      <arc head="C_refuse_1_1_3_3" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_3_3" tail-magnet="0"/>
+      <arc head="cable_used_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_3_3" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_3_3" tail-magnet="0"/>
+      <arc head="RMC_1" head-magnet="0" kind="OUTPUT" tail="C_refuse_1_1_3_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_2_2" head-magnet="0" kind="INPUT" tail="Cpt2_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_2_2" head-magnet="0" kind="INPUT" tail="AMC_3_2" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_2_2" head-magnet="0" kind="INPUT" tail="cable_used_3" tail-magnet="0"/>
+      <arc head="C_refuse_3_3_2_2" head-magnet="0" kind="INPUT" tail="FMCb" tail-magnet="0"/>
+      <arc head="Cpt2_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_2_2" tail-magnet="0"/>
+      <arc head="cable_used_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_2_2" tail-magnet="0"/>
+      <arc head="FMCb" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_2_2" tail-magnet="0"/>
+      <arc head="RMC_3" head-magnet="0" kind="OUTPUT" tail="C_refuse_3_3_2_2" tail-magnet="0"/>
+    </edges>
+  </gspn>
+</project>

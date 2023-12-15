@@ -1,0 +1,15 @@
+hppi10
+hppi11
+hppi12
+hppi13
+hppi14
+hppi15
+hppi16
+hppi17
+hppi18
+hppi19
+hppi20
+magic3x3
+magic4x4
+magic5x5
+magic6x6
