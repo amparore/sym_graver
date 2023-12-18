@@ -125,19 +125,19 @@ sym_pottier_grad(const meddly_context& ctx,
                  const size_t level,
                  const size_t rem_neg_step);
 
-// First outer loop of the Pottier algorithm (when working by levels)
+// First outer loop of the Pottier algorithm (project & lift)
 MEDDLY::dd_edge
-sym_pottier_bylvl(const meddly_context& ctx, 
-                  const pottier_params_t& pparams,
-                  MEDDLY::dd_edge initGraver, MEDDLY::dd_edge N,
-                  const std::vector<size_t> *rem_neg_levels, 
-                  const size_t rem_neg_step);
+sym_pottier_PnL(const meddly_context& ctx, 
+                const pottier_params_t& pparams,
+                MEDDLY::dd_edge initGraver, MEDDLY::dd_edge N,
+                const std::vector<size_t> *rem_neg_levels, 
+                const size_t rem_neg_step);
 
-// Second outer loop of the Pottier algorithm (when working by generators)
+// Second outer loop of the Pottier algorithm (extend and complete)
 MEDDLY::dd_edge
 sym_pottier_bygen(const meddly_context& ctx, 
                   const pottier_params_t& pparams,
-                  const std::vector<std::vector<int>>& matHermiteNF);
+                  const std::vector<std::vector<int>>& lattice_Zgenerators);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __SYMBOLIC_POTTIER_H__

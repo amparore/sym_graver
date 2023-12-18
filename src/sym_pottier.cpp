@@ -170,7 +170,8 @@ sym_s_vectors_at_level(const meddly_context& ctx, const pottier_params_t& pparam
             }
 
             MEDDLY::dd_edge Ai_plus_Bj(ctx.forestMDD);
-            S_VECTORS_OPS->get_op(0, false, invertB, svs)->computeDDEdge(Ai, Bj, Ai_plus_Bj, false);
+            // S_VECTORS_OPS->get_op(0, false, invertB, svs)->computeDDEdge(Ai, Bj, Ai_plus_Bj, false);
+            S_VECTORS2->computeDDEdge(Ai, Bj, false, invertB, svs, 0, Ai_plus_Bj);
             SV = sym_union(SV, Ai_plus_Bj);
         }
     }
@@ -198,14 +199,16 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
         // Compute the S-Vectors over all levels at once
         sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
         // a + b
-        s_vectors* s_vectors_op = S_VECTORS_OPS->get_op(level, true, false, svs);
-        s_vectors_op->computeDDEdge(A, B, SV, false);
+        S_VECTORS2->computeDDEdge(A, B, true, false, svs, level, SV);
+        // s_vectors* s_vectors_op = S_VECTORS_OPS->get_op(level, true, false, svs);
+        // s_vectors_op->computeDDEdge(A, B, SV, false);
 
         if (pparams.target == compute_target::GRAVER_BASIS) {
             // a - b
             MEDDLY::dd_edge complSV(ctx.forestMDD);
-            s_vectors_op = S_VECTORS_OPS->get_op(level, true, true, svs);
-            s_vectors_op->computeDDEdge(A, B, complSV, false);
+            S_VECTORS2->computeDDEdge(A, B, true, true, svs, level, complSV);
+            // s_vectors_op = S_VECTORS_OPS->get_op(level, true, true, svs);
+            // s_vectors_op->computeDDEdge(A, B, complSV, false);
             SV = sym_union(SV, complSV);
         }
     }
@@ -588,13 +591,13 @@ sym_pottier_grad(const meddly_context& ctx,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-// First outer loop of the Pottier algorithm (when working by levels)
+// First outer loop of the Pottier algorithm (project & lift)
 MEDDLY::dd_edge
-sym_pottier_bylvl(const meddly_context& ctx, 
-                  const pottier_params_t& pparams,
-                  MEDDLY::dd_edge initGraver, MEDDLY::dd_edge N,
-                  const std::vector<size_t> *rem_neg_levels, 
-                  const size_t rem_neg_step)
+sym_pottier_PnL(const meddly_context& ctx, 
+                const pottier_params_t& pparams,
+                MEDDLY::dd_edge initGraver, MEDDLY::dd_edge N,
+                const std::vector<size_t> *rem_neg_levels, 
+                const size_t rem_neg_step)
 {
     MEDDLY::dd_edge G(ctx.forestMDD), emptySet(ctx.forestMDD);
 
@@ -648,29 +651,29 @@ sym_pottier_bylvl(const meddly_context& ctx,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-// Second outer loop of the Pottier algorithm (when working by generators)
+// Second outer loop of the Pottier algorithm (extend and complete)
 MEDDLY::dd_edge
 sym_pottier_bygen(const meddly_context& ctx, 
                   const pottier_params_t& pparams,
-                  const std::vector<std::vector<int>>& matHermiteNF)
+                  const std::vector<std::vector<int>>& lattice_Zgenerators)
 {
     MEDDLY::dd_edge G(ctx.forestMDD);
     const MEDDLY::dd_edge empty_set(ctx.forestMDD);
     // We should start with the symmetrized HNF generators only when computing the Graver basis
     const bool make_sign_canonic = (pparams.target == compute_target::GRAVER_BASIS);
     const bool make_gen_sym = (pparams.target != compute_target::GRAVER_BASIS);
-    if (matHermiteNF.empty())
+    if (lattice_Zgenerators.empty())
         return G;
 
     if (pparams.by_generators) { // Add one generator at a time, in an outer loop
         // Determine when negative values can be dropped (for Hilbert basis)
-        std::vector<size_t> rem_neg_levels = step_for_negative_removal(matHermiteNF);
+        std::vector<size_t> rem_neg_levels = step_for_negative_removal(lattice_Zgenerators);
 
         std::vector<std::vector<int>> mG(1);
         G = empty_set;
-        // Compute by generators, bottom-up w.r.t the integral kernel in Hermite normal form
-        for (ssize_t row=matHermiteNF.size()-1; row>=0; --row) {
-            mG[0] = matHermiteNF[row];
+        // Compute by generators, bottom-up w.r.t the integral generators
+        for (ssize_t row=lattice_Zgenerators.size()-1; row>=0; --row) {
+            mG[0] = lattice_Zgenerators[row];
             // {g} or {g, -g}
             MEDDLY::dd_edge g = mdd_from_vectors(mG, ctx.forestMDD, make_gen_sym);
             if (make_sign_canonic)
@@ -679,7 +682,7 @@ sym_pottier_bygen(const meddly_context& ctx,
             if (pparams.very_verbose) 
                 cout << "\nAdding generator "<<row<<endl;
             // Extend Graver basis G with the new generator g
-            G = sym_pottier_bylvl(ctx, pparams, G, g, &rem_neg_levels, row);
+            G = sym_pottier_PnL(ctx, pparams, G, g, &rem_neg_levels, row);
 
             // For Hilbert basis and extreme rays sets, drop negative vectors (when possible)
             if (pparams.target != compute_target::GRAVER_BASIS /*&& !by_level*/) {
@@ -702,11 +705,11 @@ sym_pottier_bygen(const meddly_context& ctx,
     }
     else { // Add all generators at once
         // G  or  G u -G
-        MEDDLY::dd_edge initF = mdd_from_vectors(matHermiteNF, ctx.forestMDD, make_gen_sym);
+        MEDDLY::dd_edge initF = mdd_from_vectors(lattice_Zgenerators, ctx.forestMDD, make_gen_sym);
         if (make_sign_canonic)
             SIGN_CANON_OPS->get_op(true)->computeDDEdge(initF, initF, false);
         // Compute all generators at once
-        G = sym_pottier_bylvl(ctx, pparams, empty_set, initF, nullptr, size_t(-1));
+        G = sym_pottier_PnL(ctx, pparams, empty_set, initF, nullptr, size_t(-1));
     }
 
     // For Hilbert basis and extreme rays sets, take only the non-negative vectors

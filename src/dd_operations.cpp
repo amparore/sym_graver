@@ -519,42 +519,330 @@ void base_NtoI::computeDDEdge(const MEDDLY::dd_edge &ar1,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// S-Vectors
+// Base class for binary operators performing: Node * Node * Integer -> Node 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-s_vectors::s_vectors(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1, 
-                     MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
-                     const s_vectors_table *tab, bool isConf, bool invertB, 
-                     const sv_sign sign_of_sum, size_t lambda)
-  : base_NNtoN(opcode, arg1, arg2, res), 
-    p_table(tab), isPotentiallyConformant(isConf), invertB(invertB), 
-    sign_of_sum(sign_of_sum), lambda(lambda)
-{ 
-    if (!invertB)
-        operationCommutes();
+base_NNItoN::base_NNItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1, 
+                         MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res)
+  : MEDDLY::operation(opcode, 1), arg1F(arg1), arg2F(arg2), resF(res)
+{
+    MEDDLY::ct_entry_type* et;
+    et = new MEDDLY::ct_entry_type(opcode->getName(), "NNI:N");
+    et->setForestForSlot(0, arg1);
+    et->setForestForSlot(1, arg2);
+    et->setForestForSlot(4, res);
+    registerEntryType(0, et);
+    buildCTs();
+
+    mddUnion = MEDDLY::getOperation(MEDDLY::UNION, res, res, res);
+}
+
+bool base_NNItoN::checkForestCompatibility() const {
+    return arg1F==resF;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ 
+inline MEDDLY::ct_entry_key* 
+base_NNItoN::findResult(MEDDLY::node_handle a, MEDDLY::node_handle b, 
+                        int i, MEDDLY::node_handle &c) 
+{
+    MEDDLY::ct_entry_key* CTsrch = CT0->useEntryKey(etype[0], 0);
+    assert(CTsrch);
+    // if (can_commute && a > b) {
+    //     CTsrch->writeN(b);
+    //     CTsrch->writeN(a);
+    // } else {
+        CTsrch->writeN(a);
+        CTsrch->writeN(b);
+    // }
+    CTsrch->writeI(i);
+    CT0->find(CTsrch, CTresult[0]);
+    if (!CTresult[0]) return CTsrch;
+    c = resF->linkNode(CTresult[0].readN());
+    CT0->recycle(CTsrch);
+    return 0;
+}
+
+inline void 
+base_NNItoN::saveResult(MEDDLY::ct_entry_key* key, 
+                        // MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+                        MEDDLY::node_handle c) 
+{
+    CTresult[0].reset();
+    CTresult[0].writeN(c);
+    CT0->addEntry(key, CTresult[0]);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handle b) {
+
+
+
+
+
+
+
+
+
+
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+// // S-Vectors
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// s_vectors::s_vectors(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1, 
+//                      MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+//                      const s_vectors_table *tab, bool isConf, bool invertB, 
+//                      const sv_sign sign_of_sum, size_t lambda)
+//   : base_NNtoN(opcode, arg1, arg2, res), 
+//     p_table(tab), isPotentiallyConformant(isConf), invertB(invertB), 
+//     sign_of_sum(sign_of_sum), lambda(lambda)
+// { 
+//     if (!invertB)
+//         operationCommutes();
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handle b) {
+//     if (a==0 || b==0) return 0;
+//     if (a==-1 && b==-1) return isPotentiallyConformant ? 0 : -1;
+
+//     MEDDLY::node_handle result;
+//     MEDDLY::ct_entry_key* key = findResult(a, b, result);
+//     if (nullptr==key)
+//         return result;
+
+//     const int a_level = arg1F->getNodeLevel(a);
+//     const int b_level = arg2F->getNodeLevel(b);
+//     assert(a_level == b_level);
+//     const int res_level = std::max(a_level, b_level);
+
+//     MEDDLY::unpacked_node *A = (a_level < res_level)
+//         ? MEDDLY::unpacked_node::newRedundant(arg1F, res_level, a, false)
+//         : arg1F->newUnpacked(a, MEDDLY::SPARSE_ONLY);
+//     MEDDLY::unpacked_node *B = (b_level < res_level)
+//         ? MEDDLY::unpacked_node::newRedundant(arg2F, res_level, b, false)
+//         : arg2F->newUnpacked(b, MEDDLY::SPARSE_ONLY);
+//     // MEDDLY::unpacked_node *A = MEDDLY::unpacked_node::New();
+//     // if (a_level < res_level) 
+//     //     A->initRedundant(arg1F, res_level, a, false);
+//     // else
+//     //     arg1F->unpackNode(A, a, MEDDLY::FULL_OR_SPARSE);
+//     // MEDDLY::unpacked_node *B = MEDDLY::unpacked_node::New();
+//     // if (b_level < res_level) 
+//     //     B->initRedundant(arg1F, res_level, b, false);
+//     // else
+//     //     arg1F->unpackNode(B, b, MEDDLY::FULL_OR_SPARSE);
+//     // MEDDLY::unpacked_node *A = (a_level < res_level) 
+//     //     ? MEDDLY::unpacked_node::newRedundant(arg1F, res_level, a, false)
+//     //     : MEDDLY::unpacked_node::newFromNode(arg1F, a, false); 
+//     // MEDDLY::unpacked_node *B = (b_level < res_level)
+//     //     ? MEDDLY::unpacked_node::newRedundant(arg2F, res_level, b, false)
+//     //     : MEDDLY::unpacked_node::newFromNode(arg2F, b, false);
+
+//     const size_t a_size = get_node_size(A);
+//     const size_t b_size = get_node_size(B);
+//     const int res_size = a_size + b_size + 1; // with +1 because we are encoding integers
+//     check_level_bound(resF, res_level, res_size);
+    
+//     MEDDLY::unpacked_node* C = MEDDLY::unpacked_node::newFull(resF, res_level, res_size);
+
+//     const bool a_full = A->isFull(), b_full = B->isFull();
+
+//     for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
+//         if (a_full && 0==A->d(i))
+//             continue;
+//         int a_val = NodeToZ(a_full ? i : A->i(i));
+
+//         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
+//             if (b_full && 0==B->d(j))
+//                 continue;
+//             int b_val = NodeToZ(b_full ? j : B->i(j));
+
+//             if (invertB)
+//                 b_val = -b_val;
+
+//             int ab_sum = add_exact(a_val, b_val); // a + b or a - b
+//             int ab_sign_prod = sign3(a_val) * sign3(b_val); // a * b
+//             // canonicalize the sum (if not yet decided)
+//             sv_sign curr_sign_of_sum = sign_of_sum;
+//             if (sign_of_sum == SVS_UNDECIDED && 0!=ab_sum) { 
+//                 curr_sign_of_sum = (ab_sum > 0) ? SVS_POS : SVS_NEG;
+//             }
+//             // compute -(a+b) or -(a-b)
+//             if (curr_sign_of_sum == SVS_NEG) {
+//                 ab_sum = -ab_sum;
+//                 // ab_prod = -ab_prod;
+//             }
+
+//             int ab_sum_idx = ZtoNode(ab_sum);
+//             if (ab_sum_idx >= res_size)
+//                 cout << "ab_sum_idx:"<<ab_sum_idx<<" res_size:"<<res_size<<endl;
+//             assert(ab_sum_idx < res_size);
+
+//             bool ij_conf = (ab_sign_prod >= 0);
+//             // if (curr_sign_of_sum == SVS_NEG)
+//             //     ij_conf = -(multiply_exact(a_val, b_val)) >= 0;
+//             // else
+//             //     ij_conf = (multiply_exact(a_val, b_val)) >= 0;
+
+
+
+//             bool down_is_conf = isPotentiallyConformant && ij_conf;
+
+//             bool do_sum = true;
+//             if (lambda==0) {
+//             }
+//             else if (p_table->pivot_order->is_same_as_lambda(lambda, res_level)) {
+//                 do_sum = !ij_conf;
+//             }
+//             else if (p_table->pivot_order->is_below_lambda(lambda, res_level)) {
+//                 do_sum = ij_conf;
+//             }
+//             else if (p_table->pivot_order->is_above_lambda(lambda, res_level)) {
+//             }
+//             // cout << "a_level:"<<a_level<<" a_val:"<<a_val<<" b_val:"<<b_val<<" ij_conf:"<<ij_conf<<" do_sum:"<<do_sum<<endl;
+
+//             if (do_sum) {
+//                 MEDDLY::node_handle sum;
+//                 s_vectors *next_op = p_table->get_op(lambda, down_is_conf, invertB, curr_sign_of_sum);
+//                 sum = next_op->compute(A->d(i), B->d(j));
+//                 unionNodes(C, sum, ab_sum_idx, resF, mddUnion);
+//             }
+//         }
+//     }
+
+//     // cleanup
+//     MEDDLY::unpacked_node::recycle(B);
+//     MEDDLY::unpacked_node::recycle(A);
+
+//     // reduce and return result
+//     result = resF->createReducedNode(-1, C);
+//     saveResult(key, a, b, result);
+//     return result;
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// s_vectors* 
+// s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1, 
+//         MEDDLY::expert_forest* a2, MEDDLY::expert_forest* r,
+//         const s_vectors_table *tab, bool isConf, bool invertB, 
+//         const sv_sign sign_of_sum, size_t lambda)
+// {
+//     if (0==a1 || 0==a2 || 0==r) return 0;
+
+//     if ((a1->getDomain() != r->getDomain()) || (a2->getDomain() != r->getDomain()))
+//         throw MEDDLY::error(MEDDLY::error::DOMAIN_MISMATCH, __FILE__, __LINE__);
+
+//     if (a1->isForRelations() || r->isForRelations() || a2->isForRelations() ||
+//         (a1->getEdgeLabeling() != r->getEdgeLabeling()) ||
+//         (a2->getEdgeLabeling() != r->getEdgeLabeling()))
+//         throw MEDDLY::error(MEDDLY::error::TYPE_MISMATCH, __FILE__, __LINE__);
+
+//     if (r->getEdgeLabeling() == MEDDLY::edge_labeling::MULTI_TERMINAL) {
+//         if (r->isForRelations())
+//             throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED);
+//         return new s_vectors(this, a1, a2, r, tab, isConf, invertB, sign_of_sum, lambda);
+//     }
+//     throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED, __FILE__, __LINE__);
+// }
+
+// MEDDLY::binary_operation* 
+// s_vectors_opname::buildOperation(MEDDLY::expert_forest* arg1,
+//                                  MEDDLY::expert_forest* arg2, 
+//                                  MEDDLY::expert_forest* res) 
+// {
+//     throw std::exception(); // Unimplemented
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// s_vectors_table::s_vectors_table(MEDDLY::expert_forest* forest, 
+//                                  const variable_order *pivot_order) 
+// /**/ : forest(forest), pivot_order(pivot_order)
+// { }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// s_vectors* 
+// s_vectors_table::get_op(size_t level, bool isPotentiallyConformant, 
+//                         bool invertB, const sv_sign sign_of_sum) const
+// {
+//     if (table.empty())
+//         table.resize(forest->getNumVariables() + 1);
+//     if (table[level].empty())
+//         table[level].resize(2);
+//     if (table[level][isPotentiallyConformant].empty())
+//         table[level][isPotentiallyConformant].resize(2);
+//     if (table[level][isPotentiallyConformant][invertB].empty())
+//         table[level][isPotentiallyConformant][invertB].resize(SVS_TOTAL);
+//     if (table[level][isPotentiallyConformant][invertB][sign_of_sum] == nullptr)
+//         table[level][isPotentiallyConformant][invertB][sign_of_sum] =
+//             S_VECTORS_OPNAME->buildOperation(forest, forest, forest, this, 
+//                                              isPotentiallyConformant, invertB,
+//                                              sign_of_sum, level);
+    
+//     return table[level][isPotentiallyConformant][invertB][sign_of_sum];
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// S-Vectors (ternary)
+/////////////////////////////////////////////////////////////////////////////////////////
+
+typedef union s_vector_flags_t {
+    int value;
+    struct {
+        bool is_potentially_conformant : 1;
+        bool invert_b : 1;
+        int sign_of_sum : 2;
+        unsigned lambda : (sizeof(int)*8 - 4);
+    } bf;
+} s_vector_flags_t;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+s_vectors2::s_vectors2(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1, 
+                       MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+                       const variable_order *pivot_order)
+: base_NNItoN(opcode, arg1, arg2, res), pivot_order(pivot_order)
+{ 
+    // if (!invertB)
+    //     operationCommutes();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+MEDDLY::node_handle s_vectors2::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, 
+                                       const bool is_potentially_conformant, 
+                                       const bool invertB, 
+                                       const sv_sign sign_of_sum, const size_t lambda) 
+{
     if (a==0 || b==0) return 0;
-    if (a==-1 && b==-1) return isPotentiallyConformant ? 0 : -1;
+    if (a==-1 && b==-1) return is_potentially_conformant ? 0 : -1;
+
+    s_vector_flags_t svf;
+    svf.bf.is_potentially_conformant = is_potentially_conformant;
+    svf.bf.invert_b = invertB;
+    svf.bf.sign_of_sum = sign_of_sum;
+    svf.bf.lambda = lambda;
+
+    // TODO: if !invertB then a and b can be swapped (for commutativity in the cache)
 
     MEDDLY::node_handle result;
-    MEDDLY::ct_entry_key* key = findResult(a, b, result);
+    MEDDLY::ct_entry_key* key = findResult(a, b, svf.value, result);
     if (nullptr==key)
         return result;
 
@@ -634,25 +922,26 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
 
 
 
-            bool down_is_conf = isPotentiallyConformant && ij_conf;
+            bool down_is_conf = is_potentially_conformant && ij_conf;
 
             bool do_sum = true;
             if (lambda==0) {
             }
-            else if (p_table->pivot_order->is_same_as_lambda(lambda, res_level)) {
+            else if (pivot_order->is_same_as_lambda(lambda, res_level)) {
                 do_sum = !ij_conf;
             }
-            else if (p_table->pivot_order->is_below_lambda(lambda, res_level)) {
+            else if (pivot_order->is_below_lambda(lambda, res_level)) {
                 do_sum = ij_conf;
             }
-            else if (p_table->pivot_order->is_above_lambda(lambda, res_level)) {
+            else if (pivot_order->is_above_lambda(lambda, res_level)) {
             }
             // cout << "a_level:"<<a_level<<" a_val:"<<a_val<<" b_val:"<<b_val<<" ij_conf:"<<ij_conf<<" do_sum:"<<do_sum<<endl;
 
             if (do_sum) {
                 MEDDLY::node_handle sum;
-                s_vectors *next_op = p_table->get_op(lambda, down_is_conf, invertB, curr_sign_of_sum);
-                sum = next_op->compute(A->d(i), B->d(j));
+                // s_vectors2 *next_op = p_table->get_op(lambda, down_is_conf, invertB, curr_sign_of_sum);
+                // sum = next_op->compute(A->d(i), B->d(j));
+                sum = compute(A->d(i), B->d(j), down_is_conf, invertB, curr_sign_of_sum, lambda);
                 unionNodes(C, sum, ab_sum_idx, resF, mddUnion);
             }
         }
@@ -664,17 +953,37 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
 
     // reduce and return result
     result = resF->createReducedNode(-1, C);
-    saveResult(key, a, b, result);
+    saveResult(key, /*a, b, svf.value,*/ result);
     return result;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-s_vectors* 
-s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1, 
-        MEDDLY::expert_forest* a2, MEDDLY::expert_forest* r,
-        const s_vectors_table *tab, bool isConf, bool invertB, 
-        const sv_sign sign_of_sum, size_t lambda)
+void 
+s_vectors2::computeDDEdge(const MEDDLY::dd_edge &ar1, const MEDDLY::dd_edge &ar2, 
+                          const bool is_potentially_conformant, const bool invertB, 
+                          const sv_sign sign_of_sum, const size_t lambda,
+                          MEDDLY::dd_edge &res)
+{
+    MEDDLY::node_handle cnode = compute(ar1.getNode(), ar2.getNode(),
+                            is_potentially_conformant, invertB, sign_of_sum, lambda);
+    // const int num_levels = resF->getDomain()->getNumVariables();
+    // if (userFlag && resF->isQuasiReduced() && cnode != resF->getTransparentNode()
+    //     && resF->getNodeLevel(cnode) < num_levels) 
+    // {
+    //     MEDDLY::node_handle temp = (resF)->makeNodeAtLevel(num_levels, cnode);
+    //     resF->unlinkNode(cnode);
+    //     cnode = temp;
+    // }
+    res.set(cnode);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+s_vectors2* 
+s_vectors2_opname::buildOperation(MEDDLY::expert_forest* a1, 
+                                  MEDDLY::expert_forest* a2, MEDDLY::expert_forest* r,
+                                  const variable_order *pivot_order)
 {
     if (0==a1 || 0==a2 || 0==r) return 0;
 
@@ -689,50 +998,24 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
     if (r->getEdgeLabeling() == MEDDLY::edge_labeling::MULTI_TERMINAL) {
         if (r->isForRelations())
             throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED);
-        return new s_vectors(this, a1, a2, r, tab, isConf, invertB, sign_of_sum, lambda);
+        return new s_vectors2(this, a1, a2, r, pivot_order);
     }
     throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED, __FILE__, __LINE__);
 }
 
-MEDDLY::binary_operation* 
-s_vectors_opname::buildOperation(MEDDLY::expert_forest* arg1,
-                                 MEDDLY::expert_forest* arg2, 
-                                 MEDDLY::expert_forest* res) 
-{
-    throw std::exception(); // Unimplemented
-}
+// s_vectors2* 
+// s_vectors2_opname::buildOperation(MEDDLY::expert_forest* arg1,
+//                                   MEDDLY::expert_forest* arg2, 
+//                                   MEDDLY::expert_forest* res) 
+// {
+//     return new s_vectors2(this, a1, a2, r);
+//     // throw std::exception(); // Unimplemented
+// }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-s_vectors_table::s_vectors_table(MEDDLY::expert_forest* forest, 
-                                 const variable_order *pivot_order) 
-/**/ : forest(forest), pivot_order(pivot_order)
-{ }
 
-/////////////////////////////////////////////////////////////////////////////////////////
 
-s_vectors* 
-s_vectors_table::get_op(size_t level, bool isPotentiallyConformant, 
-                        bool invertB, const sv_sign sign_of_sum) const
-{
-    if (table.empty())
-        table.resize(forest->getNumVariables() + 1);
-    if (table[level].empty())
-        table[level].resize(2);
-    if (table[level][isPotentiallyConformant].empty())
-        table[level][isPotentiallyConformant].resize(2);
-    if (table[level][isPotentiallyConformant][invertB].empty())
-        table[level][isPotentiallyConformant][invertB].resize(SVS_TOTAL);
-    if (table[level][isPotentiallyConformant][invertB][sign_of_sum] == nullptr)
-        table[level][isPotentiallyConformant][invertB][sign_of_sum] =
-            S_VECTORS_OPNAME->buildOperation(forest, forest, forest, this, 
-                                             isPotentiallyConformant, invertB,
-                                             sign_of_sum, level);
-    
-    return table[level][isPotentiallyConformant][invertB][sign_of_sum];
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -2328,8 +2611,11 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     MEDDLY::expert_forest *forestMDDexp = (MEDDLY::expert_forest*)forestMDD;
 
     // Declare out custom operators
-    S_VECTORS_OPNAME = new s_vectors_opname();
-    S_VECTORS_OPS = new s_vectors_table(forestMDDexp, pivot_order);
+    // S_VECTORS_OPNAME = new s_vectors_opname();
+    // S_VECTORS_OPS = new s_vectors_table(forestMDDexp, pivot_order);
+
+    S_VECTORS2_OPNAME = new s_vectors2_opname();
+    S_VECTORS2 = new s_vectors2(S_VECTORS2_OPNAME, forestMDDexp, forestMDDexp, forestMDDexp, pivot_order);
 
     LESSEQ_SQ_OPNAME = new lesseq_sq_opname();
     LESSEQ_SQ_OPS = new lesseq_sq_table(forestMDDexp, pivot_order);
