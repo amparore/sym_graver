@@ -26,11 +26,11 @@ class variable_order;
 // DD_EXTERN s_vectors_opname *S_VECTORS_OPNAME;
 // DD_EXTERN s_vectors_table *S_VECTORS_OPS;
 
-class s_vectors2_opname;
-class s_vectors2;
+class s_vectors_opname;
+class s_vectors;
 
-DD_EXTERN s_vectors2_opname *S_VECTORS2_OPNAME;
-DD_EXTERN s_vectors2 *S_VECTORS2;
+DD_EXTERN s_vectors_opname *S_VECTORS_OPNAME;
+DD_EXTERN s_vectors *S_VECTORS;
 
 
 class lesseq_sq_opname;
@@ -339,74 +339,24 @@ protected:
 
 enum sv_sign { SVS_UNDECIDED, SVS_POS, SVS_NEG, SVS_TOTAL };
 
-// class s_vectors : public base_NNtoN {
-// public:
-//     s_vectors(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
-//               MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
-//               const s_vectors_table *tab, bool isConf, bool invertB, 
-//               const sv_sign sign_of_sum, size_t lambda);
-
-//     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b) override;
-// protected:
-//     const s_vectors_table* p_table; // s_vector variations
-//     const bool isPotentiallyConformant; // summed vector signs are potentially conformant?
-//     const bool invertB; // sum with b or -b
-//     const sv_sign sign_of_sum; // should we invert the sum? is this decided yet?
-//     const size_t lambda; // is level-specific (>0) or not (=0)
-// };
-
-// // Factory of s_vectors operators for specific MDD forests
-// class s_vectors_opname : public MEDDLY::binary_opname {
-// public:
-//     inline s_vectors_opname() 
-//     /**/ : MEDDLY::binary_opname("S-Vectors") {}
-
-//     virtual MEDDLY::binary_operation* 
-//     buildOperation(MEDDLY::expert_forest* arg1,
-//                    MEDDLY::expert_forest* arg2, 
-//                    MEDDLY::expert_forest* res) override;
-
-//     s_vectors* 
-//     buildOperation(MEDDLY::expert_forest* a1, 
-//                    MEDDLY::expert_forest* a2, 
-//                    MEDDLY::expert_forest* r,
-//                    const s_vectors_table *tab, 
-//                    bool isConf, bool invertB, 
-//                    const sv_sign sign_of_sum, size_t lambda);
-// };
-
-// // Table with all parametric s_vector instances
-// class s_vectors_table {
-//     // level * isConf * invertB * sign_of_sum
-//     mutable std::vector<std::vector<std::vector<std::vector<s_vectors*>>>> table; 
-// public:
-//     s_vectors_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
-
-//     s_vectors* get_op(size_t level, bool isPotentiallyConformant, 
-//                       bool invertB, const sv_sign sign_of_sum) const;
-
-//     MEDDLY::expert_forest* forest;
-//     const variable_order *pivot_order; // pivoting order when proceeding by levels
-// };
+enum class ab_sum_t { A_PLUS_B, A_MINUS_B };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// S-Vectors ternary
-/////////////////////////////////////////////////////////////////////////////////////////
 
-class s_vectors2 : public base_NNItoN {
+class s_vectors : public base_NNItoN {
 public:
-    s_vectors2(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1,
-               MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
-               const variable_order *pivot_order);
+    s_vectors(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1,
+              MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+              const variable_order *pivot_order);
 
     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b, 
                                         const bool is_potentially_conformant, 
-                                        const bool invertB, 
+                                        const ab_sum_t sum_or_diff, 
                                         const sv_sign sign_of_sum, const size_t lambda);
 
     void 
     computeDDEdge(const MEDDLY::dd_edge &ar1, const MEDDLY::dd_edge &ar2, 
-                  const bool is_potentially_conformant, const bool invertB, 
+                  const bool is_potentially_conformant, const ab_sum_t sum_or_diff, 
                   const sv_sign sign_of_sum, const size_t lambda,
                   MEDDLY::dd_edge &res);
 
@@ -414,13 +364,13 @@ protected:
     const variable_order *pivot_order; // pivoting order when proceeding by levels
 };
 
-// Factory of s_vectors2 operators for specific MDD forests
-class s_vectors2_opname : public MEDDLY::opname {
+// Factory of s_vectors operators for specific MDD forests
+class s_vectors_opname : public MEDDLY::opname {
 public:
-    inline s_vectors2_opname() 
+    inline s_vectors_opname() 
     /**/ : MEDDLY::opname("S-Vectors") {}
 
-    s_vectors2* 
+    s_vectors* 
     buildOperation(MEDDLY::expert_forest* arg1,
                    MEDDLY::expert_forest* arg2, 
                    MEDDLY::expert_forest* res,

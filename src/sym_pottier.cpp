@@ -126,17 +126,16 @@ sym_s_vectors_at_level(const meddly_context& ctx, const pottier_params_t& pparam
     // Combine elements from A and B having opposite signs at @level
     for (int i : valA) {
         for (int j : valB) {
-            bool invertB;
+            ab_sum_t sum_or_diff;
             int ij_prod = i*j;
 
             if (ij_prod < 0) {
-                // compute a + b
-                invertB = false;
+                sum_or_diff = ab_sum_t::A_PLUS_B; // compute a + b
             }
             else if (ij_prod > 0) {
                 // subtract if we are building the graver basis
                 if (pparams.target == compute_target::GRAVER_BASIS)
-                     invertB = true; // compute a - b instead
+                    sum_or_diff = ab_sum_t::A_MINUS_B; // compute a - b
                 else 
                     continue; // do nothing for i and j
             }
@@ -170,8 +169,7 @@ sym_s_vectors_at_level(const meddly_context& ctx, const pottier_params_t& pparam
             }
 
             MEDDLY::dd_edge Ai_plus_Bj(ctx.forestMDD);
-            // S_VECTORS_OPS->get_op(0, false, invertB, svs)->computeDDEdge(Ai, Bj, Ai_plus_Bj, false);
-            S_VECTORS2->computeDDEdge(Ai, Bj, false, invertB, svs, 0, Ai_plus_Bj);
+            S_VECTORS->computeDDEdge(Ai, Bj, false, sum_or_diff, svs, 0, Ai_plus_Bj);
             SV = sym_union(SV, Ai_plus_Bj);
         }
     }
@@ -199,16 +197,12 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
         // Compute the S-Vectors over all levels at once
         sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
         // a + b
-        S_VECTORS2->computeDDEdge(A, B, true, false, svs, level, SV);
-        // s_vectors* s_vectors_op = S_VECTORS_OPS->get_op(level, true, false, svs);
-        // s_vectors_op->computeDDEdge(A, B, SV, false);
+        S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_PLUS_B, svs, level, SV);
 
         if (pparams.target == compute_target::GRAVER_BASIS) {
-            // a - b
             MEDDLY::dd_edge complSV(ctx.forestMDD);
-            S_VECTORS2->computeDDEdge(A, B, true, true, svs, level, complSV);
-            // s_vectors_op = S_VECTORS_OPS->get_op(level, true, true, svs);
-            // s_vectors_op->computeDDEdge(A, B, complSV, false);
+            // a - b
+            S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_MINUS_B, svs, level, complSV);
             SV = sym_union(SV, complSV);
         }
     }
