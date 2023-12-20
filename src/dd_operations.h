@@ -57,20 +57,13 @@ class vmult_op;
 DD_EXTERN vmult_opname* VMULT_OPNAME;
 DD_EXTERN vmult_op* VMULT;
 
-
-class vcanon_mdd_opname;
-class divisors_finder_mdd_opname;
-
 class vcanon_mdd_op;
+class vcanon_mdd_opname;
+DD_EXTERN vcanon_mdd_opname* VCANON_OPNAME;
+DD_EXTERN vcanon_mdd_op* VCANON;
+
 class divisors_finder_mdd_op;
-
-// DD_EXTERN lesseq_sq* LESSEQ_SQ;
-// DD_EXTERN lesseq_sq* REDUCE_LESSEQ_SQ;
-
-DD_EXTERN vcanon_mdd_opname* VCANON_DIVISORS_MDD_OPNAME;
-DD_EXTERN vcanon_mdd_op* VCANON_DIVISORS_MDD;
-DD_EXTERN vcanon_mdd_opname* VCANON_DIVIDE_MDD_OPNAME;
-DD_EXTERN vcanon_mdd_op* VCANON_DIVIDE_MDD;
+class divisors_finder_mdd_opname;
 
 DD_EXTERN divisors_finder_mdd_opname* DIV_FINDER_MDD_OPNAME;
 DD_EXTERN divisors_finder_mdd_op* DIV_FINDER_MDD;
@@ -296,6 +289,7 @@ class base_NNItoN : public MEDDLY::operation {
 public:
     base_NNItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1,
                 MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res);
+    virtual ~base_NNItoN();
 
     bool checkForestCompatibility() const override;
 
@@ -316,6 +310,40 @@ protected:
                MEDDLY::node_handle c);
 
     // utility to perform node unions
+    MEDDLY::binary_operation* mddUnion;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Base of unary operations with signature: node * integer -> node * node
+/////////////////////////////////////////////////////////////////////////////////////////
+
+class base_NItoNN : public MEDDLY::operation {
+public:
+    base_NItoNN(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
+                MEDDLY::expert_forest* _res1F, MEDDLY::expert_forest* _res2F);
+    virtual ~base_NItoNN();    
+
+    void computeDDEdge(const MEDDLY::dd_edge &ar, const int b, 
+                       MEDDLY::dd_edge &res1, MEDDLY::dd_edge &res2);
+
+    bool checkForestCompatibility() const override;
+
+protected:
+    MEDDLY::expert_forest* argF;
+    MEDDLY::expert_forest* res1F;
+    MEDDLY::expert_forest* res2F;
+
+    virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
+    compute(MEDDLY::node_handle a, const int b) = 0;
+    
+    inline MEDDLY::ct_entry_key* 
+    findResult(MEDDLY::node_handle a, const int b, 
+               std::pair<MEDDLY::node_handle, MEDDLY::node_handle> &c);
+
+    inline void saveResult(MEDDLY::ct_entry_key* key, 
+                           //MEDDLY::node_handle a, const int b, 
+                           std::pair<MEDDLY::node_handle, MEDDLY::node_handle> c);
+
     MEDDLY::binary_operation* mddUnion;
 };
 
@@ -586,18 +614,15 @@ public:
 // Divide all paths that are divisible by a given number
 /////////////////////////////////////////////////////////////////////////////////////////
 
-class vcanon_mdd_op : public base_NItoN {
+class vcanon_mdd_op : public base_NItoNN {
 public:
     vcanon_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                  MEDDLY::expert_forest* _resF, bool _divide);
+                  MEDDLY::expert_forest* _resF);
     virtual ~vcanon_mdd_op();    
 
 protected:
-    virtual MEDDLY::node_handle 
+    virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, const int divisor) override;
-
-    // should divide the elements by the divisor?
-    bool divide;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -605,10 +630,8 @@ protected:
 // Factory
 class vcanon_mdd_opname : public MEDDLY::unary_opname {
 public:
-    vcanon_mdd_opname(bool _divide);
+    vcanon_mdd_opname();
     virtual MEDDLY::operation* buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF);
-private:
-    bool divide;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////

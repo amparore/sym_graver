@@ -88,12 +88,9 @@ sym_canonicalize_gcd(const meddly_context& ctx, MEDDLY::dd_edge A)
     // divisors appear in descending order
     for (int div : divisors) {
         if (div > 0) {
-            MEDDLY::dd_edge R(ctx.forestMDD), D(ctx.forestMDD);
-            VCANON_DIVISORS_MDD->computeDDEdge(A, div, D); // D = divisibles by div
-            VCANON_DIVIDE_MDD->computeDDEdge(D, div, R); // R = divided by div
-
-            A = sym_difference(A, D);
-            A = sym_union(A, R);
+            MEDDLY::dd_edge U(ctx.forestMDD), D(ctx.forestMDD); // undivisible, divided
+            VCANON->computeDDEdge(A, div, U, D);
+            A = sym_union(U, D);
         }
     }
     return A;

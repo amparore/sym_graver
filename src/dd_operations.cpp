@@ -528,13 +528,19 @@ base_NNItoN::base_NNItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1,
 {
     MEDDLY::ct_entry_type* et;
     et = new MEDDLY::ct_entry_type(opcode->getName(), "NNI:N");
-    et->setForestForSlot(0, arg1);
-    et->setForestForSlot(1, arg2);
-    et->setForestForSlot(4, res);
+    et->setForestForSlot(0, arg1F);
+    et->setForestForSlot(1, arg2F);
+    et->setForestForSlot(4, resF);
     registerEntryType(0, et);
     buildCTs();
 
     mddUnion = MEDDLY::getOperation(MEDDLY::UNION, res, res, res);
+}
+
+base_NNItoN::~base_NNItoN() {
+    unregisterInForest(arg1F);
+    unregisterInForest(arg2F);   
+    unregisterInForest(resF); 
 }
 
 bool base_NNItoN::checkForestCompatibility() const {
@@ -572,6 +578,90 @@ base_NNItoN::saveResult(MEDDLY::ct_entry_key* key,
     CTresult[0].reset();
     CTresult[0].writeN(c);
     CT0->addEntry(key, CTresult[0]);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Base of unary operations with signature: node * integer -> node * node
+/////////////////////////////////////////////////////////////////////////////////////////
+
+base_NItoNN::base_NItoNN(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
+                         MEDDLY::expert_forest* _res1F, MEDDLY::expert_forest* _res2F)
+/**/ : MEDDLY::operation(opcode, 1), argF(_argF), res1F(_res1F), res2F(_res2F)
+{
+    registerInForest(argF);
+    registerInForest(res1F);
+    registerInForest(res2F);
+
+    MEDDLY::ct_entry_type* et;
+    et = new MEDDLY::ct_entry_type(opcode->getName(), "NI:NN");
+    et->setForestForSlot(0, argF);
+    et->setForestForSlot(3, res1F);
+    et->setForestForSlot(4, res2F);
+    registerEntryType(0, et);
+    buildCTs();
+
+    mddUnion = MEDDLY::getOperation(MEDDLY::UNION, res1F, res1F, res1F);  
+}
+
+base_NItoNN::~base_NItoNN() {
+    unregisterInForest(argF);
+    unregisterInForest(res1F);   
+    unregisterInForest(res2F);   
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+inline void 
+base_NItoNN::saveResult(MEDDLY::ct_entry_key* key, 
+                        //MEDDLY::node_handle a, const int b, 
+                        std::pair<MEDDLY::node_handle, MEDDLY::node_handle> c) 
+{
+    CTresult[0].reset();
+    CTresult[0].writeN(c.first);
+    CTresult[0].writeN(c.second);
+    CT0->addEntry(key, CTresult[0]);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+inline MEDDLY::ct_entry_key* 
+base_NItoNN::findResult(MEDDLY::node_handle a, const int b, 
+                        std::pair<MEDDLY::node_handle, MEDDLY::node_handle> &c) 
+{
+    MEDDLY::ct_entry_key* CTsrch = CT0->useEntryKey(etype[0], 0);
+    assert(CTsrch);
+    CTsrch->writeN(a);
+    CTsrch->writeI(b);
+    CT0->find(CTsrch, CTresult[0]);
+    if (!CTresult[0]) return CTsrch;
+    c.first  = res1F->linkNode(CTresult[0].readN());
+    c.second = res2F->linkNode(CTresult[0].readN());
+    CT0->recycle(CTsrch);
+    return 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+bool base_NItoNN::checkForestCompatibility() const {
+    return argF==res1F;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void base_NItoNN::computeDDEdge(const MEDDLY::dd_edge &a, const int b, 
+                                MEDDLY::dd_edge &res1, MEDDLY::dd_edge &res2)
+{
+    std::pair<MEDDLY::node_handle, MEDDLY::node_handle> cnodes;
+    cnodes = compute(a.getNode(), b);
+//   const int num_levels = resF->getDomain()->getNumVariables();
+//   if ( userFlag && resF->isQuasiReduced() && cnode != resF->getTransparentNode()
+//     && resF->getNodeLevel(cnode) < num_levels) {
+//     node_handle temp = ((mt_forest*)resF)->makeNodeAtLevel(num_levels, cnode);
+//     resF->unlinkNode(cnode);
+//     cnode = temp;
+//   }
+    res1.set(cnodes.first);
+    res2.set(cnodes.second);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1388,13 +1478,15 @@ MEDDLY::node_handle vmult_op::compute(MEDDLY::node_handle a, const int multiplie
 
 
 
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // Canonicalize vectors
 // Divide all paths that are divisible by a given number
 /////////////////////////////////////////////////////////////////////////////////////////
 
-vcanon_mdd_opname::vcanon_mdd_opname(bool _divide) 
-/**/ : unary_opname("CanonicalizeGCD"), divide(_divide)
+vcanon_mdd_opname::vcanon_mdd_opname() 
+/**/ : unary_opname("VecCanonicalize")
 { }
 
 MEDDLY::operation* 
@@ -1403,7 +1495,7 @@ vcanon_mdd_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF)
     if (0==arF || 0==resF) return 0;
     
     return new vcanon_mdd_op(this, (MEDDLY::expert_forest*)arF, 
-                             (MEDDLY::expert_forest*)resF, divide);
+                              (MEDDLY::expert_forest*)resF);
 }
 
 vcanon_mdd_op::~vcanon_mdd_op() { }
@@ -1411,33 +1503,33 @@ vcanon_mdd_op::~vcanon_mdd_op() { }
 /////////////////////////////////////////////////////////////////////////////////////////
 
 vcanon_mdd_op::vcanon_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                             MEDDLY::expert_forest* _resF, bool _divide)
-/**/ : base_NItoN(opcode, _argF, _resF), divide(_divide)
+                             MEDDLY::expert_forest* _resF)
+/**/ : base_NItoNN(opcode, _argF, _resF, _resF)
 { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-MEDDLY::node_handle vcanon_mdd_op::compute(MEDDLY::node_handle a, const int divisor) 
+// <first=undivisible, second=divided by d>
+std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
+vcanon_mdd_op::compute(MEDDLY::node_handle a, const int divisor) 
 {
-    if (a==0 || a==-1) return a;
-    if (divisor==1) return resF->linkNode(a);
+    if (a==0 || a==-1) return std::make_pair(0, a);
+    if (divisor==1)    return std::make_pair(res1F->linkNode(a), 0);
 
-    MEDDLY::node_handle result;
+    std::pair<MEDDLY::node_handle, MEDDLY::node_handle> result;
     MEDDLY::ct_entry_key* CTsrch;
     MEDDLY::ct_entry_key* key = findResult(a, divisor, result);
     if (nullptr==key)
         return result;
 
-    // // Read the node and accumulate the LCM of the GCDs
+    // Read the node and accumulate the LCM of the GCDs
     MEDDLY::unpacked_node* A = argF->newUnpacked(a, MEDDLY::SPARSE_ONLY);
-    // MEDDLY::unpacked_node* A = MEDDLY::unpacked_node::newFromNode(argF, a, false);
-    // MEDDLY::unpacked_node *A = MEDDLY::unpacked_node::New();
-    // argF->unpackNode(A, a, MEDDLY::FULL_OR_SPARSE);
     const int a_level = argF->getNodeLevel(a);
     const size_t a_size = get_node_size(A);
 
     const int res_size = a_size;
-    MEDDLY::unpacked_node* C = MEDDLY::unpacked_node::newFull(resF, a_level, res_size);
+    MEDDLY::unpacked_node* Cn = MEDDLY::unpacked_node::newFull(res1F, a_level, res_size); // not divisible by @divisor
+    MEDDLY::unpacked_node* Cy = MEDDLY::unpacked_node::newFull(res2F, a_level, res_size); // divided by @divisor
 
     const bool a_full = A->isFull();
 
@@ -1446,23 +1538,27 @@ MEDDLY::node_handle vcanon_mdd_op::compute(MEDDLY::node_handle a, const int divi
             continue;
         int a_val = NodeToZ(a_full ? i : A->i(i));
 
-        if (0 == (abs(a_val) % divisor)) // path is divisible by @divisor
-            unionNodes(C, compute(A->d(i), divisor), 
-                        divide ? ZtoNode(a_val / divisor) : ZtoNode(a_val), 
-                        resF, mddUnion);
-
+        if (0 == (abs(a_val) % divisor)) { // path is divisible by @divisor
+            std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down = compute(A->d(i), divisor);
+            unionNodes(Cn, down.first, ZtoNode(a_val), res1F, mddUnion);
+            unionNodes(Cy, down.second, ZtoNode(a_val / divisor), res2F, mddUnion);
+        }
+        else { // path is not divisible by @divisor -> copy/ref A->d(i)
+            unionNodes(Cn, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
+        }
     }
 
     // // Cleanup
     MEDDLY::unpacked_node::recycle(A);
     // Save in cache
-    result = resF->createReducedNode(-1, C);
-    saveResult(key, a, divisor, result);
+    result.first  = res1F->createReducedNode(-1, Cn);
+    result.second = res2F->createReducedNode(-1, Cy);
+    saveResult(key, /*a, divisor,*/ result);
+
     return result;
  }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 
@@ -2396,11 +2492,8 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     VMULT_OPNAME = new vmult_opname();
     VMULT = (vmult_op*)VMULT_OPNAME->buildOperation(forestMDDexp, forestMDD);
 
-    VCANON_DIVISORS_MDD_OPNAME = new vcanon_mdd_opname(false);
-    VCANON_DIVISORS_MDD = (vcanon_mdd_op*)VCANON_DIVISORS_MDD_OPNAME->buildOperation(forestMDD, forestMDD);
-
-    VCANON_DIVIDE_MDD_OPNAME = new vcanon_mdd_opname(true);
-    VCANON_DIVIDE_MDD = (vcanon_mdd_op*)VCANON_DIVIDE_MDD_OPNAME->buildOperation(forestMDD, forestMDD);
+    VCANON_OPNAME = new vcanon_mdd_opname();
+    VCANON = (vcanon_mdd_op*)VCANON_OPNAME->buildOperation(forestMDD, forestMDD);
 
     DIV_FINDER_MDD_OPNAME = new divisors_finder_mdd_opname();
     DIV_FINDER_MDD = (divisors_finder_mdd_op*)DIV_FINDER_MDD_OPNAME->buildOperation(forestMDD);

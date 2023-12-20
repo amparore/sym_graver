@@ -52,7 +52,9 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 //         { 0, 3, 1, 0, 0},
 //         { 2, 0, 0, 1, 2},
 //         { 1,-1,-3,-1,-1},
-//         // {0,2,0,2,0,2,0}
+//         { 0, 2, 0, 2, 0},
+//         { 0, 2, 4, 2, 0},
+//         { 0, 2, 3, 2, 0},
 //     };
 //     const std::vector<std::vector<int>> mB = {
 //         { 3,-2,-2, 1, 4},
@@ -63,17 +65,23 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 //     variable_order vorder(num_levels), pivot_order(num_levels);
 
 //     meddly_context ctx(num_levels, vorder, pivot_order);
-//     ctx.initialize();
+//     size_t meddly_cache_size = 1000000;
+//     ctx.initialize(meddly_cache_size);
 //     MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
 //     MEDDLY::dd_edge B = mdd_from_vectors(mB, ctx.forestMDD, false);
 
 //     cout << "A:\n" << print_mdd(A, vorder) << endl;
-//     cout << "B:\n" << print_mdd(B, vorder) << endl;
+//     // cout << "B:\n" << print_mdd(B, vorder) << endl;
 
-//     MEDDLY::dd_edge AB(ctx.forestMDD);
-//     s_vectors* svop = S_VECTORS_OPS->get_op(1, false, false, SVS_UNDECIDED); // lvl, isConf, invertB, svs
-//     svop->computeDDEdge(A, B, AB, false);
-//     cout << "A + B:\n" << print_mdd(AB, vorder) << endl;
+//     MEDDLY::dd_edge U(ctx.forestMDD), D(ctx.forestMDD);
+//     VCANON2->computeDDEdge(A, 2, U, D);
+//     cout << "U:\n" << print_mdd(U, vorder) << endl;
+//     cout << "D:\n" << print_mdd(D, vorder) << endl;
+
+//     // MEDDLY::dd_edge AB(ctx.forestMDD);
+//     // s_vectors* svop = S_VECTORS_OPS->get_op(1, false, false, SVS_UNDECIDED); // lvl, isConf, invertB, svs
+//     // svop->computeDDEdge(A, B, AB, false);
+//     // cout << "A + B:\n" << print_mdd(AB, vorder) << endl;
 
 //     // MEDDLY::dd_edge A2(ctx.forestMDD);
 //     // SIGN_CANON_OPS->get_op(true)->computeDDEdge(A, A2, false);
