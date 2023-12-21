@@ -40,6 +40,12 @@ class lesseq_sq;
 DD_EXTERN lesseq_sq_opname *LESSEQ_SQ_OPNAME;
 DD_EXTERN lesseq_sq_table *LESSEQ_SQ_OPS;
 
+class reduce_opname;
+class reduce;
+
+DD_EXTERN reduce_opname *REDUCE_OPNAME;
+DD_EXTERN reduce *REDUCE;
+
 // class compl_proc_opname;
 // class compl_proc_table;
 // class compl_proc;
@@ -348,6 +354,39 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
+// Base class for binary operators performing: Node * Node * Integer -> Node * Node
+/////////////////////////////////////////////////////////////////////////////////////////
+
+class base_NNItoNN : public MEDDLY::operation {
+public:
+    base_NNItoNN(MEDDLY::opname* opcode, 
+                 MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
+                 MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2);
+    virtual ~base_NNItoNN();
+
+    bool checkForestCompatibility() const override;
+
+protected:
+    MEDDLY::expert_forest* arg1F, *arg2F;
+    MEDDLY::expert_forest* res1F, *res2F;
+
+    virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
+    compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) = 0;
+
+    inline MEDDLY::ct_entry_key* 
+    findResult(MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+               std::pair<MEDDLY::node_handle, MEDDLY::node_handle> &c);
+
+    inline void 
+    saveResult(MEDDLY::ct_entry_key* key, 
+               //MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+               std::pair<MEDDLY::node_handle, MEDDLY::node_handle> c);
+
+    // utility to perform node unions
+    MEDDLY::binary_operation* mddUnion;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -462,6 +501,40 @@ public:
 
     MEDDLY::expert_forest* forest;
     const variable_order *pivot_order; // pivoting order when proceeding by levels
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Reduction of elements that are less-equal-squared-but-not-equal up to lambda
+/////////////////////////////////////////////////////////////////////////////////////////
+
+class reduce : public base_NNItoNN {
+public:
+    reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+           const variable_order *pivot_order);
+
+    void 
+    computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
+                  const bool is_potentially_equal, 
+                  const bool is_b_potentially_zero,
+                  const size_t lambda,
+                  MEDDLY::dd_edge &rN, MEDDLY::dd_edge &rY);
+
+protected:
+    virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
+    compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) override;
+
+    const variable_order *pivot_order; // pivoting order when proceeding by levels
+};
+
+// Factory of reduce operators for specific MDD forests
+class reduce_opname : public MEDDLY::opname {
+public:
+    inline reduce_opname() 
+    /**/ : MEDDLY::opname("Reduce_LeqSq") {}
+
+    reduce* 
+    buildOperation(MEDDLY::expert_forest *forestMDD,
+                   const variable_order *pivot_order);
 };
 
 // /////////////////////////////////////////////////////////////////////////////////////////

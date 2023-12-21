@@ -181,6 +181,7 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 
 int main(int argc, char** argv)
 {
+    unit_test_reduce();
     // test();
     // test2();
     // test3();

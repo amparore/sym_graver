@@ -37,6 +37,7 @@ add_executable(sym_hilbert
                     src/matrix.cpp  
                     src/variable_order.cpp 
                     src/sym_pottier.cpp
+                    src/unit_tests.cpp
                 )
 # Compile and link sym_hilbert to meddly
 target_include_directories(sym_hilbert  PRIVATE  ${MEDDLY_HEADERS_PATH})
