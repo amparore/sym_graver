@@ -178,6 +178,11 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 // }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+// Unit tests:
+
+void unit_test_vcanon();
+void unit_test_reduce();
+void unit_test_sign_canon();
 
 void do_unit_tests(int argc, char** argv) {
     int ii=1;
@@ -187,6 +192,9 @@ void do_unit_tests(int argc, char** argv) {
         }
         else if (0==strcmp(argv[ii], "-unit-test-reduce")) { 
             unit_test_reduce(); 
+        }
+        else if (0==strcmp(argv[ii], "-unit-test-sign-canon")) { 
+            unit_test_sign_canon(); 
         }
     }
 }
@@ -639,7 +647,7 @@ int main(int argc, char** argv)
 
             MEDDLY::dd_edge Hcheckdd = mdd_from_vectors(Hcheck, ctx.forestMDD, false);
             if (canonicalize_half_basis) {
-                SIGN_CANON_OPS->get_op(true)->computeDDEdge(Hcheckdd, Hcheckdd, false);
+                SIGN_CANON->computeDDEdge(Hcheckdd, Hcheckdd, false);
             }
 
             if (Hcheckdd == G) {

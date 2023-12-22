@@ -87,3 +87,30 @@ void unit_test_reduce() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+void unit_test_sign_canon() {
+    const std::vector<std::vector<int>> mA = {
+        { 2, 3, 1, 0, 0 },
+        {-2,-3,-1, 0, 0 },
+        { 5, 4,-1, 0, 0 },
+        { 2, 0, 0, 1, 2 },
+        { 2, 0,-1, 1,-2 },
+    };
+
+    const size_t num_levels = mA[0].size();
+    variable_order vorder(num_levels), pivot_order(num_levels);
+
+    meddly_context ctx(num_levels, vorder, pivot_order);
+    size_t meddly_cache_size = 1000000;
+    ctx.initialize(meddly_cache_size);
+    MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
+
+    cout << "A:\n" << print_mdd(A, vorder) << endl;
+    MEDDLY::dd_edge C(ctx.forestMDD);
+    SIGN_CANON->computeDDEdge(A, C, false);
+    cout << "C:\n" << print_mdd(C, vorder) << endl;
+
+    exit(0);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////

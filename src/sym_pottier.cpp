@@ -671,7 +671,7 @@ sym_pottier_bygen(const meddly_context& ctx,
             // {g} or {g, -g}
             MEDDLY::dd_edge g = mdd_from_vectors(mG, ctx.forestMDD, make_gen_sym);
             if (make_sign_canonic)
-                SIGN_CANON_OPS->get_op(true)->computeDDEdge(g, g, false);
+                SIGN_CANON->computeDDEdge(g, g, false);
 
             if (pparams.very_verbose) 
                 cout << "\nAdding generator "<<row<<endl;
@@ -701,7 +701,7 @@ sym_pottier_bygen(const meddly_context& ctx,
         // G  or  G u -G
         MEDDLY::dd_edge initF = mdd_from_vectors(lattice_Zgenerators, ctx.forestMDD, make_gen_sym);
         if (make_sign_canonic)
-            SIGN_CANON_OPS->get_op(true)->computeDDEdge(initF, initF, false);
+            SIGN_CANON->computeDDEdge(initF, initF, false);
         // Compute all generators at once
         G = sym_pottier_PnL(ctx, pparams, empty_set, initF, nullptr, size_t(-1));
     }

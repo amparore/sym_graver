@@ -62,9 +62,9 @@ DD_EXTERN reduce *REDUCE;
 // DD_EXTERN compl_proc_table *COMPL_PROC_OPS;
 
 class sign_canon_mdd_opname;
-class sign_canon_table;
+class sign_canon_mdd_op;
 DD_EXTERN sign_canon_mdd_opname* SIGN_CANON_OPNAME;
-DD_EXTERN sign_canon_table* SIGN_CANON_OPS;
+DD_EXTERN sign_canon_mdd_op* SIGN_CANON;
 
 class vmult_opname;
 class vmult_op;
@@ -640,18 +640,11 @@ public:
 class sign_canon_mdd_op : public base_NtoN {
 public:
     sign_canon_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::expert_forest* _argF,
-                      MEDDLY::expert_forest* _resF, const sign_canon_table* p_table,
-                      bool isZero);
+                      MEDDLY::expert_forest* _resF);
     virtual ~sign_canon_mdd_op();
 public:
     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a) override;
-
-protected:
-    const sign_canon_table* p_table; // operator's variations
-    const bool isZero; // is following a zero path (true) or is it inverting a vector (false)?
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////
 
 // Factory
 class sign_canon_mdd_opname : public MEDDLY::unary_opname {
@@ -659,18 +652,7 @@ public:
     sign_canon_mdd_opname();
     
     virtual sign_canon_mdd_op* 
-    buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF, 
-                   const sign_canon_table* p_table, bool isZero);
-};
-// Table with all parametric sign_canon_mdd_op instances
-class sign_canon_table {
-    // isZero
-    mutable std::vector<sign_canon_mdd_op*> table;
-    MEDDLY::expert_forest* forest;
-public:
-    sign_canon_table(MEDDLY::expert_forest* forest);
-
-    sign_canon_mdd_op* get_op(bool isZero) const;
+    buildOperation(MEDDLY::expert_forest* arF, MEDDLY::expert_forest* resF);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -764,6 +746,8 @@ public:
 protected:
     virtual MEDDLY::node_handle 
     compute(MEDDLY::node_handle a, const int multiplier) override;
+
+    friend class sign_canon_mdd_op;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////

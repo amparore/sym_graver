@@ -1680,13 +1680,11 @@ sign_canon_mdd_opname::sign_canon_mdd_opname()
 { }
 
 sign_canon_mdd_op* 
-sign_canon_mdd_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF, 
-                                      const sign_canon_table* p_table, bool isZero)
+sign_canon_mdd_opname::buildOperation(MEDDLY::expert_forest* arF, MEDDLY::expert_forest* resF)
 {
     if (0==arF || 0==resF) return 0;
     
-    return new sign_canon_mdd_op(this, (MEDDLY::expert_forest*)arF, 
-                                 (MEDDLY::expert_forest*)resF, p_table, isZero);
+    return new sign_canon_mdd_op(this, arF, resF);
 }
 
 sign_canon_mdd_op::~sign_canon_mdd_op() { }
@@ -1694,8 +1692,8 @@ sign_canon_mdd_op::~sign_canon_mdd_op() { }
 /////////////////////////////////////////////////////////////////////////////////////////
 
 sign_canon_mdd_op::sign_canon_mdd_op(MEDDLY::unary_opname* opcode, MEDDLY::expert_forest* _argF,
-                                     MEDDLY::expert_forest* _resF, const sign_canon_table* p_table, bool isZero)
-/**/ : base_NtoN(opcode, _argF, _resF), p_table(p_table), isZero(isZero)
+                                     MEDDLY::expert_forest* _resF)
+/**/ : base_NtoN(opcode, _argF, _resF)
 { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1712,9 +1710,6 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
 
     // Read the node and swap the sign of the negative values        
     MEDDLY::unpacked_node* A = argF->newUnpacked(a, MEDDLY::SPARSE_ONLY);
-    // MEDDLY::unpacked_node* A = MEDDLY::unpacked_node::newFromNode(argF, a, false);
-    // MEDDLY::unpacked_node *A = MEDDLY::unpacked_node::New();
-    // argF->unpackNode(A, a, MEDDLY::FULL_OR_SPARSE);
     const int a_level = argF->getNodeLevel(a);
     const size_t a_size = get_node_size(A);
 
@@ -1728,23 +1723,19 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
             continue;
         int a_val = NodeToZ(a_full ? i : A->i(i));
 
-        if (isZero == true) { // following a 0-path, not found yet the first nnz
-            if (a_val > 0) { // keep as-is, end recursive descent
-                unionNodes(C, resF->linkNode(A->d(i)), 
-                           ZtoNode(a_val), resF, mddUnion);
-            }
-            else if (a_val == 0) { // continue descending
-                unionNodes(C, compute(A->d(i)), 
-                           ZtoNode(a_val), resF, mddUnion);
-            }
-            else { // invert vectors
-                unionNodes(C, p_table->get_op(false)->compute(A->d(i)), 
-                           ZtoNode(-a_val), resF, mddUnion);
-            }
+        if (a_val > 0) { // keep as-is, end recursive descent
+            unionNodes(C, resF->linkNode(A->d(i)), 
+                        ZtoNode(a_val), resF, mddUnion);
         }
-        else { // keep inverting the vector
+        else if (a_val == 0) { 
+            // following a 0-path, not found yet the first nnz
+            // continue descending
             unionNodes(C, compute(A->d(i)), 
-                       ZtoNode(-a_val), resF, mddUnion);
+                        ZtoNode(a_val), resF, mddUnion);
+        }
+        else { // invert vectors from here down. Use VMULT
+            unionNodes(C, VMULT->compute(A->d(i), -1), 
+                        ZtoNode(-a_val), resF, mddUnion);
         }
     }
 
@@ -1754,22 +1745,6 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
     result = resF->createReducedNode(-1, C);
     saveResult(key, a, result);
     return result;
- }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-sign_canon_table::sign_canon_table(MEDDLY::expert_forest* forest) 
-/**/ : forest(forest)
-{ }
-
-sign_canon_mdd_op* sign_canon_table::get_op(bool isZero) const
-{
-    if (table.empty())
-        table.resize(2);
-    if (table[isZero] == nullptr)
-        table[isZero] = SIGN_CANON_OPNAME->buildOperation(forest, forest, this, isZero);
-
-    return table[isZero];
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -2896,7 +2871,7 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     // COMPL_PROC_OPS = new compl_proc_table(forestMDDexp);
 
     SIGN_CANON_OPNAME = new sign_canon_mdd_opname();
-    SIGN_CANON_OPS = new sign_canon_table(forestMDDexp);
+    SIGN_CANON = SIGN_CANON_OPNAME->buildOperation(forestMDDexp, forestMDDexp);
 
     VMULT_OPNAME = new vmult_opname();
     VMULT = (vmult_op*)VMULT_OPNAME->buildOperation(forestMDDexp, forestMDD);
