@@ -70,9 +70,23 @@ inline int multiply_exact(int a, int b) {
     return r; 
 }
 
-// return -1,0,+1 depnding of sign of v
+// return -1,0,+1 depending of sign of v
 inline int sign3(int v) {
     return (v==0) ? 0 : ((v>0) ? 1 : -1);
+}
+
+// return true if a and b are comparable in the less-equal-squared sense
+//  - positives and negatives are incomparable
+//  - 0 compares with both positives and negatives
+//  - 0 compares with 0
+inline bool comparable_signs(const int a, const int b) {
+    return (sign3(a) * sign3(b)) >= 0;
+}
+
+// return true if a <= b in the less-equal-squared sense:
+//  - |a| <= |b|   and   a,b signs are comparable 
+inline bool less_equal_squared(const int a, const int b) {
+    return (abs(a) <= abs(b)) && comparable_signs(a, b);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

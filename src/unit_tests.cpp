@@ -48,15 +48,22 @@ void unit_test_vcanon() {
 
 void unit_test_reduce() {
     const std::vector<std::vector<int>> mA = {
-        { 0, 3, 1, 0, 0 },
-        { 0,-3, 1, 0, 0 },
-        { 2, 0, 0, 1, 2 },
-        { 2, 0,-1, 1, 2 },
+        { 0, 3, 1 },
+        { 0,-3, 1 },
+        { 7, 0, 0 },
+        { 7, 0,-1 },
+        // { 0, 3, 1, 0, 0 },
+        // { 0,-3, 1, 0, 0 },
+        // { 2, 0, 0, 1, 2 },
+        // { 2, 0,-1, 1, 2 },
     };
     const std::vector<std::vector<int>> mB = {
-        { 0, 4, 1, 0, 0 },
-        { 0, 1, 1, 0, 0 },
-        { 2, 0, 0, 1, 2 },
+        { 0, 4, 1 },
+        { 0, 1, 1 },
+        { 7, 0, 0 },
+        // { 0, 4, 1, 0, 0 },
+        // { 0, 1, 1, 0, 0 },
+        // { 2, 0, 0, 1, 2 },
         // { 0, 0, 0, 0, 0 },
     };
     const size_t num_levels = mA[0].size();
@@ -70,18 +77,21 @@ void unit_test_reduce() {
 
     cout << "A:\n" << print_mdd(A, vorder) << endl;
     cout << "B:\n" << print_mdd(B, vorder) << endl;
+    cout << "-----\n";
 
     MEDDLY::dd_edge C(ctx.forestMDD), S(ctx.forestMDD);
     LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, 0, C);
     LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, 0, S);
-    cout << "C:\n" << print_mdd(C, vorder) << endl;
     cout << "A \\ C:\n" << print_mdd(sym_difference(A, C), vorder) << endl;
+    cout << "C:\n" << print_mdd(C, vorder) << endl;
     cout << "S:\n" << print_mdd(S, vorder) << endl;
+    cout << "-----\n";
 
-    MEDDLY::dd_edge U(ctx.forestMDD), R(ctx.forestMDD);
-    REDUCE->computeDDEdge(A, B, true, true, 0, U, R);
-    cout << "U:\n" << print_mdd(U, vorder) << endl;
+    MEDDLY::dd_edge I(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
+    REDUCE->computeDDEdge(A, B, true, true, 0, I, R, D);
+    cout << "I:\n" << print_mdd(I, vorder) << endl;
     cout << "R:\n" << print_mdd(R, vorder) << endl;
+    cout << "D:\n" << print_mdd(D, vorder) << endl;
 
     exit(0);
 }

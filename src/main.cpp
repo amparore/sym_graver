@@ -196,6 +196,7 @@ void do_unit_tests(int argc, char** argv) {
         else if (0==strcmp(argv[ii], "-unit-test-sign-canon")) { 
             unit_test_sign_canon(); 
         }
+        ++ii;
     }
 }
 

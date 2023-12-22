@@ -395,6 +395,37 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
+// Base class for binary operators performing: Node * Node * Integer -> Node * Node * Node
+/////////////////////////////////////////////////////////////////////////////////////////
+
+class base_NNItoNNN : public MEDDLY::operation {
+public:
+    base_NNItoNNN(MEDDLY::opname* opcode, 
+                  MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
+                  MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2, 
+                  MEDDLY::expert_forest* res3);
+    virtual ~base_NNItoNNN();
+
+    bool checkForestCompatibility() const override;
+
+protected:
+    MEDDLY::expert_forest* arg1F, *arg2F;
+    MEDDLY::expert_forest* res1F, *res2F, *res3F;
+
+    virtual std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
+    compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) = 0;
+
+    inline MEDDLY::ct_entry_key* 
+    findResult(MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+               std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> &c);
+
+    inline void 
+    saveResult(MEDDLY::ct_entry_key* key, 
+               //MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+               std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> c);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -551,7 +582,7 @@ public:
 // Reduction of elements that are less-equal-squared-but-not-equal up to lambda
 /////////////////////////////////////////////////////////////////////////////////////////
 
-class reduce : public base_NNItoNN {
+class reduce : public base_NNItoNNN {
 public:
     reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
            const variable_order *pivot_order);
@@ -561,13 +592,17 @@ public:
                   const bool is_potentially_equal, 
                   const bool is_b_potentially_zero,
                   const size_t lambda,
-                  MEDDLY::dd_edge &rN, MEDDLY::dd_edge &rY);
+                  MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
+                  MEDDLY::dd_edge &reduced);
 
 protected:
-    virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
+    virtual std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) override;
 
     const variable_order *pivot_order; // pivoting order when proceeding by levels
+
+    // utility to perform node operations
+    MEDDLY::binary_operation *mddUnion, *mddDifference;
 };
 
 // Factory of reduce operators for specific MDD forests

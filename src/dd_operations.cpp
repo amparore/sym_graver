@@ -235,7 +235,7 @@ void unionNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
                 MEDDLY::binary_operation* mddUnion) 
 {
     if (node == 0)
-        return;
+        return; // nothing to add
     assert(pos < C->getSize());
     assert(C->isFull());
     if (C->d(pos) == 0)
@@ -246,6 +246,27 @@ void unionNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
         dd2.set(C->d(pos));
         mddUnion->computeTemp(dd1, dd2, union_dd);
         C->set_d(pos, union_dd);
+        assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void differenceNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node, 
+                     unsigned pos, MEDDLY::expert_forest* resF,  
+                     MEDDLY::binary_operation* mddDifference) 
+{
+    if (node == 0)
+        return; // nothing to subtract
+    assert(pos < C->getSize());
+    assert(C->isFull());
+    
+    if (C->d(pos) != 0) { // perform difference
+        MEDDLY::dd_edge dd1(resF), dd2(resF), diff_dd(resF);
+        dd1.set(node);
+        dd2.set(C->d(pos));
+        mddDifference->computeTemp(dd1, dd2, diff_dd);
+        C->set_d(pos, diff_dd);
         assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
     }
 }
@@ -727,6 +748,72 @@ base_NNItoNN::saveResult(MEDDLY::ct_entry_key* key,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+// Base class for binary operators performing: Node * Node * Integer -> Node * Node * Node
+/////////////////////////////////////////////////////////////////////////////////////////
+
+base_NNItoNNN::base_NNItoNNN(MEDDLY::opname* opcode, 
+                             MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
+                             MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2,
+                             MEDDLY::expert_forest* res3)
+: MEDDLY::operation(opcode, 1), arg1F(arg1), arg2F(arg2), 
+  res1F(res1), res2F(res2), res3F(res3)
+{
+    MEDDLY::ct_entry_type* et;
+    et = new MEDDLY::ct_entry_type(opcode->getName(), "NNI:NNN");
+    et->setForestForSlot(0, arg1F);
+    et->setForestForSlot(1, arg2F);
+    et->setForestForSlot(4, res1F);
+    et->setForestForSlot(5, res2F);
+    et->setForestForSlot(6, res3F);
+    registerEntryType(0, et);
+    buildCTs();
+}
+
+base_NNItoNNN::~base_NNItoNNN() {
+    unregisterInForest(arg1F);
+    unregisterInForest(arg2F);   
+    unregisterInForest(res1F); 
+    unregisterInForest(res2F); 
+    unregisterInForest(res3F); 
+}
+
+bool base_NNItoNNN::checkForestCompatibility() const {
+    return arg1F==res1F;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ 
+inline MEDDLY::ct_entry_key* 
+base_NNItoNNN::findResult(MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+                          std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> &c) 
+{
+    MEDDLY::ct_entry_key* CTsrch = CT0->useEntryKey(etype[0], 0);
+    assert(CTsrch);
+    CTsrch->writeN(a);
+    CTsrch->writeN(b);
+    CTsrch->writeI(i);
+    CT0->find(CTsrch, CTresult[0]);
+    if (!CTresult[0]) return CTsrch;
+    std::get<0>(c) = res1F->linkNode(CTresult[0].readN());
+    std::get<1>(c) = res2F->linkNode(CTresult[0].readN());
+    std::get<2>(c) = res3F->linkNode(CTresult[0].readN());
+    CT0->recycle(CTsrch);
+    return 0;
+}
+
+inline void 
+base_NNItoNNN::saveResult(MEDDLY::ct_entry_key* key, 
+                         //MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
+                         std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> c)
+{
+    CTresult[0].reset();
+    CTresult[0].writeN(std::get<0>(c));
+    CTresult[0].writeN(std::get<1>(c));
+    CTresult[0].writeN(std::get<2>(c));
+    CT0->addEntry(key, CTresult[0]);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -761,6 +848,8 @@ typedef union s_vector_flags_t { // cache entry
         unsigned lambda : (sizeof(int)*8 - 4);
     } bf;
 } s_vector_flags_t;
+
+static_assert(sizeof(s_vector_flags_t) == sizeof(int));
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -830,7 +919,7 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
                 b_val = -b_val;
 
             int ab_sum = add_exact(a_val, b_val); // a + b or a - b
-            int ab_sign_prod = sign3(a_val) * sign3(b_val); // a * b
+            // int ab_sign_prod = sign3(a_val) * sign3(b_val); // a * b
             // canonicalize the sum (if not yet decided)
             sv_sign curr_sign_of_sum = sign_of_sum;
             if (sign_of_sum == SVS_UNDECIDED && 0!=ab_sum) { 
@@ -847,7 +936,8 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
                 cout << "ab_sum_idx:"<<ab_sum_idx<<" res_size:"<<res_size<<endl;
             assert(ab_sum_idx < res_size);
 
-            bool ij_conf = (ab_sign_prod >= 0);
+            // bool ij_conf = (ab_sign_prod >= 0);
+            bool ij_conf = comparable_signs(a_val, b_val);
             // if (curr_sign_of_sum == SVS_NEG)
             //     ij_conf = -(multiply_exact(a_val, b_val)) >= 0;
             // else
@@ -1196,8 +1286,8 @@ leq_neq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, int flags)
     const size_t b_size = get_node_size(B);
     // const size_t res_size = a_size;
     size_t res_size;
-    if (lf.bf.lambda != 0 && 
-        pivot_order->is_above_lambda(lf.bf.lambda, res_level) && subtract) 
+    if (subtract && lf.bf.lambda != 0 && 
+        pivot_order->is_above_lambda(lf.bf.lambda, res_level)) 
     {
         res_size = a_size + b_size;
     }
@@ -1218,28 +1308,29 @@ leq_neq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, int flags)
                 continue;
             int b_val = NodeToZ(b_full ? j : B->i(j));
 
-            bool is_leq_neq_sq;
-            bool is_pot_eq = lf.bf.is_potentially_equal;
-            bool is_b_pot_zero = lf.bf.is_b_potentially_zero;
+            bool ij_is_leq_sq;
+            bool ij_is_pot_eq = lf.bf.is_potentially_equal;
+            bool ij_is_b_pot_zero = lf.bf.is_b_potentially_zero;
 
             if (lf.bf.lambda != 0 && pivot_order->is_above_lambda(lf.bf.lambda, res_level)) {
-                is_leq_neq_sq = true;
+                ij_is_leq_sq = true;
             }
             else {
-            //     // check that i <= j and both are conformal
-                int ab_sign_prod = sign3(a_val) * sign3(b_val);
-                is_leq_neq_sq = (abs(b_val) <= abs(a_val) && ab_sign_prod >= 0);
-                is_pot_eq = is_pot_eq && (a_val == b_val);
-                is_b_pot_zero = is_b_pot_zero && (0 == b_val);
+            //     // check that i <= j and have comparable signs
+                // int ab_sign_prod = sign3(a_val) * sign3(b_val);
+                // ij_is_leq_sq = (abs(b_val) <= abs(a_val) && ab_sign_prod >= 0);
+                ij_is_leq_sq = less_equal_squared(b_val, a_val);
+                ij_is_pot_eq = ij_is_pot_eq && (a_val == b_val);
+                ij_is_b_pot_zero = ij_is_b_pot_zero && (0 == b_val);
             }
 
-            if (is_leq_neq_sq) 
+            if (ij_is_leq_sq) 
             { 
                 int idx = ZtoNode(subtract ? subtract_exact(a_val, b_val) : a_val);
 
                 leq_neq_sq_flags_t down_lf;
-                down_lf.bf.is_potentially_equal = is_pot_eq;
-                down_lf.bf.is_b_potentially_zero = is_b_pot_zero;
+                down_lf.bf.is_potentially_equal = ij_is_pot_eq;
+                down_lf.bf.is_b_potentially_zero = ij_is_b_pot_zero;
                 down_lf.bf.lambda = lf.bf.lambda;
 
                 MEDDLY::node_handle leq_ij = compute(A->d(i), B->d(j), down_lf.value);
@@ -1322,13 +1413,18 @@ typedef union reduce_flags_t { // cache entry
     } bf;
 } reduce_flags_t;
 
+static_assert(sizeof(reduce_flags_t) == sizeof(int));
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 reduce::reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
                const variable_order *pivot_order)
-: base_NNItoNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD), 
+: base_NNItoNNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD, forestMDD), 
   pivot_order(pivot_order)
-{ }
+{ 
+    mddUnion = MEDDLY::getOperation(MEDDLY::UNION, forestMDD, forestMDD, forestMDD);
+    mddDifference = MEDDLY::getOperation(MEDDLY::DIFFERENCE, forestMDD, forestMDD, forestMDD);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1337,39 +1433,43 @@ reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
                       const bool is_potentially_equal, 
                       const bool is_b_potentially_zero,
                       const size_t lambda,
-                      MEDDLY::dd_edge &rN, MEDDLY::dd_edge &rY) 
+                      MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
+                      MEDDLY::dd_edge &reduced) 
 {
     reduce_flags_t rf;
     rf.bf.is_potentially_equal = is_potentially_equal;
     rf.bf.is_b_potentially_zero = is_b_potentially_zero;
     rf.bf.lambda = lambda;
 
-    std::pair<MEDDLY::node_handle, MEDDLY::node_handle> cnodes;
-    cnodes = compute(a.getNode(), b.getNode(), rf.value);
+    auto cnodes = compute(a.getNode(), b.getNode(), rf.value);
 
-    rN.set(cnodes.first);
-    rY.set(cnodes.second);
+    irreducibles.set(get<0>(cnodes));
+    reducibles.set(get<1>(cnodes));
+    reduced.set(get<2>(cnodes));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
+// 0=irreducibles
+// 1=reducibles
+// 2=reduced
+std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
 reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags) 
 {
     reduce_flags_t rf;
     rf.value = flags;
 
-    if (a==0) return std::make_pair(0, 0);
-    if (b==0) return std::make_pair(res1F->linkNode(a), 0);
+    if (a==0) return std::make_tuple(0, 0, 0);
+    if (b==0) return std::make_tuple(res1F->linkNode(a), 0, 0);
     if (a==-1) {
         if (rf.bf.is_potentially_equal || rf.bf.is_b_potentially_zero)
-            return std::make_pair(res1F->linkNode(a), 0);
+            return std::make_tuple(res1F->linkNode(a), 0, 0);
         else
-            return std::make_pair(0, -1);
+            return std::make_tuple(0, -1, -1);
     }
     assert(b != -1);
 
-    std::pair<MEDDLY::node_handle, MEDDLY::node_handle> result;
+    std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> result;
     MEDDLY::ct_entry_key* key = findResult(a, b, flags, result);
     if (nullptr==key)
         return result;
@@ -1389,17 +1489,18 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     const size_t a_size = get_node_size(A);
     const size_t b_size = get_node_size(B);
     const size_t resN_size = a_size;
-    size_t resY_size;
-    if (rf.bf.lambda != 0 && 
-        pivot_order->is_above_lambda(rf.bf.lambda, res_level)) 
-    {
-        resY_size = a_size + b_size;
-    }
-    else resY_size = a_size;
-    check_level_bound(res1F, res_level, resY_size);
+    const size_t resY_size = a_size + b_size; // TODO: since b<=a, then a-b is <= a and reY_size should be a_size
+    // if (rf.bf.lambda != 0 && 
+    //     pivot_order->is_above_lambda(rf.bf.lambda, res_level)) 
+    // {
+    //     resY_size = a_size + b_size;
+    // }
+    // else resY_size = a_size;
+    check_level_bound(res3F, res_level, resY_size);
 
-    MEDDLY::unpacked_node* Cn = MEDDLY::unpacked_node::newFull(res1F, res_level, resN_size);
-    MEDDLY::unpacked_node* Cy = MEDDLY::unpacked_node::newFull(res2F, res_level, resY_size);
+    MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resN_size);
+    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res2F, res_level, resN_size);
+    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res3F, res_level, resY_size);
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
@@ -1407,6 +1508,8 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
         if (a_full && 0==A->d(i))
             continue;
         int a_val = NodeToZ(a_full ? i : A->i(i));
+
+        unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
 
         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
             if (b_full && 0==B->d(j))
@@ -1420,11 +1523,9 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 ij_reduce = true;
             }
             else {
-            //     // check that i <= j and both are conformal
-                int ab_sign_prod = sign3(a_val) * sign3(b_val);
-                ij_reduce = (abs(b_val) <= abs(a_val) && ab_sign_prod >= 0);
-                ij_pot_eq &= (a_val == b_val);
-                ij_b_pot_zero &= (0 == b_val);
+                ij_reduce = less_equal_squared(b_val, a_val);
+                ij_pot_eq = ij_pot_eq && (a_val == b_val);
+                ij_b_pot_zero = ij_b_pot_zero && (0 == b_val);
             }
 
             if (ij_reduce) 
@@ -1436,24 +1537,28 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 down_rf.bf.is_b_potentially_zero = ij_b_pot_zero;
                 down_rf.bf.lambda = rf.bf.lambda;
 
-                std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down;
+                std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
                 down = compute(A->d(i), B->d(j), down_rf.value);
 
-                unionNodes(Cn, down.first,  ZtoNode(a_val), res1F, mddUnion);
-                unionNodes(Cy, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
+                differenceNodes(C_irreducibles0, get<1>(down), ZtoNode(a_val), res1F, mddDifference);
+                // unionNodes(C_irreducibles0, get<0>(down), ZtoNode(a_val), res1F, mddUnion);
+                unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
+                unionNodes(C_reduced2, get<2>(down), ZtoNode(a_minus_b), res3F, mddUnion);
             }
             else {
-                unionNodes(Cn, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
+                // unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
             }
         }
+        // differenceNodes(C_irreducibles0, C_reducibles1->d(i), ZtoNode(a_val), res1F, mddDifference);
     }
 
     // cleanup
     MEDDLY::unpacked_node::recycle(B);
     MEDDLY::unpacked_node::recycle(A);
     // reduce and return result
-    result.first  = res1F->createReducedNode(-1, Cn);
-    result.second = res2F->createReducedNode(-1, Cy);
+    get<0>(result) = res1F->createReducedNode(-1, C_irreducibles0);
+    get<1>(result) = res2F->createReducedNode(-1, C_reducibles1);
+    get<2>(result) = res3F->createReducedNode(-1, C_reduced2);
     saveResult(key, /*a, divisor,*/ result);
 
     return result;
