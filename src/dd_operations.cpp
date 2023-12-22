@@ -947,31 +947,236 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 
 
 
+// /////////////////////////////////////////////////////////////////////////////////////////
+// // Less Equal Squared Operator
+// // Get the elements using the less-equal-but-not-equal-squared operator
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// lesseq_sq::lesseq_sq(MEDDLY::binary_opname* opcode, 
+// /**/        MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+// /**/        const lesseq_sq_table* tab,
+// /**/        bool isEq, bool isB0,
+// /**/        bool _subtract, size_t lambda)
+//   : base_NNtoN(opcode, arg1, arg2, res), p_table(tab),
+//     isPotentiallyEqual(isEq), isBZero(isB0),
+//     subtract(_subtract), lambda(lambda)
+// { }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// MEDDLY::node_handle lesseq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b) {
+//     if (a==0) return 0;
+//     if (b==0) return 0;
+//     if (a==-1) return isPotentiallyEqual || isBZero ? 0 : -1;
+//     assert(b != -1);
+
+//     MEDDLY::node_handle result;
+//     MEDDLY::ct_entry_key* key = findResult(a, b, result);
+//     if (nullptr==key)
+//         return result;
+
+//     const int a_level = arg1F->getNodeLevel(a);
+//     const int b_level = arg2F->getNodeLevel(b);
+//     assert(a_level == b_level);
+//     const int res_level = std::max(a_level, b_level);
+
+//     MEDDLY::unpacked_node *A = (a_level < res_level)
+//         ? MEDDLY::unpacked_node::newRedundant(arg1F, res_level, a, false)
+//         : arg1F->newUnpacked(a, MEDDLY::SPARSE_ONLY);
+//     MEDDLY::unpacked_node *B = (b_level < res_level)
+//         ? MEDDLY::unpacked_node::newRedundant(arg2F, res_level, b, false)
+//         : arg2F->newUnpacked(b, MEDDLY::SPARSE_ONLY);
+
+//     const size_t a_size = get_node_size(A);
+//     const size_t b_size = get_node_size(B);
+//     // const size_t res_size = a_size;
+//     size_t res_size;
+//     if (lambda != 0 && 
+//         p_table->pivot_order->is_above_lambda(lambda, res_level) && subtract) 
+//     {
+//         res_size = a_size + b_size;
+//     }
+//     else res_size = a_size;
+//     check_level_bound(resF, res_level, res_size);
+
+//     MEDDLY::unpacked_node* C = MEDDLY::unpacked_node::newFull(resF, res_level, res_size);
+
+//     const bool a_full = A->isFull(), b_full = B->isFull();
+
+//     for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
+//         if (a_full && 0==A->d(i))
+//             continue;
+//         int a_val = NodeToZ(a_full ? i : A->i(i));
+
+//         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
+//             if (b_full && 0==B->d(j))
+//                 continue;
+//             int b_val = NodeToZ(b_full ? j : B->i(j));
+
+//             bool is_lesseq_sq;
+//             bool is_pot_eq = isPotentiallyEqual;
+//             bool is_b_pot_zero = isBZero;
+//             if (lambda != 0 && p_table->pivot_order->is_above_lambda(lambda, res_level)) {
+//                 is_lesseq_sq = true;
+//             }
+//             else {
+//             //     // check that i <= j and both are conformal
+//                 int ab_sign_prod = sign3(a_val) * sign3(b_val);
+//                 is_lesseq_sq = (abs(b_val) <= abs(a_val) && ab_sign_prod >= 0);
+//                 is_pot_eq &= (a_val == b_val);
+//                 is_b_pot_zero &= (0 == b_val);
+//             }
+
+//             if (is_lesseq_sq) 
+//             { 
+//                 int idx = ZtoNode(subtract ? subtract_exact(a_val, b_val) : a_val);
+
+//                 // Determine next operator in chain
+//                 bool down_is_eq = isPotentiallyEqual && is_pot_eq;
+//                 bool down_is_b0 = isBZero && is_b_pot_zero;
+//                 lesseq_sq* next_op = p_table->get_op(lambda, down_is_eq, 
+//                                                      down_is_b0, subtract);
+
+//                 MEDDLY::node_handle leq_ij = next_op->compute(A->d(i), B->d(j));
+//                 unionNodes(C, leq_ij, idx, resF, mddUnion);
+//             }
+//         }
+//     }
+
+//     // cleanup
+//     MEDDLY::unpacked_node::recycle(B);
+//     MEDDLY::unpacked_node::recycle(A);
+//     // reduce and return result
+//     result = resF->createReducedNode(-1, C);
+//     saveResult(key, a, b, result);
+//     return result;
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// lesseq_sq* 
+// lesseq_sq_opname::buildOperation(MEDDLY::expert_forest* a1, 
+//                                           MEDDLY::expert_forest* a2, 
+//                                           MEDDLY::expert_forest* r,
+//                                           const lesseq_sq_table* tab,
+//                                           bool isEq, bool isB0, bool subtract,
+//                                           size_t lambda)
+// {
+//     if (0==a1 || 0==a2 || 0==r) return 0;
+
+//     if ((a1->getDomain() != r->getDomain()) || (a2->getDomain() != r->getDomain()))
+//         throw MEDDLY::error(MEDDLY::error::DOMAIN_MISMATCH, __FILE__, __LINE__);
+
+//     if (a1->isForRelations() || r->isForRelations() || a2->isForRelations() ||
+//         (a1->getEdgeLabeling() != r->getEdgeLabeling()) ||
+//         (a2->getEdgeLabeling() != r->getEdgeLabeling()))
+//         throw MEDDLY::error(MEDDLY::error::TYPE_MISMATCH, __FILE__, __LINE__);
+
+//     if (r->getEdgeLabeling() == MEDDLY::edge_labeling::MULTI_TERMINAL) {
+//         if (r->isForRelations())
+//             throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED);
+//         return new lesseq_sq(this, a1, a2, r, tab, isEq, isB0,
+//                              subtract, lambda);
+//     }
+//     throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED, __FILE__, __LINE__);
+// }
+
+// MEDDLY::binary_operation* 
+// lesseq_sq_opname::buildOperation(MEDDLY::expert_forest* a1, 
+//                                           MEDDLY::expert_forest* a2, 
+//                                           MEDDLY::expert_forest* r)
+// {
+//     throw std::exception(); // Unimplemented
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// lesseq_sq_table::lesseq_sq_table(MEDDLY::expert_forest* forest,
+//                                  const variable_order *pivot_order) 
+// /**/ : forest(forest), pivot_order(pivot_order)
+// { }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// lesseq_sq* 
+// lesseq_sq_table:: get_op(size_t level, bool isPotentiallyEqual, 
+//                          bool isBZero, bool subtract) const 
+// {
+//     if (table.empty())
+//         table.resize(forest->getNumVariables() + 1);
+//     if (table[level].empty())
+//         table[level].resize(2);
+//     if (table[level][isPotentiallyEqual].empty())
+//         table[level][isPotentiallyEqual].resize(2);
+//     if (table[level][isPotentiallyEqual][isBZero].empty())
+//         table[level][isPotentiallyEqual][isBZero].resize(2);
+//     if (table[level][isPotentiallyEqual][isBZero][subtract] == nullptr)
+//         table[level][isPotentiallyEqual][isBZero][subtract] = 
+//             LESSEQ_SQ_OPNAME->buildOperation(forest, forest, forest, this, 
+//                                              isPotentiallyEqual, isBZero, 
+//                                              subtract, level);
+
+//     return table[level][isPotentiallyEqual][isBZero][subtract];
+// }
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
-// Less Equal Squared Operator
+// Less-Equal-but-Not-Equal-Squared Operator
 // Get the elements using the less-equal-but-not-equal-squared operator
 /////////////////////////////////////////////////////////////////////////////////////////
 
-lesseq_sq::lesseq_sq(MEDDLY::binary_opname* opcode, 
-/**/        MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
-/**/        const lesseq_sq_table* tab,
-/**/        bool isEq, bool isB0,
-/**/        bool _subtract, size_t lambda)
-  : base_NNtoN(opcode, arg1, arg2, res), p_table(tab),
-    isPotentiallyEqual(isEq), isBZero(isB0),
-    subtract(_subtract), lambda(lambda)
+leq_neq_sq::leq_neq_sq(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+                       const variable_order *pivot_order, const bool subtract)
+: base_NNItoN(opcode, forestMDD, forestMDD, forestMDD), 
+/**/ pivot_order(pivot_order), subtract(subtract)
 { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-MEDDLY::node_handle lesseq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b) {
+typedef union leq_neq_sq_flags_t { // cache entry
+    int value;
+    struct {
+        // is a and b potentially the same vectors?
+        bool is_potentially_equal : 1; 
+        // is b potentially the zero vector?
+        bool is_b_potentially_zero : 1;
+        // The level (for project-and-lift)
+        unsigned lambda : (sizeof(int)*8 - 2);
+    } bf;
+} leq_neq_sq_flags_t;
+
+static_assert(sizeof(leq_neq_sq_flags_t) == sizeof(int));
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+MEDDLY::node_handle 
+leq_neq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, int flags) 
+{
+    leq_neq_sq_flags_t lf { .value=flags };
+
     if (a==0) return 0;
     if (b==0) return 0;
-    if (a==-1) return isPotentiallyEqual || isBZero ? 0 : -1;
+    if (a==-1) return lf.bf.is_potentially_equal || lf.bf.is_b_potentially_zero ? 0 : -1;
     assert(b != -1);
 
     MEDDLY::node_handle result;
-    MEDDLY::ct_entry_key* key = findResult(a, b, result);
+    MEDDLY::ct_entry_key* key = findResult(a, b, flags, result);
     if (nullptr==key)
         return result;
 
@@ -991,8 +1196,8 @@ MEDDLY::node_handle lesseq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handl
     const size_t b_size = get_node_size(B);
     // const size_t res_size = a_size;
     size_t res_size;
-    if (lambda != 0 && 
-        p_table->pivot_order->is_above_lambda(lambda, res_level) && subtract) 
+    if (lf.bf.lambda != 0 && 
+        pivot_order->is_above_lambda(lf.bf.lambda, res_level) && subtract) 
     {
         res_size = a_size + b_size;
     }
@@ -1013,31 +1218,31 @@ MEDDLY::node_handle lesseq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handl
                 continue;
             int b_val = NodeToZ(b_full ? j : B->i(j));
 
-            bool is_lesseq_sq;
-            bool is_pot_eq = isPotentiallyEqual;
-            bool is_b_pot_zero = isBZero;
-            if (lambda != 0 && p_table->pivot_order->is_above_lambda(lambda, res_level)) {
-                is_lesseq_sq = true;
+            bool is_leq_neq_sq;
+            bool is_pot_eq = lf.bf.is_potentially_equal;
+            bool is_b_pot_zero = lf.bf.is_b_potentially_zero;
+
+            if (lf.bf.lambda != 0 && pivot_order->is_above_lambda(lf.bf.lambda, res_level)) {
+                is_leq_neq_sq = true;
             }
             else {
             //     // check that i <= j and both are conformal
                 int ab_sign_prod = sign3(a_val) * sign3(b_val);
-                is_lesseq_sq = (abs(b_val) <= abs(a_val) && ab_sign_prod >= 0);
-                is_pot_eq &= (a_val == b_val);
-                is_b_pot_zero &= (0 == b_val);
+                is_leq_neq_sq = (abs(b_val) <= abs(a_val) && ab_sign_prod >= 0);
+                is_pot_eq = is_pot_eq && (a_val == b_val);
+                is_b_pot_zero = is_b_pot_zero && (0 == b_val);
             }
 
-            if (is_lesseq_sq) 
+            if (is_leq_neq_sq) 
             { 
                 int idx = ZtoNode(subtract ? subtract_exact(a_val, b_val) : a_val);
 
-                // Determine next operator in chain
-                bool down_is_eq = isPotentiallyEqual && is_pot_eq;
-                bool down_is_b0 = isBZero && is_b_pot_zero;
-                lesseq_sq* next_op = p_table->get_op(lambda, down_is_eq, 
-                                                     down_is_b0, subtract);
+                leq_neq_sq_flags_t down_lf;
+                down_lf.bf.is_potentially_equal = is_pot_eq;
+                down_lf.bf.is_b_potentially_zero = is_b_pot_zero;
+                down_lf.bf.lambda = lf.bf.lambda;
 
-                MEDDLY::node_handle leq_ij = next_op->compute(A->d(i), B->d(j));
+                MEDDLY::node_handle leq_ij = compute(A->d(i), B->d(j), down_lf.value);
                 unionNodes(C, leq_ij, idx, resF, mddUnion);
             }
         }
@@ -1048,80 +1253,50 @@ MEDDLY::node_handle lesseq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handl
     MEDDLY::unpacked_node::recycle(A);
     // reduce and return result
     result = resF->createReducedNode(-1, C);
-    saveResult(key, a, b, result);
+    saveResult(key, result);
     return result;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-lesseq_sq* 
-lesseq_sq_opname::buildOperation(MEDDLY::expert_forest* a1, 
-                                          MEDDLY::expert_forest* a2, 
-                                          MEDDLY::expert_forest* r,
-                                          const lesseq_sq_table* tab,
-                                          bool isEq, bool isB0, bool subtract,
-                                          size_t lambda)
+void 
+leq_neq_sq:: computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
+                           const bool is_potentially_equal, 
+                           const bool is_b_potentially_zero,
+                           const size_t lambda,
+                           MEDDLY::dd_edge &res)
 {
-    if (0==a1 || 0==a2 || 0==r) return 0;
+    leq_neq_sq_flags_t lf;
+    lf.bf.is_potentially_equal = is_potentially_equal;
+    lf.bf.is_b_potentially_zero = is_b_potentially_zero;
+    lf.bf.lambda = lambda;
 
-    if ((a1->getDomain() != r->getDomain()) || (a2->getDomain() != r->getDomain()))
-        throw MEDDLY::error(MEDDLY::error::DOMAIN_MISMATCH, __FILE__, __LINE__);
+    MEDDLY::node_handle cnode = compute(a.getNode(), b.getNode(), lf.value);
 
-    if (a1->isForRelations() || r->isForRelations() || a2->isForRelations() ||
-        (a1->getEdgeLabeling() != r->getEdgeLabeling()) ||
-        (a2->getEdgeLabeling() != r->getEdgeLabeling()))
+    res.set(cnode);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+leq_neq_sq* 
+leq_neq_sq_opname::buildOperation(MEDDLY::expert_forest* forestMDD,
+                                  const variable_order *pivot_order,
+                                  const bool subtract)
+{
+    if (0==forestMDD) return 0;
+
+    if (forestMDD->isForRelations())
         throw MEDDLY::error(MEDDLY::error::TYPE_MISMATCH, __FILE__, __LINE__);
 
-    if (r->getEdgeLabeling() == MEDDLY::edge_labeling::MULTI_TERMINAL) {
-        if (r->isForRelations())
+    if (forestMDD->getEdgeLabeling() == MEDDLY::edge_labeling::MULTI_TERMINAL) {
+        if (forestMDD->isForRelations())
             throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED);
-        return new lesseq_sq(this, a1, a2, r, tab, isEq, isB0,
-                             subtract, lambda);
+        return new leq_neq_sq(this, forestMDD, pivot_order, subtract);
     }
     throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED, __FILE__, __LINE__);
 }
 
-MEDDLY::binary_operation* 
-lesseq_sq_opname::buildOperation(MEDDLY::expert_forest* a1, 
-                                          MEDDLY::expert_forest* a2, 
-                                          MEDDLY::expert_forest* r)
-{
-    throw std::exception(); // Unimplemented
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
-
-lesseq_sq_table::lesseq_sq_table(MEDDLY::expert_forest* forest,
-                                 const variable_order *pivot_order) 
-/**/ : forest(forest), pivot_order(pivot_order)
-{ }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-lesseq_sq* 
-lesseq_sq_table:: get_op(size_t level, bool isPotentiallyEqual, 
-                         bool isBZero, bool subtract) const 
-{
-    if (table.empty())
-        table.resize(forest->getNumVariables() + 1);
-    if (table[level].empty())
-        table[level].resize(2);
-    if (table[level][isPotentiallyEqual].empty())
-        table[level][isPotentiallyEqual].resize(2);
-    if (table[level][isPotentiallyEqual][isBZero].empty())
-        table[level][isPotentiallyEqual][isBZero].resize(2);
-    if (table[level][isPotentiallyEqual][isBZero][subtract] == nullptr)
-        table[level][isPotentiallyEqual][isBZero][subtract] = 
-            LESSEQ_SQ_OPNAME->buildOperation(forest, forest, forest, this, 
-                                             isPotentiallyEqual, isBZero, 
-                                             subtract, level);
-
-    return table[level][isPotentiallyEqual][isBZero][subtract];
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 
@@ -2707,8 +2882,12 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     S_VECTORS_OPNAME = new s_vectors_opname();
     S_VECTORS = new s_vectors(S_VECTORS_OPNAME, forestMDDexp, forestMDDexp, forestMDDexp, pivot_order);
 
-    LESSEQ_SQ_OPNAME = new lesseq_sq_opname();
-    LESSEQ_SQ_OPS = new lesseq_sq_table(forestMDDexp, pivot_order);
+    // LESSEQ_SQ_OPNAME = new lesseq_sq_opname();
+    // LESSEQ_SQ_OPS = new lesseq_sq_table(forestMDDexp, pivot_order);
+
+    LEQ_NEQ_SQ_OPNAME = new leq_neq_sq_opname();
+    LEQ_NEQ_SQ_COMPARE = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDDexp, pivot_order, false);
+    LEQ_NEQ_SQ_SUBTRACT = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDDexp, pivot_order, true);
 
     REDUCE_OPNAME = new reduce_opname();
     REDUCE = REDUCE_OPNAME->buildOperation(forestMDDexp, pivot_order);

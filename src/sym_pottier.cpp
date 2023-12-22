@@ -250,8 +250,8 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
                 const size_t level, bool do_reduction) 
 {
     const size_t normalization_level = (pparams.normalize_by_levels ? level : 0);
-    lesseq_sq *lesseq_sq_op = LESSEQ_SQ_OPS->get_op(normalization_level, true, true, false);
-    lesseq_sq *reduce_sq_op = LESSEQ_SQ_OPS->get_op(normalization_level, true, true, true);
+    // lesseq_sq *lesseq_sq_op = LESSEQ_SQ_OPS->get_op(normalization_level, true, true, false);
+    // lesseq_sq *reduce_sq_op = LESSEQ_SQ_OPS->get_op(normalization_level, true, true, true);
 
     if (pparams.target == compute_target::EXTREME_RAYS /*&& normalization_level!=0*/) {
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
@@ -262,7 +262,8 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         Aprev = A;
         // Remove from A the elements less_eq_squared B, and add the reduced vectors
         MEDDLY::dd_edge reducibles(A.getForest());
-        lesseq_sq_op->computeDDEdge(A, B, reducibles, false);
+        // lesseq_sq_op->computeDDEdge(A, B, reducibles, false);
+        LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, normalization_level, reducibles);
         A = sym_difference(A, reducibles);
 
         // if (pparams.half_basis) {
@@ -275,7 +276,8 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         // cout << "reducibles:\n" << print_mdd(reducibles, ctx.vorder) << endl;
         if (do_reduction) {
             MEDDLY::dd_edge reduced(A.getForest());
-            reduce_sq_op->computeDDEdge(reducibles, B, reduced, false);
+            LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, normalization_level, reduced);
+            // reduce_sq_op->computeDDEdge(reducibles, B, reduced, false);
             // cout << "reduced:\n" << print_mdd(reduced, ctx.vorder) << endl;
 
             A = sym_union(A, reduced);
@@ -392,6 +394,7 @@ sym_pottier(const meddly_context& ctx,
         MEDDLY::dd_edge S(ctx.forestMDD);
         int degree = -1;
         if (pparams.by_degree) { // get the subset of C having the smallest degree
+            assert(level != 0);
             SMALLEST_DEGREE_TABLE->get_op(level, degtype)->computeDDEdge(C, degree);
             DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(C, degree, S);
         }

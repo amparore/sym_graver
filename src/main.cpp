@@ -179,9 +179,23 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+void do_unit_tests(int argc, char** argv) {
+    int ii=1;
+    while (ii < argc) {
+        if (0==strcmp(argv[ii], "-unit-test-vcanon")) { 
+            unit_test_vcanon(); 
+        }
+        else if (0==strcmp(argv[ii], "-unit-test-reduce")) { 
+            unit_test_reduce(); 
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 int main(int argc, char** argv)
 {
-    unit_test_reduce();
+    do_unit_tests(argc, argv);
     // test();
     // test2();
     // test3();
@@ -363,6 +377,9 @@ int main(int argc, char** argv)
     }
     if (pparams.by_generators) {
         pparams.normalize_by_levels = false;
+    }
+    if (!pparams.by_levels) {
+        pparams.by_degree = false;
     }
 
     const std::string base_fname(basename);

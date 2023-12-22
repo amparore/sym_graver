@@ -71,6 +71,13 @@ void unit_test_reduce() {
     cout << "A:\n" << print_mdd(A, vorder) << endl;
     cout << "B:\n" << print_mdd(B, vorder) << endl;
 
+    MEDDLY::dd_edge C(ctx.forestMDD), S(ctx.forestMDD);
+    LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, 0, C);
+    LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, 0, S);
+    cout << "C:\n" << print_mdd(C, vorder) << endl;
+    cout << "A \\ C:\n" << print_mdd(sym_difference(A, C), vorder) << endl;
+    cout << "S:\n" << print_mdd(S, vorder) << endl;
+
     MEDDLY::dd_edge U(ctx.forestMDD), R(ctx.forestMDD);
     REDUCE->computeDDEdge(A, B, true, true, 0, U, R);
     cout << "U:\n" << print_mdd(U, vorder) << endl;

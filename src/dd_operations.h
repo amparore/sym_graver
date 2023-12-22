@@ -33,12 +33,20 @@ DD_EXTERN s_vectors_opname *S_VECTORS_OPNAME;
 DD_EXTERN s_vectors *S_VECTORS;
 
 
-class lesseq_sq_opname;
-class lesseq_sq_table;
-class lesseq_sq;
+// class lesseq_sq_opname;
+// class lesseq_sq_table;
+// class lesseq_sq;
 
-DD_EXTERN lesseq_sq_opname *LESSEQ_SQ_OPNAME;
-DD_EXTERN lesseq_sq_table *LESSEQ_SQ_OPS;
+// DD_EXTERN lesseq_sq_opname *LESSEQ_SQ_OPNAME;
+// DD_EXTERN lesseq_sq_table *LESSEQ_SQ_OPS;
+
+class leq_neq_sq;
+class leq_neq_sq_opname;
+
+DD_EXTERN leq_neq_sq_opname *LEQ_NEQ_SQ_OPNAME;
+DD_EXTERN leq_neq_sq *LEQ_NEQ_SQ_COMPARE;
+DD_EXTERN leq_neq_sq *LEQ_NEQ_SQ_SUBTRACT;
+
 
 class reduce_opname;
 class reduce;
@@ -444,63 +452,99 @@ public:
                    const variable_order *pivot_order);
 };
 
+// /////////////////////////////////////////////////////////////////////////////////////////
+// // Less Equal Squared Operator
+// // Get the elements using the less-equal-but-not-equal-squared operator
+// /////////////////////////////////////////////////////////////////////////////////////////
+
+// class lesseq_sq : public base_NNtoN {
+// public:
+//     lesseq_sq(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
+//               MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+//               const lesseq_sq_table* tab,
+//               bool isEq, bool isB0,
+//               bool _subtract, size_t lambda);
+
+//     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b) override;
+
+// protected:
+
+//     const lesseq_sq_table* p_table; // operator's variations
+
+//     const bool isPotentiallyEqual; // is a==b ?
+//     const bool isBZero; // is b potentially zero?
+//     const bool subtract; // return (a-b) instead of (a)
+//     const size_t lambda; // is level-specific (>0) or not (=0)
+// };
+
+// // Factory of lesseq_sq operators for specific MDD forests
+// class lesseq_sq_opname : public MEDDLY::binary_opname {
+// public:
+//     inline lesseq_sq_opname() 
+//     /**/ : MEDDLY::binary_opname("LessEqSquared") {}
+
+//     virtual MEDDLY::binary_operation* 
+//     buildOperation(MEDDLY::expert_forest* a1, 
+//                    MEDDLY::expert_forest* a2, 
+//                    MEDDLY::expert_forest* r) override;
+
+//     lesseq_sq* 
+//     buildOperation(MEDDLY::expert_forest* a1, 
+//                    MEDDLY::expert_forest* a2, 
+//                    MEDDLY::expert_forest* r,
+//                    const lesseq_sq_table* tab,
+//                    bool isEq, bool isB0, bool subtract,
+//                    size_t lambda);
+// };
+
+// // Table with all parametric s_vector instances
+// class lesseq_sq_table {
+//     // level * isEq * isB0 * subtract
+//     mutable std::vector<std::vector<std::vector<std::vector<lesseq_sq*>>>> table;
+// public:
+//     lesseq_sq_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
+
+//     lesseq_sq* get_op(size_t level, bool isPotentiallyEqual, 
+//                       bool isBZero, bool subtract) const; 
+
+//     MEDDLY::expert_forest* forest;
+//     const variable_order *pivot_order; // pivoting order when proceeding by levels
+// };
+
 /////////////////////////////////////////////////////////////////////////////////////////
-// Less Equal Squared Operator
+// Less-Equal-but-Not-Equal-Squared Operator
 // Get the elements using the less-equal-but-not-equal-squared operator
 /////////////////////////////////////////////////////////////////////////////////////////
 
-class lesseq_sq : public base_NNtoN {
+class leq_neq_sq : public base_NNItoN {
 public:
-    lesseq_sq(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
-              MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
-              const lesseq_sq_table* tab,
-              bool isEq, bool isB0,
-              bool _subtract, size_t lambda);
+    leq_neq_sq(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+               const variable_order *pivot_order, const bool subtract);
 
-    virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b) override;
-
+    void 
+    computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
+                  const bool is_potentially_equal, 
+                  const bool is_b_potentially_zero,
+                  const size_t lambda,
+                  MEDDLY::dd_edge &res);
 protected:
 
-    const lesseq_sq_table* p_table; // operator's variations
+    MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b, int flags);
 
-    const bool isPotentiallyEqual; // is a==b ?
-    const bool isBZero; // is b potentially zero?
-    const bool subtract; // return (a-b) instead of (a)
-    const size_t lambda; // is level-specific (>0) or not (=0)
+    const variable_order *pivot_order;
+    const bool subtract; // compute (a-b) instead of (a)
 };
 
-// Factory of lesseq_sq operators for specific MDD forests
-class lesseq_sq_opname : public MEDDLY::binary_opname {
+// Factory of leq_neq_sq operators for specific MDD forests
+class leq_neq_sq_opname : public MEDDLY::opname {
 public:
-    inline lesseq_sq_opname() 
-    /**/ : MEDDLY::binary_opname("LessEqSquared") {}
+    inline leq_neq_sq_opname() 
+    /**/ : MEDDLY::opname("LessEqNeqSquared") {}
 
-    virtual MEDDLY::binary_operation* 
-    buildOperation(MEDDLY::expert_forest* a1, 
-                   MEDDLY::expert_forest* a2, 
-                   MEDDLY::expert_forest* r) override;
-
-    lesseq_sq* 
-    buildOperation(MEDDLY::expert_forest* a1, 
-                   MEDDLY::expert_forest* a2, 
-                   MEDDLY::expert_forest* r,
-                   const lesseq_sq_table* tab,
-                   bool isEq, bool isB0, bool subtract,
-                   size_t lambda);
-};
-
-// Table with all parametric s_vector instances
-class lesseq_sq_table {
-    // level * isEq * isB0 * subtract
-    mutable std::vector<std::vector<std::vector<std::vector<lesseq_sq*>>>> table;
-public:
-    lesseq_sq_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
-
-    lesseq_sq* get_op(size_t level, bool isPotentiallyEqual, 
-                      bool isBZero, bool subtract) const; 
-
-    MEDDLY::expert_forest* forest;
-    const variable_order *pivot_order; // pivoting order when proceeding by levels
+    leq_neq_sq* 
+    buildOperation(MEDDLY::expert_forest* forestMDD,
+                   const variable_order *pivot_order,
+                   const bool subtract);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
