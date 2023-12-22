@@ -263,8 +263,8 @@ void differenceNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
     
     if (C->d(pos) != 0) { // perform difference
         MEDDLY::dd_edge dd1(resF), dd2(resF), diff_dd(resF);
-        dd1.set(node);
-        dd2.set(C->d(pos));
+        dd1.set(C->d(pos));
+        dd2.set(node);
         mddDifference->computeTemp(dd1, dd2, diff_dd);
         C->set_d(pos, diff_dd);
         assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
@@ -1463,7 +1463,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     if (b==0) return std::make_tuple(res1F->linkNode(a), 0, 0);
     if (a==-1) {
         if (rf.bf.is_potentially_equal || rf.bf.is_b_potentially_zero)
-            return std::make_tuple(res1F->linkNode(a), 0, 0);
+            return std::make_tuple(-1, 0, 0);
         else
             return std::make_tuple(0, -1, -1);
     }
@@ -1488,19 +1488,19 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
 
     const size_t a_size = get_node_size(A);
     const size_t b_size = get_node_size(B);
-    const size_t resN_size = a_size;
-    const size_t resY_size = a_size + b_size; // TODO: since b<=a, then a-b is <= a and reY_size should be a_size
+    const size_t resA_size = a_size;
+    const size_t resAB_size = a_size + b_size; // TODO: since b<=a, then a-b is <= a and reY_size should be a_size
     // if (rf.bf.lambda != 0 && 
     //     pivot_order->is_above_lambda(rf.bf.lambda, res_level)) 
     // {
-    //     resY_size = a_size + b_size;
+    //     resAB_size = a_size + b_size;
     // }
-    // else resY_size = a_size;
-    check_level_bound(res3F, res_level, resY_size);
+    // else resAB_size = a_size;
+    check_level_bound(res3F, res_level, resAB_size);
 
-    MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resN_size);
-    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res2F, res_level, resN_size);
-    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res3F, res_level, resY_size);
+    MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
+    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res2F, res_level, resA_size);
+    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res3F, res_level, resAB_size);
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
@@ -1528,7 +1528,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 ij_b_pot_zero = ij_b_pot_zero && (0 == b_val);
             }
 
-            if (ij_reduce) 
+            if (ij_reduce)
             {
                 int a_minus_b = subtract_exact(a_val, b_val);
 
@@ -1540,6 +1540,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
                 down = compute(A->d(i), B->d(j), down_rf.value);
 
+                // differenceNodes(C_irreducibles0, res1F->linkNode(get<1>(down)), ZtoNode(a_val), res1F, mddDifference);
                 differenceNodes(C_irreducibles0, get<1>(down), ZtoNode(a_val), res1F, mddDifference);
                 // unionNodes(C_irreducibles0, get<0>(down), ZtoNode(a_val), res1F, mddUnion);
                 unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
