@@ -596,44 +596,71 @@ sym_pottier_PnL(const meddly_context& ctx,
     MEDDLY::dd_edge G(ctx.forestMDD), emptySet(ctx.forestMDD);
 
     if (pparams.by_levels) {
+        
         // Compute by levels, following the pivoting order
         G = initGraver;
         for (size_t var=0; var<ctx.num_levels; var++) {
             // Get the next pivot level that will be completed
             const size_t level = ctx.pivot_order.var2lvl(var) + 1;
 
+            // Get the non-zero initial elements
+            MEDDLY::dd_edge nnz_sel = selector_for_nonzeroes_at_level(ctx.forestMDD, level);
+            MEDDLY::dd_edge init_level = sym_intersection(N, nnz_sel);
+            N = sym_difference(N, init_level);
+
+            if (init_level == emptySet)
+                init_level = G; // nothing new to add, the initial s-vectors is (G+G)
+
             // Complete the level
-            G = sym_pottier(ctx, pparams, G, N, level, rem_neg_step);
-            
+            G = sym_pottier(ctx, pparams, G, init_level, level, rem_neg_step);
+
             if (pparams.target != compute_target::GRAVER_BASIS) {
                 // Remove negative values @level if they are not needed any longer
                 if (rem_neg_levels==nullptr || (*rem_neg_levels)[level-1] >= rem_neg_step) {
-                    // // canonicalize vectors that are <0 at @level, and 0 below
-                    // MEDDLY::dd_edge sel = selector_for_sign_at_level(ctx.forestMDD, level, -1, 1);
-                    // for (size_t v=0; v<var; v++) {
-                    //     const size_t lvl = ctx.pivot_order.var2lvl(v) + 1;
-                    //     MEDDLY::dd_edge level_sel = selector_for_value_at_level(ctx.forestMDD, 0, lvl);
-                    //     sel = sym_intersection(sel, level_sel);
-                    // }
-                    // MEDDLY::dd_edge rows_to_canon(ctx.forestMDD);
-                    // rows_to_canon = sym_intersection(G, sel);
-                    // if (!is_emptyset(rows_to_canon)) {
-                    //     cout << " |rows_to_canon|="<<rows_to_canon.getCardinality()<<""<<endl;
-                    //     cout << print_mdd(rows_to_canon, ctx.vorder) << endl;
-                    //     G = sym_difference(G, rows_to_canon);
-                    //     VMULT->computeDDEdge(rows_to_canon, -1, rows_to_canon);
-                    //     G = sym_union(G, rows_to_canon);
-                    // }
-
-                    // cout << "* removing nonzeroes for level "<<level<<endl;
                     MEDDLY::dd_edge non_neg_sel = selector_for_sign_at_level(ctx.forestMDD, level, +1);
                     G = sym_intersection(G, non_neg_sel);
                 }
             }
-
-            N = G; // N is new only at the first iteration, then combine everything
-            initGraver = emptySet;
         }
+
+        // // Compute by levels, following the pivoting order
+        // G = initGraver;
+        // for (size_t var=0; var<ctx.num_levels; var++) {
+        //     // Get the next pivot level that will be completed
+        //     const size_t level = ctx.pivot_order.var2lvl(var) + 1;
+
+        //     // Complete the level
+        //     G = sym_pottier(ctx, pparams, G, N, level, rem_neg_step);
+            
+        //     if (pparams.target != compute_target::GRAVER_BASIS) {
+        //         // Remove negative values @level if they are not needed any longer
+        //         if (rem_neg_levels==nullptr || (*rem_neg_levels)[level-1] >= rem_neg_step) {
+        //             // // canonicalize vectors that are <0 at @level, and 0 below
+        //             // MEDDLY::dd_edge sel = selector_for_sign_at_level(ctx.forestMDD, level, -1, 1);
+        //             // for (size_t v=0; v<var; v++) {
+        //             //     const size_t lvl = ctx.pivot_order.var2lvl(v) + 1;
+        //             //     MEDDLY::dd_edge level_sel = selector_for_value_at_level(ctx.forestMDD, 0, lvl);
+        //             //     sel = sym_intersection(sel, level_sel);
+        //             // }
+        //             // MEDDLY::dd_edge rows_to_canon(ctx.forestMDD);
+        //             // rows_to_canon = sym_intersection(G, sel);
+        //             // if (!is_emptyset(rows_to_canon)) {
+        //             //     cout << " |rows_to_canon|="<<rows_to_canon.getCardinality()<<""<<endl;
+        //             //     cout << print_mdd(rows_to_canon, ctx.vorder) << endl;
+        //             //     G = sym_difference(G, rows_to_canon);
+        //             //     VMULT->computeDDEdge(rows_to_canon, -1, rows_to_canon);
+        //             //     G = sym_union(G, rows_to_canon);
+        //             // }
+
+        //             // cout << "* removing nonzeroes for level "<<level<<endl;
+        //             MEDDLY::dd_edge non_neg_sel = selector_for_sign_at_level(ctx.forestMDD, level, +1);
+        //             G = sym_intersection(G, non_neg_sel);
+        //         }
+        //     }
+
+        //     N = G; // N is new only at the first iteration, then combine everything
+        //     initGraver = emptySet;
+        // }
     }
     else {
         // Compute all levels at once

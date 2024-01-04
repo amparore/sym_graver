@@ -154,6 +154,9 @@ MEDDLY::dd_edge
 selector_for_value_at_level(MEDDLY::forest *forestMDD, int value, size_t level);
 
 MEDDLY::dd_edge
+selector_for_nonzeroes_at_level(MEDDLY::forest *forestMDD, size_t level);
+
+MEDDLY::dd_edge
 selector_for_sign_at_level(MEDDLY::forest *forestMDD, size_t level, int sign, int threshold=0);
 
 MEDDLY::dd_edge

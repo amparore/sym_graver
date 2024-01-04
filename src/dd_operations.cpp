@@ -146,6 +146,23 @@ selector_for_value_at_level(MEDDLY::forest *forestMDD, int value, size_t level)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 MEDDLY::dd_edge
+selector_for_nonzeroes_at_level(MEDDLY::forest *forestMDD, size_t level) 
+{
+    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forestMDD->getDomain();
+
+    int bound = dom_exp->getVariableBound(level);
+    bool terms[bound+1];
+    for (int i=0; i<bound+1; i++)
+        terms[i] = (NodeToZ(i) != 0);
+
+    MEDDLY::dd_edge level_sel(forestMDD);
+    forestMDD->createEdgeForVar(level, false, terms, level_sel);
+    return level_sel;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+MEDDLY::dd_edge
 selector_for_nonnegatives(MEDDLY::forest *forestMDD) 
 {
     MEDDLY::dd_edge sel(forestMDD);
@@ -1540,17 +1557,11 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
                 down = compute(A->d(i), B->d(j), down_rf.value);
 
-                // differenceNodes(C_irreducibles0, res1F->linkNode(get<1>(down)), ZtoNode(a_val), res1F, mddDifference);
-                differenceNodes(C_irreducibles0, get<1>(down), ZtoNode(a_val), res1F, mddDifference);
-                // unionNodes(C_irreducibles0, get<0>(down), ZtoNode(a_val), res1F, mddUnion);
                 unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
                 unionNodes(C_reduced2, get<2>(down), ZtoNode(a_minus_b), res3F, mddUnion);
             }
-            else {
-                // unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
-            }
         }
-        // differenceNodes(C_irreducibles0, C_reducibles1->d(i), ZtoNode(a_val), res1F, mddDifference);
+        differenceNodes(C_irreducibles0, C_reducibles1->d(i), ZtoNode(a_val), res1F, mddDifference);
     }
 
     // cleanup
