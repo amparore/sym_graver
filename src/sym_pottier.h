@@ -28,6 +28,7 @@ struct pottier_params_t {
     bool verbose_for_basis = false;
     bool by_degree = true;
     bool dynamic_svectors = false;
+    bool primitive_extremal_rays = true;
     compute_target target = compute_target::HILBERT_BASIS;
 
     // At which step in the by-gen process it becomes possible 

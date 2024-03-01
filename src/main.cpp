@@ -307,6 +307,9 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-nd")) {
             pparams.by_degree = false;
         }
+         else if (0==strcmp(argv[ii], "-srx")) {
+            pparams.primitive_extremal_rays = false;
+        }
         else if (0==strcmp(argv[ii], "-c")) {
             do_check_output = true;
         }
@@ -378,6 +381,7 @@ int main(int argc, char** argv)
                  "         -k       Input matrix is already the lattice generating set.\n"
                  "         -g       Compute the Graver basis instead of the Hilbert basis.\n"
                  "         -x       Compute the set of extremal rays of the cone.\n"
+                 "         -srx     Compute the smallest representative of extremal rays (default: primitive).\n"
                  "         -cs <x>  Set Meddly cache size as <x>.\n"
                  "Method:  -yl      Computate by levels. [default]\n"
                  "         -nl      Disable computation by levels.\n"

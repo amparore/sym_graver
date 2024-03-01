@@ -212,9 +212,9 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
     SV = sym_difference(SV, ctx.vzero);
 
     // SIGN_CANON_OPS->get_op(true)->computeDDEdge(SV, SV, false);
-    if (pparams.target == compute_target::EXTREME_RAYS) {
-        // Canonicalize the summed entries
-        // TODO: this passes from primitive to smallest representatives
+    if (pparams.target == compute_target::EXTREME_RAYS && pparams.primitive_extremal_rays) {
+        // Canonicalize the summed entries (this passes from smallest lattice 
+        // representatives to primitive extremal rays)
         SV = sym_canonicalize_gcd(ctx, SV);
     }
 
@@ -234,10 +234,13 @@ sym_normal_form_extremal_rays(const meddly_context& ctx, const pottier_params_t&
     SUPPORT_INCL_TABLE->get_op(level, true, false)->computeDDEdge(A, B, non_minimal_support, false);
     A = sym_difference(A, non_minimal_support);
 
-    // TODO: reduction is needed only if we do not canonicalize the extremal rays
-    MEDDLY::dd_edge reduced(A.getForest());
-    SUPPORT_INCL_TABLE->get_op(level, true, true)->computeDDEdge(non_minimal_support, B, reduced, false);
-    A = sym_union(A, reduced);
+    if (!pparams.primitive_extremal_rays) {
+        // if extremal rays are not made primitive, we could end up having
+        // multiples of the same ray, therefore we need to reduce by subtraction.
+        MEDDLY::dd_edge reduced(A.getForest());
+        SUPPORT_INCL_TABLE->get_op(level, true, true)->computeDDEdge(non_minimal_support, B, reduced, false);
+        A = sym_union(A, reduced);
+    }
 
     // if (!is_emptyset(non_minimal_support)) {
     //     cout << "sym_normal_form_extremal_rays (level="<<level<<")" << endl;
