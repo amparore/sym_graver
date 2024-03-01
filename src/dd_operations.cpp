@@ -2265,7 +2265,8 @@ MEDDLY::node_handle support_inclusion_op::compute(MEDDLY::node_handle a, MEDDLY:
                 }
             }
             else { // a_val != 0 -> b can be any value or 0
-                if (is_pot_eq_supp && b_val==0) // smaller support
+                if (is_pot_eq_supp && (b_val==0 || abs(b_val) < abs(a_val))) 
+                    // b has smaller support than a, or b is smaller than a (for reduction)
                     n = p_table->get_op(lambda, false, subtract)->compute(A->d(i), B->d(j));
                 else //if (multiply_exact(a_val, b_val) >= 0)
                     n = compute(A->d(i), B->d(j));

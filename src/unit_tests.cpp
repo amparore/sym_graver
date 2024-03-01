@@ -124,3 +124,28 @@ void unit_test_sign_canon() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+void unit_test_minimal_supports() {
+    const std::vector<std::vector<int>> mA = {
+        {  4, 0, 2 },
+        {  6, 2, 0 },
+        { 12, 4, 0 },
+    };
+
+    const size_t num_levels = mA[0].size();
+    variable_order vorder(num_levels), pivot_order(num_levels);
+
+    meddly_context ctx(num_levels, vorder, pivot_order);
+    size_t meddly_cache_size = 1000000;
+    ctx.initialize(meddly_cache_size);
+    MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
+
+    MEDDLY::dd_edge non_minimal_support(A.getForest());
+    SUPPORT_INCL_TABLE->get_op(0, true, false)->computeDDEdge(A, A, non_minimal_support, false);
+    cout << "A:\n" << print_mdd(A, vorder) << endl;
+    cout << "nms:\n" << print_mdd(non_minimal_support, vorder) << endl;
+    // A = sym_difference(A, non_minimal_support);
+}
+    
+/////////////////////////////////////////////////////////////////////////////////////////
+

@@ -48,7 +48,7 @@ void print_cpu_rusage() {
     struct rusage r;
     getrusage(RUSAGE_SELF, &r);
     cout << "CPU usage: " << r.ru_utime.tv_sec << "." 
-         << setw(6) << setfill('0') << r.ru_utime.tv_usec << endl;
+         << setw(6) << setfill('0') << r.ru_utime.tv_usec << setfill(' ') << endl;
 }
 
 #else
@@ -203,6 +203,7 @@ void print_cpu_rusage() {
 void unit_test_vcanon();
 void unit_test_reduce();
 void unit_test_sign_canon();
+void unit_test_minimal_supports();
 
 void do_unit_tests(int argc, char** argv) {
     int ii=1;
@@ -215,6 +216,9 @@ void do_unit_tests(int argc, char** argv) {
         }
         else if (0==strcmp(argv[ii], "-unit-test-sign-canon")) { 
             unit_test_sign_canon(); 
+        }
+        else if (0==strcmp(argv[ii], "-unit-test-minimal-supports")) { 
+            unit_test_minimal_supports(); 
         }
         ++ii;
     }

@@ -155,6 +155,12 @@ sym_s_vectors_at_level(const meddly_context& ctx, const pottier_params_t& pparam
                 mult_Ai /= g;
                 mult_Bj /= g;
 
+                // Hemmecke formula at page 7
+                // mult_Bj = mult_Ai / mult_Bj;
+                // mult_Ai = 1;
+                // if (mult_Bj == 0)
+                //     continue;
+
                 // cout << " s-vectors op: "<<i<<"*"<<mult_Ai<<" + "<<j<<"*"<<mult_Bj<<" = "
                 //      <<(i*mult_Ai)<<" + "<<(j*mult_Bj)<<" = "
                 //      <<(i*mult_Ai + j*mult_Bj) << endl;
@@ -208,6 +214,7 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
     // SIGN_CANON_OPS->get_op(true)->computeDDEdge(SV, SV, false);
     if (pparams.target == compute_target::EXTREME_RAYS) {
         // Canonicalize the summed entries
+        // TODO: this passes from primitive to smallest representatives
         SV = sym_canonicalize_gcd(ctx, SV);
     }
 
@@ -223,13 +230,14 @@ sym_normal_form_extremal_rays(const meddly_context& ctx, const pottier_params_t&
 {
     // Remove from A the elements having a non-minimal support w.r.t. B
     MEDDLY::dd_edge non_minimal_support(A.getForest());
-    // FIXME: using 0 or level?
-    SUPPORT_INCL_TABLE->get_op(0, true, false)->computeDDEdge(A, B, non_minimal_support, false);
+    // FIXME: using 0 or level doesn't make any difference -> resolved use level
+    SUPPORT_INCL_TABLE->get_op(level, true, false)->computeDDEdge(A, B, non_minimal_support, false);
     A = sym_difference(A, non_minimal_support);
 
-    // MEDDLY::dd_edge reduced(A.getForest());
-    // SUPPORT_INCL_TABLE->get_op(0, true, true)->computeDDEdge(non_minimal_support, B, reduced, false);
-    // A = sym_union(A, reduced);
+    // TODO: reduction is needed only if we do not canonicalize the extremal rays
+    MEDDLY::dd_edge reduced(A.getForest());
+    SUPPORT_INCL_TABLE->get_op(level, true, true)->computeDDEdge(non_minimal_support, B, reduced, false);
+    A = sym_union(A, reduced);
 
     // if (!is_emptyset(non_minimal_support)) {
     //     cout << "sym_normal_form_extremal_rays (level="<<level<<")" << endl;
