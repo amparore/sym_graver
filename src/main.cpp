@@ -41,6 +41,26 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#if (defined __unix__) || (defined __APPLE__)
+
+#include <sys/resource.h>
+void print_cpu_rusage() {
+    struct rusage r;
+    getrusage(RUSAGE_SELF, &r);
+    cout << "CPU usage: " << r.ru_utime.tv_sec << "." 
+         << setw(6) << setfill('0') << r.ru_utime.tv_usec << endl;
+}
+
+#else
+
+void print_cpu_rusage() {
+    cout << "CPU rusage unsupported.";
+}
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 
@@ -218,6 +238,7 @@ int main(int argc, char** argv)
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
     bool do_pivoting = true;
+    bool print_rusage = false;
     pottier_params_t pparams;
     perf_counters_t perf_counters;
     bool use_old_basisZgen = false;
@@ -323,6 +344,9 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-np")) {
             do_pivoting = false;
         }
+        else if (0==strcmp(argv[ii], "-u")) {
+            print_rusage = true;
+        }
         else if (0==strcmp(argv[ii], "-h")) {
             show_help = true;
         }
@@ -345,6 +369,7 @@ int main(int argc, char** argv)
                  "Options: -v       Verbose.\n"
                  "         -vv      Very Verbose.\n"
                  "         -p       Performance counters.\n"
+                 "         -u       Print CPU rusage.\n"
                  "         -t       Transpose input matrix.\n"
                  "         -k       Input matrix is already the lattice generating set.\n"
                  "         -g       Compute the Graver basis instead of the Hilbert basis.\n"
@@ -411,12 +436,13 @@ int main(int argc, char** argv)
     if (pparams.verbose_show_mat(A)) {
         cout << "Input matrix:" << endl; print_mat(A); cout << endl;
     }
-    const size_t num_variables = A.front().size();
 
     // Transpose
     if (transpose_input) {
         A = transpose(A);
     }
+
+    const size_t num_variables = A.front().size();
 
     // {
     //     std::vector<std::vector<int>> ker1A, ker2A;
@@ -604,6 +630,9 @@ int main(int argc, char** argv)
     if (pparams.perf) {
         cout << "Total S-Vectors processed: "<<pparams.perf->counter_C<<endl;
     }
+
+    if (print_rusage)
+        print_cpu_rusage();
 
     //----------------------------------------------------
     // Check correctness of generated solutions.
