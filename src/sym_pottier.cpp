@@ -89,7 +89,7 @@ sym_canonicalize_gcd(const meddly_context& ctx, MEDDLY::dd_edge A)
     for (int div : divisors) {
         if (div > 0) {
             MEDDLY::dd_edge U(ctx.forestMDD), D(ctx.forestMDD); // undivisible, divided
-            VCANON->computeDDEdge(A, div, U, D);
+            VDIVIDE->computeDDEdge(A, div, U, D);
             A = sym_union(U, D);
         }
     }
@@ -192,7 +192,9 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
               const size_t level) 
 {
     MEDDLY::dd_edge SV(ctx.forestMDD);
-    if (level != 0) {
+    if (level != 0 /*&& pparams.target == compute_target::EXTREME_RAYS*/) {
+        // TODO: while s-vectors @ level appears to be faster in benchmark, this should be
+        //   disabled through a command-line option.
         // Compute the S-Vectors at the specified level only
         SV = sym_s_vectors_at_level(ctx, pparams, A, B, level);
     }
@@ -261,6 +263,8 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
                 const size_t level, bool do_reduction) 
 {
     const size_t normalization_level = (pparams.normalize_by_levels ? level : 0);
+    sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
+    cmp_sign cs = pparams.target == compute_target::GRAVER_BASIS ? CMP_UNDECIDED : CMP_POS;
 
     if (pparams.target == compute_target::EXTREME_RAYS) {
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
@@ -269,7 +273,7 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
     MEDDLY::dd_edge I(ctx.forestMDD);
     while (!is_emptyset(A)) {
         MEDDLY::dd_edge I2(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
-        REDUCE->computeDDEdge(A, B, true, true, normalization_level, I2, R, D);
+        REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
         // cout << "QNF:\n";
         // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
         // cout << "B:\n" << print_mdd(B, ctx.vorder) << endl;
@@ -279,9 +283,8 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
 
         I = sym_union(I, I2);
 
-        // TODO: improvement: push the sign canonicization inside the REDUCE operation
-        if (pparams.target == compute_target::GRAVER_BASIS)
-            SIGN_CANON->computeDDEdge(D, D, false);
+        // if (pparams.target == compute_target::GRAVER_BASIS)
+        //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
 
         A = D;
     }

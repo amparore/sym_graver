@@ -860,7 +860,7 @@ typedef union s_vector_flags_t { // cache entry
         // When computing the Graver half-basis, we need a canonical form for the vectors
         // We decide arbitrarily that the first entry from the DD root has to be positive.
         // If it is negative, the resulting vector (a+b) is inverted as (-(a+b))
-        int sign_of_sum : 2;
+        unsigned sign_of_sum : 2;
         // The level (for project-and-lift)
         unsigned lambda : (sizeof(int)*8 - 4);
     } bf;
@@ -1425,8 +1425,15 @@ typedef union reduce_flags_t { // cache entry
         bool is_potentially_equal : 1; 
         // is b potentially the zero vector?
         bool is_b_potentially_zero : 1;
+        // When computing the Graver half-basis, we need a canonical form for the redisual 
+        // vectors. We decide arbitrarily that the first entry from the DD root has to be 
+        // positive. If it is negative, the resulting vector (a-b) is inverted as (-(a-b))
+        unsigned sign_of_sum : 2;
+        // When comparing the Graver half-basis, we check for both b < a and -b < a,
+        // and decide the comparison sign at the first occasion possible
+        unsigned sign_of_comparison : 2;
         // The level (for project-and-lift)
-        unsigned lambda : (sizeof(int)*8 - 2);
+        unsigned lambda : (sizeof(int)*8 - 6);
     } bf;
 } reduce_flags_t;
 
@@ -1449,6 +1456,8 @@ void
 reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
                       const bool is_potentially_equal, 
                       const bool is_b_potentially_zero,
+                      const sv_sign sign_of_sum, 
+                      const cmp_sign sign_of_comparison,
                       const size_t lambda,
                       MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
                       MEDDLY::dd_edge &reduced) 
@@ -1456,6 +1465,8 @@ reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
     reduce_flags_t rf;
     rf.bf.is_potentially_equal = is_potentially_equal;
     rf.bf.is_b_potentially_zero = is_b_potentially_zero;
+    rf.bf.sign_of_sum = sign_of_sum;
+    rf.bf.sign_of_comparison = sign_of_comparison;
     rf.bf.lambda = lambda;
 
     auto cnodes = compute(a.getNode(), b.getNode(), rf.value);
@@ -1536,22 +1547,40 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
             bool ij_reduce;
             bool ij_pot_eq = rf.bf.is_potentially_equal;
             bool ij_b_pot_zero = rf.bf.is_b_potentially_zero;
+            cmp_sign ij_cmp_sign = (cmp_sign)rf.bf.sign_of_comparison;
             if (rf.bf.lambda != 0 && pivot_order->is_above_lambda(rf.bf.lambda, res_level)) {
                 ij_reduce = true;
             }
             else {
-                ij_reduce = less_equal_squared(b_val, a_val);
+                if (ij_cmp_sign == CMP_UNDECIDED) {
+                    if      (b_val * a_val > 0)   ij_cmp_sign = CMP_POS;
+                    else if (b_val * a_val < 0)   ij_cmp_sign = CMP_NEG;
+                }
+                int b_cmp_sign = (ij_cmp_sign == CMP_NEG ? -1 : 1);
+                ij_reduce = less_equal_squared(b_val * b_cmp_sign, a_val);
                 ij_pot_eq = ij_pot_eq && (a_val == b_val);
                 ij_b_pot_zero = ij_b_pot_zero && (0 == b_val);
             }
 
             if (ij_reduce)
             {
-                int a_minus_b = subtract_exact(a_val, b_val);
+                int b_cmp_sign = (ij_cmp_sign == CMP_NEG ? -1 : 1);
+                int a_minus_b = subtract_exact(a_val, b_val * b_cmp_sign);
+                // decide the sign of the result (if still undecided)
+                sv_sign curr_sign_of_sum = (sv_sign)rf.bf.sign_of_sum;
+                if (curr_sign_of_sum == SVS_UNDECIDED && 0!=a_minus_b) { 
+                    curr_sign_of_sum = (a_minus_b > 0) ? SVS_POS : SVS_NEG;
+                }
+                // compute (a-b) or -(a-b)
+                if (curr_sign_of_sum == SVS_NEG) {
+                    a_minus_b = -a_minus_b;
+                }
 
                 reduce_flags_t down_rf;
                 down_rf.bf.is_potentially_equal = ij_pot_eq;
                 down_rf.bf.is_b_potentially_zero = ij_b_pot_zero;
+                down_rf.bf.sign_of_sum = curr_sign_of_sum;
+                down_rf.bf.sign_of_comparison = ij_cmp_sign;
                 down_rf.bf.lambda = rf.bf.lambda;
 
                 std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
@@ -1559,7 +1588,8 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
 
                 // cout << "lvl(a)="<<a_level<<" lvl(b)="<<b_level<<" a="<<a_val<<" b="<<b_val
                 //      << " is_eq="<<ij_pot_eq<<" b_zero="<<ij_b_pot_zero
-                //      << " down="<<get<0>(down)<<"|"<<get<1>(down)<<"|"<<get<2>(down)<<endl;
+                //      << " sign_of_sum="<<down_rf.bf.sign_of_sum
+                //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
 
                 res1F->unlinkNode(get<0>(down));
                 unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
@@ -1986,25 +2016,25 @@ MEDDLY::node_handle vmult_op::compute(MEDDLY::node_handle a, const int multiplie
 // Divide all paths that are divisible by a given number
 /////////////////////////////////////////////////////////////////////////////////////////
 
-vcanon_mdd_opname::vcanon_mdd_opname() 
+vdivide_mdd_opname::vdivide_mdd_opname() 
 /**/ : unary_opname("VecCanonicalize")
 { }
 
 MEDDLY::operation* 
-vcanon_mdd_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF)
+vdivide_mdd_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF)
 {
     if (0==arF || 0==resF) return 0;
     
-    return new vcanon_mdd_op(this, (MEDDLY::expert_forest*)arF, 
+    return new vdivide_mdd_op(this, (MEDDLY::expert_forest*)arF, 
                               (MEDDLY::expert_forest*)resF);
 }
 
-vcanon_mdd_op::~vcanon_mdd_op() { }
+vdivide_mdd_op::~vdivide_mdd_op() { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-vcanon_mdd_op::vcanon_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                             MEDDLY::expert_forest* _resF)
+vdivide_mdd_op::vdivide_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
+                               MEDDLY::expert_forest* _resF)
 /**/ : base_NItoNN(opcode, _argF, _resF, _resF)
 { }
 
@@ -2012,7 +2042,7 @@ vcanon_mdd_op::vcanon_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _arg
 
 // <first=undivisible, second=divided by d>
 std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
-vcanon_mdd_op::compute(MEDDLY::node_handle a, const int divisor) 
+vdivide_mdd_op::compute(MEDDLY::node_handle a, const int divisor) 
 {
     if (a==0 || a==-1) return std::make_pair(0, a);
     if (divisor==1)    return std::make_pair(res1F->linkNode(a), 0);
@@ -3001,8 +3031,8 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     VMULT_OPNAME = new vmult_opname();
     VMULT = (vmult_op*)VMULT_OPNAME->buildOperation(forestMDDexp, forestMDD);
 
-    VCANON_OPNAME = new vcanon_mdd_opname();
-    VCANON = (vcanon_mdd_op*)VCANON_OPNAME->buildOperation(forestMDD, forestMDD);
+    VDIVIDE_OPNAME = new vdivide_mdd_opname();
+    VDIVIDE = (vdivide_mdd_op*)VDIVIDE_OPNAME->buildOperation(forestMDD, forestMDD);
 
     DIV_FINDER_MDD_OPNAME = new divisors_finder_mdd_opname();
     DIV_FINDER_MDD = (divisors_finder_mdd_op*)DIV_FINDER_MDD_OPNAME->buildOperation(forestMDD);

@@ -71,10 +71,10 @@ class vmult_op;
 DD_EXTERN vmult_opname* VMULT_OPNAME;
 DD_EXTERN vmult_op* VMULT;
 
-class vcanon_mdd_op;
-class vcanon_mdd_opname;
-DD_EXTERN vcanon_mdd_opname* VCANON_OPNAME;
-DD_EXTERN vcanon_mdd_op* VCANON;
+class vdivide_mdd_op;
+class vdivide_mdd_opname;
+DD_EXTERN vdivide_mdd_opname* VDIVIDE_OPNAME;
+DD_EXTERN vdivide_mdd_op* VDIVIDE;
 
 class divisors_finder_mdd_op;
 class divisors_finder_mdd_opname;
@@ -450,6 +450,8 @@ enum sv_sign { SVS_UNDECIDED, SVS_POS, SVS_NEG, SVS_TOTAL };
 
 enum class ab_sum_t { A_PLUS_B, A_MINUS_B };
 
+enum cmp_sign { CMP_UNDECIDED, CMP_POS, CMP_NEG, CMP_TOTAL };
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 class s_vectors : public base_NNItoN {
@@ -594,6 +596,8 @@ public:
     computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
                   const bool is_potentially_equal, 
                   const bool is_b_potentially_zero,
+                  const sv_sign sign_of_sum, 
+                  const cmp_sign sign_of_comparison,
                   const size_t lambda,
                   MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
                   MEDDLY::dd_edge &reduced);
@@ -747,15 +751,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// Canonicalize vectors
+// Divide vectors, when possible
 // Divide all paths that are divisible by a given number
 /////////////////////////////////////////////////////////////////////////////////////////
 
-class vcanon_mdd_op : public base_NItoNN {
+class vdivide_mdd_op : public base_NItoNN {
 public:
-    vcanon_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
+    vdivide_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
                   MEDDLY::expert_forest* _resF);
-    virtual ~vcanon_mdd_op();    
+    virtual ~vdivide_mdd_op();    
 
 protected:
     virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
@@ -765,9 +769,9 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Factory
-class vcanon_mdd_opname : public MEDDLY::unary_opname {
+class vdivide_mdd_opname : public MEDDLY::unary_opname {
 public:
-    vcanon_mdd_opname();
+    vdivide_mdd_opname();
     virtual MEDDLY::operation* buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF);
 };
 
