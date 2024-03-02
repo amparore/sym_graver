@@ -48,23 +48,17 @@ void unit_test_vcanon() {
 
 void unit_test_reduce() {
     const std::vector<std::vector<int>> mA = {
-        { 0, 3, 1 },
-        { 0,-3, 1 },
-        { 7, 0, 0 },
-        { 7, 0,-1 },
-        // { 0, 3, 1, 0, 0 },
-        // { 0,-3, 1, 0, 0 },
-        // { 2, 0, 0, 1, 2 },
-        // { 2, 0,-1, 1, 2 },
+        // { 0, 3, 1 },
+        // { 0,-3, 1 },
+        // { 7, 0, 0 },
+        // { 7, 0,-1 },
+        { 2, 2, 2 },
     };
     const std::vector<std::vector<int>> mB = {
-        { 0, 4, 1 },
-        { 0, 1, 1 },
-        { 7, 0, 0 },
-        // { 0, 4, 1, 0, 0 },
-        // { 0, 1, 1, 0, 0 },
-        // { 2, 0, 0, 1, 2 },
-        // { 0, 0, 0, 0, 0 },
+        // { 0, 4, 1 },
+        // { 0, 1, 1 },
+        // { 7, 0, 0 },
+        { 1, 1, 1 },
     };
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);

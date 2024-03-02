@@ -261,42 +261,61 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
                 const size_t level, bool do_reduction) 
 {
     const size_t normalization_level = (pparams.normalize_by_levels ? level : 0);
-    // lesseq_sq *lesseq_sq_op = LESSEQ_SQ_OPS->get_op(normalization_level, true, true, false);
-    // lesseq_sq *reduce_sq_op = LESSEQ_SQ_OPS->get_op(normalization_level, true, true, true);
 
-    if (pparams.target == compute_target::EXTREME_RAYS /*&& normalization_level!=0*/) {
+    if (pparams.target == compute_target::EXTREME_RAYS) {
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
     }
 
-    MEDDLY::dd_edge Aprev(A.getForest());
-    do {
-        Aprev = A;
-        // Remove from A the elements less_eq_squared B, and add the reduced vectors
-        MEDDLY::dd_edge reducibles(A.getForest());
-        // lesseq_sq_op->computeDDEdge(A, B, reducibles, false);
-        LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, normalization_level, reducibles);
-        A = sym_difference(A, reducibles);
+    MEDDLY::dd_edge I(ctx.forestMDD);
+    while (!is_emptyset(A)) {
+        MEDDLY::dd_edge I2(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
+        REDUCE->computeDDEdge(A, B, true, true, normalization_level, I2, R, D);
+        // cout << "QNF:\n";
+        // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
+        // cout << "B:\n" << print_mdd(B, ctx.vorder) << endl;
+        // cout << "I:\n" << print_mdd(I2, ctx.vorder) << endl;
+        // cout << "R:\n" << print_mdd(R, ctx.vorder) << endl;
+        // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
 
-        // if (pparams.half_basis) {
-        //     // take only the half Graver basis
-        //     MEDDLY::dd_edge A2(ctx.forestMDD);
-        //     SIGN_CANON_OPS->get_op(true)->computeDDEdge(A, A2, false);
-        //     assert(A == A2);
-        // }
+        I = sym_union(I, I2);
 
-        // cout << "reducibles:\n" << print_mdd(reducibles, ctx.vorder) << endl;
-        if (do_reduction) {
-            MEDDLY::dd_edge reduced(A.getForest());
-            LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, normalization_level, reduced);
-            // reduce_sq_op->computeDDEdge(reducibles, B, reduced, false);
-            // cout << "reduced:\n" << print_mdd(reduced, ctx.vorder) << endl;
+        // TODO: improvement: push the sign canonicization inside the REDUCE operation
+        if (pparams.target == compute_target::GRAVER_BASIS)
+            SIGN_CANON->computeDDEdge(D, D, false);
 
-            A = sym_union(A, reduced);
-        }
-        else break; // no need to fix-point
-    } 
-    while (A != Aprev);
-    return A;
+        A = D;
+    }
+    return I;
+
+    // MEDDLY::dd_edge Aprev(A.getForest());
+    // do {
+    //     Aprev = A;
+    //     // Remove from A the elements less_eq_squared B, and add the reduced vectors
+    //     MEDDLY::dd_edge reducibles(A.getForest());
+    //     // lesseq_sq_op->computeDDEdge(A, B, reducibles, false);
+    //     LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, normalization_level, reducibles);
+    //     A = sym_difference(A, reducibles);
+
+    //     // if (pparams.half_basis) {
+    //     //     // take only the half Graver basis
+    //     //     MEDDLY::dd_edge A2(ctx.forestMDD);
+    //     //     SIGN_CANON_OPS->get_op(true)->computeDDEdge(A, A2, false);
+    //     //     assert(A == A2);
+    //     // }
+
+    //     // cout << "reducibles:\n" << print_mdd(reducibles, ctx.vorder) << endl;
+    //     if (do_reduction) {
+    //         MEDDLY::dd_edge reduced(A.getForest());
+    //         LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, normalization_level, reduced);
+    //         // reduce_sq_op->computeDDEdge(reducibles, B, reduced, false);
+    //         // cout << "reduced:\n" << print_mdd(reduced, ctx.vorder) << endl;
+
+    //         A = sym_union(A, reduced);
+    //     }
+    //     else break; // no need to fix-point
+    // } 
+    // while (A != Aprev);
+    // return A;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

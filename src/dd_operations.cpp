@@ -1557,11 +1557,18 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
                 down = compute(A->d(i), B->d(j), down_rf.value);
 
+                // cout << "lvl(a)="<<a_level<<" lvl(b)="<<b_level<<" a="<<a_val<<" b="<<b_val
+                //      << " is_eq="<<ij_pot_eq<<" b_zero="<<ij_b_pot_zero
+                //      << " down="<<get<0>(down)<<"|"<<get<1>(down)<<"|"<<get<2>(down)<<endl;
+
+                res1F->unlinkNode(get<0>(down));
                 unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
                 unionNodes(C_reduced2, get<2>(down), ZtoNode(a_minus_b), res3F, mddUnion);
             }
         }
-        differenceNodes(C_irreducibles0, C_reducibles1->d(i), ZtoNode(a_val), res1F, mddDifference);
+        // cout << "  i="<<i<<"  ZtoNode("<<a_val<<")="<<ZtoNode(a_val)<<endl;
+        differenceNodes(C_irreducibles0, res1F->linkNode(C_reducibles1->d(ZtoNode(a_val))), 
+                        ZtoNode(a_val), res1F, mddDifference);
     }
 
     // cleanup
