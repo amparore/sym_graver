@@ -262,6 +262,7 @@ void unionNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
         dd1.set(node);
         dd2.set(C->d(pos));
         mddUnion->computeTemp(dd1, dd2, union_dd);
+        assert(pos < resF->getDomain()->getVariableBound(C->getLevel()));
         C->set_d(pos, union_dd);
         assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
     }
@@ -283,6 +284,7 @@ void differenceNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
         dd1.set(C->d(pos));
         dd2.set(node);
         mddDifference->computeTemp(dd1, dd2, diff_dd);
+        assert(pos < resF->getDomain()->getVariableBound(C->getLevel()));
         C->set_d(pos, diff_dd);
         assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
     }
@@ -1868,6 +1870,7 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
     const size_t a_size = get_node_size(A);
 
     const int res_size = max(a_size, (size_t)ZtoNode(-NodeToZ(a_size-1)) + 1);
+    check_level_bound(resF, a_level, res_size); // resize level if needed
     MEDDLY::unpacked_node* C = MEDDLY::unpacked_node::newFull(resF, a_level, res_size);
 
     const bool a_full = A->isFull();
@@ -1888,6 +1891,7 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
                         ZtoNode(a_val), resF, mddUnion);
         }
         else { // invert vectors from here down. Use VMULT
+            assert(ZtoNode(-a_val) < resF->getDomain()->getVariableBound(a_level));
             unionNodes(C, VMULT->compute(A->d(i), -1), 
                         ZtoNode(-a_val), resF, mddUnion);
         }

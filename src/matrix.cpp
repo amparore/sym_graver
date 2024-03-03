@@ -1001,7 +1001,7 @@ print_mat_hnf(const std::vector<std::vector<int>>& H, // n*m
     // for (ssize_t k=leading_cols.size()-1; k>=0; k--) {
         // cout << "swap columns: "<<indices[k]<<" <> "<<leading_cols[k]<<endl;
         swap_columns(HH, indices[k], leading_cols[k]);
-        swap_columns(UU, indices[k], leading_cols[k]);
+        // swap_columns(UU, indices[k], leading_cols[k]); // columns are over m, UU is n*n
         std::swap(indices[k], indices[leading_cols[k]]);
     }
 

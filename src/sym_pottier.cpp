@@ -343,10 +343,18 @@ pottier_iter_banner_start(const meddly_context& ctx,
             cout << "       ";
     }
     if (level != 0) {
-        if (pparams.very_verbose || iter == 0)
-            cout << "Level=" << left << setw(4) << level;
+        if (pparams.very_verbose || iter == 0) {
+            const char* var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
+            cout << "Level=" << level << "["<<var_name<<"]";
+            size_t spaces = 10 - strlen(var_name);
+            if (level < 1000) spaces--;
+            if (level < 100)  spaces--;
+            if (level < 10)   spaces--;
+            for (size_t i=0; i<spaces; i++)
+                cout << " ";
+        }
         else
-            cout << "          ";
+            cout << "                ";
     }
     cout << "Iter="<< left << setw(3) <<iter;
 }
