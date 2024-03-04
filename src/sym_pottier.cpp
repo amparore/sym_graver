@@ -139,6 +139,7 @@ sym_s_vectors_at_level(const meddly_context& ctx, const pottier_params_t& pparam
             else // ij_prod == 0
                 continue;
 
+            // FIXME: ma ij_prod può essere == 0 ????
             if (pparams.target == compute_target::EXTREME_RAYS && 0==ij_prod)
                 continue;
 
@@ -202,6 +203,7 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
         // Compute the S-Vectors over all levels at once
         sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
         // a + b
+        // TODO: no need for svs even in Graver, use SVS_POS always.
         S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_PLUS_B, svs, level, SV);
 
         if (pparams.target == compute_target::GRAVER_BASIS) {
@@ -273,7 +275,11 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
     MEDDLY::dd_edge I(ctx.forestMDD);
     while (!is_emptyset(A)) {
         MEDDLY::dd_edge I2(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
-        REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
+        REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, R, D);
+        I2 = sym_difference(A, R);
+
+        // FIXME: REDUCE può tornare solo R e D, non serve I
+
         // cout << "QNF:\n";
         // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
         // cout << "B:\n" << print_mdd(B, ctx.vorder) << endl;
@@ -282,6 +288,7 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
 
         I = sym_union(I, I2);
+        // TODO: check I does not contain the zero vector.
 
         // if (pparams.target == compute_target::GRAVER_BASIS)
         //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
@@ -456,7 +463,6 @@ sym_pottier(const meddly_context& ctx,
         C = sym_difference(C, S);
 
 
-        // FIXME: if not reducing, should this be a fixpoint loop?
         // cout << "normal_form" << endl;
         if (!pparams.by_degree)
             S = sym_normal_form(ctx, pparams, S, S, level, false);
@@ -480,6 +486,10 @@ sym_pottier(const meddly_context& ctx,
             SV = sym_difference(SV, F);
         }
         // cout << "  |SV|=" << SV.getCardinality() << endl;
+
+        // if (pparams.by_degree) { // FIXME: check again this QNF
+        //     C = sym_normal_form(ctx, pparams, C, S, level, false);
+        // }
 
         C = sym_union(C, SV);
         F = sym_union(F, S);
@@ -615,6 +625,8 @@ sym_pottier_grad(const meddly_context& ctx,
 
         if (added && k==0) {
             // repeat for k=0
+            // FIXME: this may happen also when k>0, but there are
+            // 0-degree vectors for i and j.
         }
         else
             k++;

@@ -48,17 +48,17 @@ void unit_test_vcanon() {
 
 void unit_test_reduce() {
     const std::vector<std::vector<int>> mA = {
-        // { 0, 3, 1 },
-        // { 0,-3, 1 },
-        // { 7, 0, 0 },
-        // { 7, 0,-1 },
+        { 0, 3, 1 },
+        { 0,-3, 1 },
+        { 7, 0, 0 },
+        { 7, 0,-1 },
         { -2, -2, 2 },
     };
     const std::vector<std::vector<int>> mB = {
-        // { 0, 4, 1 },
-        // { 0, 1, 1 },
-        // { 7, 0, 0 },
-        { 0, -1, 0 },
+        { 0, 4, 1 },
+        { 0, 1, 1 },
+        { 7, 0, 0 },
+        // { 0, -1, 0 },
     };
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);
@@ -82,7 +82,8 @@ void unit_test_reduce() {
     cout << "----------------------------------\n";
 
     MEDDLY::dd_edge I(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
-    REDUCE->computeDDEdge(A, B, true, true, sv_sign::SVS_UNDECIDED, cmp_sign::CMP_UNDECIDED, 0, I, R, D);
+    REDUCE->computeDDEdge(A, B, true, true, sv_sign::SVS_UNDECIDED, cmp_sign::CMP_UNDECIDED, 0, R, D);
+    I = sym_difference(A, R);
     cout << "I:\n" << print_mdd(I, vorder) << endl;
     cout << "R:\n" << print_mdd(R, vorder) << endl;
     cout << "D:\n" << print_mdd(D, vorder) << endl;

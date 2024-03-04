@@ -61,6 +61,7 @@ std::ostream& operator<< (std::ostream& os, const mdd_printer& mp)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// resize level to accomodate a given bound
 void check_level_bound(MEDDLY::forest* forest, int level, int bound)
 {
     // if (bound > 20)
@@ -1445,7 +1446,7 @@ static_assert(sizeof(reduce_flags_t) == sizeof(int));
 
 reduce::reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
                const variable_order *pivot_order)
-: base_NNItoNNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD, forestMDD), 
+: base_NNItoNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD), 
   pivot_order(pivot_order)
 { 
     mddUnion = MEDDLY::getOperation(MEDDLY::UNION, forestMDD, forestMDD, forestMDD);
@@ -1461,7 +1462,7 @@ reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
                       const sv_sign sign_of_sum, 
                       const cmp_sign sign_of_comparison,
                       const size_t lambda,
-                      MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
+                      MEDDLY::dd_edge &reducibles, 
                       MEDDLY::dd_edge &reduced) 
 {
     reduce_flags_t rf;
@@ -1473,33 +1474,31 @@ reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
 
     auto cnodes = compute(a.getNode(), b.getNode(), rf.value);
 
-    irreducibles.set(get<0>(cnodes));
-    reducibles.set(get<1>(cnodes));
-    reduced.set(get<2>(cnodes));
+    reducibles.set(cnodes.first);
+    reduced.set(cnodes.second);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-// 0=irreducibles
-// 1=reducibles
-// 2=reduced
-std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
+// first=reducibles
+// second=reduced
+std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
 reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags) 
 {
     reduce_flags_t rf;
     rf.value = flags;
 
-    if (a==0) return std::make_tuple(0, 0, 0);
-    if (b==0) return std::make_tuple(res1F->linkNode(a), 0, 0);
+    if (a==0) return std::make_pair(0, 0);
+    if (b==0) return std::make_pair(0, 0);
     if (a==-1) {
         if (rf.bf.is_potentially_equal || rf.bf.is_b_potentially_zero)
-            return std::make_tuple(-1, 0, 0);
+            return std::make_pair(0, 0);
         else
-            return std::make_tuple(0, -1, -1);
+            return std::make_pair(-1, -1);
     }
     assert(b != -1);
 
-    std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> result;
+    std::pair<MEDDLY::node_handle, MEDDLY::node_handle> result;
     MEDDLY::ct_entry_key* key = findResult(a, b, flags, result);
     if (nullptr==key)
         return result;
@@ -1526,11 +1525,11 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     //     resAB_size = a_size + b_size;
     // }
     // else resAB_size = a_size;
-    check_level_bound(res3F, res_level, resAB_size);
+    check_level_bound(res1F, res_level, resAB_size);
 
-    MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
-    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res2F, res_level, resA_size);
-    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res3F, res_level, resAB_size);
+    // MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
+    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
+    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res2F, res_level, resAB_size);
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
@@ -1539,7 +1538,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
             continue;
         int a_val = NodeToZ(a_full ? i : A->i(i));
 
-        unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
+        // unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
 
         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
             if (b_full && 0==B->d(j))
@@ -1585,7 +1584,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 down_rf.bf.sign_of_comparison = ij_cmp_sign;
                 down_rf.bf.lambda = rf.bf.lambda;
 
-                std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
+                std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down;
                 down = compute(A->d(i), B->d(j), down_rf.value);
 
                 // cout << "lvl(a)="<<a_level<<" lvl(b)="<<b_level<<" a="<<a_val<<" b="<<b_val
@@ -1593,23 +1592,23 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 //      << " sign_of_sum="<<down_rf.bf.sign_of_sum
                 //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
 
-                res1F->unlinkNode(get<0>(down));
-                unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
-                unionNodes(C_reduced2, get<2>(down), ZtoNode(a_minus_b), res3F, mddUnion);
+                // res1F->unlinkNode(get<0>(down));
+                unionNodes(C_reducibles1, down.first, ZtoNode(a_val), res1F, mddUnion);
+                unionNodes(C_reduced2, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
             }
         }
         // cout << "  i="<<i<<"  ZtoNode("<<a_val<<")="<<ZtoNode(a_val)<<endl;
-        differenceNodes(C_irreducibles0, res1F->linkNode(C_reducibles1->d(ZtoNode(a_val))), 
-                        ZtoNode(a_val), res1F, mddDifference);
+        // differenceNodes(C_irreducibles0, res1F->linkNode(C_reducibles1->d(ZtoNode(a_val))), 
+        //                 ZtoNode(a_val), res1F, mddDifference);
     }
 
     // cleanup
     MEDDLY::unpacked_node::recycle(B);
     MEDDLY::unpacked_node::recycle(A);
     // reduce and return result
-    get<0>(result) = res1F->createReducedNode(-1, C_irreducibles0);
-    get<1>(result) = res2F->createReducedNode(-1, C_reducibles1);
-    get<2>(result) = res3F->createReducedNode(-1, C_reduced2);
+    // get<0>(result) = res1F->createReducedNode(-1, C_irreducibles0);
+    result.first  = res1F->createReducedNode(-1, C_reducibles1);
+    result.second = res2F->createReducedNode(-1, C_reduced2);
     saveResult(key, /*a, divisor,*/ result);
 
     return result;

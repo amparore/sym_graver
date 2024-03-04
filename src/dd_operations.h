@@ -446,6 +446,9 @@ protected:
 // S-Vectors
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: si può eliminare NEG e avere solo decided/undecided, per poi scendere
+// ricorsivamente con (p,q) o (q,p) per decidere il segno.
+// NOTA2: la somma (A+B) può essere commutativa.
 enum sv_sign { SVS_UNDECIDED, SVS_POS, SVS_NEG, SVS_TOTAL };
 
 enum class ab_sum_t { A_PLUS_B, A_MINUS_B };
@@ -587,7 +590,7 @@ public:
 // Reduction of elements that are less-equal-squared-but-not-equal up to lambda
 /////////////////////////////////////////////////////////////////////////////////////////
 
-class reduce : public base_NNItoNNN {
+class reduce : public base_NNItoNN {
 public:
     reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
            const variable_order *pivot_order);
@@ -599,11 +602,11 @@ public:
                   const sv_sign sign_of_sum, 
                   const cmp_sign sign_of_comparison,
                   const size_t lambda,
-                  MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
+                  MEDDLY::dd_edge &reducibles, 
                   MEDDLY::dd_edge &reduced);
 
 protected:
-    virtual std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
+    virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) override;
 
     const variable_order *pivot_order; // pivoting order when proceeding by levels
