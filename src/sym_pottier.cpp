@@ -13,7 +13,7 @@ using namespace std;
 
 void sep(const pottier_params_t& pparams) {
     if (pparams.verbose)
-    cout << "----------------------------------------------------------------------" << endl;
+        cout << "----------------------------------------------------------------------" << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -379,6 +379,13 @@ sym_pottier(const meddly_context& ctx,
             const size_t level,
             const size_t rem_neg_step)
 {
+    if (pparams.very_verbose && level>0) {
+        const char* var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
+        cout << "\n\n\n\nStart of level "<<level<<"["<<var_name<<"]"<<endl; 
+        cout << "F^init:\n" << print_mdd_lambda(initGraver, ctx.vorder, ctx.pivot_order, level) << endl;
+        cout << "N^init:\n" << print_mdd_lambda(N, ctx.vorder, ctx.pivot_order, level) << endl;
+        cout << endl;
+    }
     if (pparams.dynamic_svectors)
         return sym_pottier_grad(ctx, pparams, initGraver, N, level, rem_neg_step);
 
@@ -439,14 +446,24 @@ sym_pottier(const meddly_context& ctx,
     // }
 
     size_t iter=0;
+    int degree = -1;
     do {
         // Get the subset S of C that will be normalized and furtherly combined
         MEDDLY::dd_edge S(ctx.forestMDD);
-        int degree = -1;
         if (pparams.by_degree) { // get the subset of C having the smallest degree
             assert(level != 0);
+            int prev_degree = degree;
             SMALLEST_DEGREE_TABLE->get_op(level, degtype)->computeDDEdge(C, degree);
             DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(C, degree, S);
+            // if (!is_emptyset(S)) {
+            //     if (!(prev_degree==-1 || prev_degree<=degree)) {
+            //         cout << "\n\n\n";
+            //         cout << "prev_degree="<<prev_degree<<" degree="<<degree<<endl;
+            //         cout << "**C:\n" << print_mdd_lambda(C, ctx.vorder, ctx.pivot_order, level) << endl;
+            //         cout << "**S:\n" << print_mdd_lambda(S, ctx.vorder, ctx.pivot_order, level) << endl;
+            //     }
+            //     assert(prev_degree==-1 || prev_degree<=degree);
+            // }
         }
         else { // ignore degrees, take all C at once
             S = C;
@@ -471,11 +488,13 @@ sym_pottier(const meddly_context& ctx,
         S = sym_difference(S, F);
 
         if (pparams.very_verbose)
-            cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
+            cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl;
         if (is_emptyset(S) && is_emptyset(C))
             break;
         if (pparams.very_verbose) {
-            cout << "C:\n" << print_mdd(S, ctx.vorder) << endl;
+            if (!pparams.by_degree) cout << "C:\n";
+            else cout << "C("<<degree<<"):\n";
+            cout << print_mdd_lambda(S, ctx.vorder, ctx.pivot_order, level) << endl;
         }
 
         F = sym_union(F, S);
@@ -520,12 +539,6 @@ sym_pottier_grad(const meddly_context& ctx,
 
     // F = N u initG
     F = sym_union(initGraver, N); 
-
-    if (pparams.very_verbose) {
-        cout << "\n\n\n\nStart of level "<<level<<endl; 
-        cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
-        cout << endl;
-    }
 
     if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
         // perform the completion procedure to extend to the new column
@@ -607,9 +620,9 @@ sym_pottier_grad(const meddly_context& ctx,
                     //      << "  normForm(SV)="<<SV.getCardinality()<<endl;
 
                     if (pparams.very_verbose) {
-                        cout << "F+("<<i<<"):\n" << print_mdd(Fi, ctx.vorder);
-                        cout << "F-("<<j<<"):\n" << print_mdd(Fj, ctx.vorder);
-                        cout << "SV("<<k<<"):\n" << print_mdd(SV, ctx.vorder);
+                        cout << "F+("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
+                        cout << "F-("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
+                        cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
                         cout << endl << endl;
                     }
 
@@ -624,7 +637,7 @@ sym_pottier_grad(const meddly_context& ctx,
         }
 
         if (pparams.very_verbose)
-            cout << "F:\n" << print_mdd(F, ctx.vorder) << endl << endl;
+            cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl << endl;
 
         if (added && k==0) {
             // repeat for k=0

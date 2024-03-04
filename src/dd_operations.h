@@ -128,13 +128,23 @@ struct mdd_printer {
     const variable_order& vorder;
     bool write_header;
     bool write_counts;
+    // only for projection problems
+    const variable_order* pivot_order;
+    const size_t lambda;
 };
 std::ostream& operator<< (std::ostream&, const mdd_printer&);
 
 inline mdd_printer print_mdd(MEDDLY::dd_edge dd, const variable_order& vorder,
                              bool write_header=true, bool write_counts=false) {
     return mdd_printer{ .dd=dd, .vorder=vorder, .write_header=write_header, 
-                        .write_counts=write_counts };
+                        .write_counts=write_counts, .pivot_order=nullptr, .lambda=0 };
+}
+
+inline mdd_printer print_mdd_lambda(MEDDLY::dd_edge dd, const variable_order& vorder,
+                                    const variable_order& pivot_order, size_t lambda,
+                                    bool write_header=true, bool write_counts=false) {
+    return mdd_printer{ .dd=dd, .vorder=vorder, .write_header=write_header, 
+                        .write_counts=write_counts, .pivot_order=&pivot_order, .lambda=lambda };
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

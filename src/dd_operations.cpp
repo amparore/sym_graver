@@ -50,10 +50,27 @@ std::ostream& operator<< (std::ostream& os, const mdd_printer& mp)
     // print paths/tuples/rows
     for (MEDDLY::enumerator path(mp.dd); path != 0; ++path) {
         const int *assignments = path.getAssignments() + 1;
+        int degree = 0;
         for(size_t var=0; var < m; var++) {
+            bool on = false;
             const size_t lvl = mp.vorder.var2lvl(var);
-            os << setw(col_spaces[var]) << right << NodeToZ(assignments[lvl]) << " ";
+            int value = NodeToZ(assignments[lvl]);
+            if (mp.lambda>0) {
+                if (mp.pivot_order->is_above_lambda(mp.lambda, lvl+1)) { os << "\033[90m"; on = true; }
+                else if (mp.lambda == lvl+1) { 
+                    os << (value>0 ? "\033[92m" : (value==0 ? "\033[93m" : "\033[95m"));
+                    on = true; 
+                }
+            }
+            os << setw(col_spaces[var]) << right << value << " ";
+            if (on) {
+                os << "\033[39m";
+            }
+            if (mp.lambda>0 && mp.pivot_order->is_below_lambda(mp.lambda, lvl+1))
+                degree += value;
         }
+        if (mp.lambda>0)
+            os << " [" << degree << "]";
         os << endl;
     }
     return os;
@@ -2906,11 +2923,7 @@ MEDDLY::node_handle degree_selector_op::compute(MEDDLY::node_handle a, const int
     if (nullptr==key)
         return result;
 
-    // // Read the node and accumulate the LCM of the GCDs
     MEDDLY::unpacked_node* A = argF->newUnpacked(a, MEDDLY::SPARSE_ONLY);
-    // MEDDLY::unpacked_node* A = MEDDLY::unpacked_node::newFromNode(argF, a, false);
-    // MEDDLY::unpacked_node *A = MEDDLY::unpacked_node::New();
-    // argF->unpackNode(A, a, MEDDLY::FULL_OR_SPARSE);
     const int a_level = argF->getNodeLevel(a);
     const size_t a_size = get_node_size(A);
 
