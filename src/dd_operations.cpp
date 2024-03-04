@@ -948,7 +948,6 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
             // compute -(a+b) or -(a-b)
             if (curr_sign_of_sum == SVS_NEG) {
                 ab_sum = -ab_sum;
-                // ab_prod = -ab_prod;
             }
 
             int ab_sum_idx = ZtoNode(ab_sum);
@@ -956,14 +955,7 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
                 cout << "ab_sum_idx:"<<ab_sum_idx<<" res_size:"<<res_size<<endl;
             assert(ab_sum_idx < res_size);
 
-            // bool ij_conf = (ab_sign_prod >= 0);
             bool ij_conf = comparable_signs(a_val, b_val);
-            // if (curr_sign_of_sum == SVS_NEG)
-            //     ij_conf = -(multiply_exact(a_val, b_val)) >= 0;
-            // else
-            //     ij_conf = (multiply_exact(a_val, b_val)) >= 0;
-
-
 
             bool down_is_conf = is_potentially_conformant && ij_conf;
 

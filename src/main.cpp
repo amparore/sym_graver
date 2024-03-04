@@ -201,6 +201,7 @@ void print_cpu_rusage() {
 // Unit tests:
 
 void unit_test_vcanon();
+void unit_test_svectors();
 void unit_test_reduce();
 void unit_test_sign_canon();
 void unit_test_minimal_supports();
@@ -210,6 +211,9 @@ void do_unit_tests(int argc, char** argv) {
     while (ii < argc) {
         if (0==strcmp(argv[ii], "-unit-test-vcanon")) { 
             unit_test_vcanon(); 
+        }
+        else if (0==strcmp(argv[ii], "-unit-test-svectors")) { 
+            unit_test_svectors(); 
         }
         else if (0==strcmp(argv[ii], "-unit-test-reduce")) { 
             unit_test_reduce(); 

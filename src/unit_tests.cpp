@@ -46,19 +46,54 @@ void unit_test_vcanon() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+void unit_test_svectors() {
+    const std::vector<std::vector<int>> mA = {
+        {  0,  5,  9,  13,  1, 1 }, 
+        {  0, -5, -9, -14, -2, 1 }, 
+        { -5,  0, -6, -12, -4, 1 }, 
+     };
+    const std::vector<std::vector<int>> mB = {      
+    };
+    const size_t num_levels = mA[0].size();
+    variable_order vorder(num_levels), pivot_order(num_levels);
+
+    meddly_context ctx(num_levels, vorder, pivot_order);
+    size_t meddly_cache_size = 1000000;
+    ctx.initialize(meddly_cache_size);
+    MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
+    MEDDLY::dd_edge B = mdd_from_vectors(mB, ctx.forestMDD, false);
+    B = A;
+
+    cout << "A:\n" << print_mdd(A, vorder) << endl;
+    cout << "B:\n" << print_mdd(B, vorder) << endl;
+    cout << "----------------------------------\n";
+
+    MEDDLY::dd_edge SVp(ctx.forestMDD);
+    MEDDLY::dd_edge SVn(ctx.forestMDD);
+    S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_PLUS_B, SVS_POS, 6, SVp);
+    cout << "A + B:\n" << print_mdd(SVp, vorder) << endl;
+
+    S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_MINUS_B, SVS_UNDECIDED, 6, SVn);
+    cout << "A - B:\n" << print_mdd(SVn, vorder) << endl;
+
+    exit(0);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 void unit_test_reduce() {
     const std::vector<std::vector<int>> mA = {
         { 0, 3, 1 },
         { 0,-3, 1 },
         { 7, 0, 0 },
         { 7, 0,-1 },
-        { -2, -2, 2 },
-    };
-    const std::vector<std::vector<int>> mB = {
+        // { -2, -2, 2 },
+     };
+    const std::vector<std::vector<int>> mB = {      
         { 0, 4, 1 },
         { 0, 1, 1 },
         { 7, 0, 0 },
-        // { 0, -1, 0 },
+        { 0, -1, 0 },
     };
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);

@@ -201,7 +201,7 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
     }
     else {
         // Compute the S-Vectors over all levels at once
-        sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
+
         // a + b
         // When summing vectors, the result will always be in canonical form, as
         // both a and b are. There is therefore no need to decide the sign of the sum,
@@ -211,7 +211,9 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
         if (pparams.target == compute_target::GRAVER_BASIS) {
             MEDDLY::dd_edge complSV(ctx.forestMDD);
             // a - b
-            S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_MINUS_B, svs, level, complSV);
+            // In this case, the sign of the result needs to be checked for canonicity,
+            // deciding if the half-basis will store (a-b) or its complement.
+            S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_MINUS_B, SVS_UNDECIDED, level, complSV);
             SV = sym_union(SV, complSV);
         }
     }
@@ -462,7 +464,6 @@ sym_pottier(const meddly_context& ctx,
         prevC = C;
         C = sym_difference(C, S);
 
-
         // cout << "normal_form" << endl;
         if (!pparams.by_degree)
             S = sym_normal_form(ctx, pparams, S, S, level, false);
@@ -477,9 +478,11 @@ sym_pottier(const meddly_context& ctx,
             cout << "C:\n" << print_mdd(S, ctx.vorder) << endl;
         }
 
+        F = sym_union(F, S);
         MEDDLY::dd_edge SV(ctx.forestMDD);
         SV = sym_s_vectors(ctx, pparams, F, S, level);
         pparams.perf_C(SV);
+
         if (reduce_C) {
             SV = sym_difference(SV, prevC);
             SV = sym_difference(SV, S);
@@ -492,7 +495,7 @@ sym_pottier(const meddly_context& ctx,
         // }
 
         C = sym_union(C, SV);
-        F = sym_union(F, S);
+        // F = sym_union(F, S);
 
         iter++;
     } while (C != prevC);
