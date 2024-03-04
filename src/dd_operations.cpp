@@ -1488,8 +1488,8 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     reduce_flags_t rf;
     rf.value = flags;
 
-    if (a==0) return std::make_pair(0, 0);
-    if (b==0) return std::make_pair(0, 0);
+    if (a==0 || b==0) 
+        return std::make_pair(0, 0);
     if (a==-1) {
         if (rf.bf.is_potentially_equal || rf.bf.is_b_potentially_zero)
             return std::make_pair(0, 0);
@@ -1527,7 +1527,6 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     // else resAB_size = a_size;
     check_level_bound(res1F, res_level, resAB_size);
 
-    // MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
     MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
     MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res2F, res_level, resAB_size);
 
@@ -1537,8 +1536,6 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
         if (a_full && 0==A->d(i))
             continue;
         int a_val = NodeToZ(a_full ? i : A->i(i));
-
-        // unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
 
         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
             if (b_full && 0==B->d(j))
@@ -1592,21 +1589,16 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 //      << " sign_of_sum="<<down_rf.bf.sign_of_sum
                 //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
 
-                // res1F->unlinkNode(get<0>(down));
                 unionNodes(C_reducibles1, down.first, ZtoNode(a_val), res1F, mddUnion);
                 unionNodes(C_reduced2, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
             }
         }
-        // cout << "  i="<<i<<"  ZtoNode("<<a_val<<")="<<ZtoNode(a_val)<<endl;
-        // differenceNodes(C_irreducibles0, res1F->linkNode(C_reducibles1->d(ZtoNode(a_val))), 
-        //                 ZtoNode(a_val), res1F, mddDifference);
     }
 
     // cleanup
     MEDDLY::unpacked_node::recycle(B);
     MEDDLY::unpacked_node::recycle(A);
     // reduce and return result
-    // get<0>(result) = res1F->createReducedNode(-1, C_irreducibles0);
     result.first  = res1F->createReducedNode(-1, C_reducibles1);
     result.second = res2F->createReducedNode(-1, C_reduced2);
     saveResult(key, /*a, divisor,*/ result);

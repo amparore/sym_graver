@@ -203,8 +203,10 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
         // Compute the S-Vectors over all levels at once
         sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
         // a + b
-        // TODO: no need for svs even in Graver, use SVS_POS always.
-        S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_PLUS_B, svs, level, SV);
+        // When summing vectors, the result will always be in canonical form, as
+        // both a and b are. There is therefore no need to decide the sign of the sum,
+        // and SVS_POS can be used in all cases.
+        S_VECTORS->computeDDEdge(A, B, true, ab_sum_t::A_PLUS_B, SVS_POS, level, SV);
 
         if (pparams.target == compute_target::GRAVER_BASIS) {
             MEDDLY::dd_edge complSV(ctx.forestMDD);
@@ -277,8 +279,6 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         MEDDLY::dd_edge I2(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
         REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, R, D);
         I2 = sym_difference(A, R);
-
-        // FIXME: REDUCE può tornare solo R e D, non serve I
 
         // cout << "QNF:\n";
         // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
@@ -353,15 +353,15 @@ pottier_iter_banner_start(const meddly_context& ctx,
         if (pparams.very_verbose || iter == 0) {
             const char* var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
             cout << "Level=" << level << "["<<var_name<<"]";
-            size_t spaces = 10 - strlen(var_name);
-            if (level < 1000) spaces--;
-            if (level < 100)  spaces--;
-            if (level < 10)   spaces--;
+            size_t spaces = 8 - strlen(var_name);
+            if (level >= 1000) spaces--;
+            if (level >= 100)  spaces--;
+            if (level >= 10)   spaces--;
             for (size_t i=0; i<spaces; i++)
                 cout << " ";
         }
         else
-            cout << "                ";
+            cout << "                 ";
     }
     cout << "Iter="<< left << setw(3) <<iter;
 }
