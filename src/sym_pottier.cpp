@@ -603,6 +603,9 @@ sym_pottier_grad(const meddly_context& ctx,
                     pparams.perf_C(SV);
                     // normalize
                     SV = sym_normal_form(ctx, pparams, SV, F, level, false);
+
+                    SV = sym_normal_form(ctx, pparams, SV, SV, level, false);
+                    SV = sym_difference(SV, F);
                     // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<SV2.getCardinality()
                     //      << "  normForm(SV)="<<SV.getCardinality()<<endl;
 

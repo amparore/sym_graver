@@ -245,7 +245,7 @@ int main(int argc, char** argv)
     bool save_dd = false;
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
-    bool do_pivoting = true;
+    selected_pivoting pivoting = selected_pivoting::MAT_HEUR;
     bool print_rusage = false;
     bool hnf_Zbasis = false;
     pottier_params_t pparams;
@@ -360,7 +360,10 @@ int main(int argc, char** argv)
             output_mat_dd = true;
         }
         else if (0==strcmp(argv[ii], "-np")) {
-            do_pivoting = false;
+            pivoting = selected_pivoting::NONE;
+        }
+        else if (0==strcmp(argv[ii], "-pf")) {
+            pivoting = selected_pivoting::FROM_FILE;
         }
         else if (0==strcmp(argv[ii], "-u")) {
             print_rusage = true;
@@ -404,6 +407,7 @@ int main(int argc, char** argv)
                  "         -ye      Compute by generators.\n"
                  "         -ne      Disable computation by generators. [default]\n"
                  "         -np      Disable level pivoting.\n"
+                 "         -pf      Read pivot order from file <basename>.piv\n"
                  "Output:  -dd      Save decision diagrams as PDFs.\n"
                  "         -o       Write results as explicit matrices.\n"
                  "         -od      Write results as serialized MDDs (MEDDLY format).\n"
@@ -556,7 +560,7 @@ int main(int argc, char** argv)
             pivot_order_from_matrix_iter(vorder, lattice_Zgenerators, pparams.target==compute_target::GRAVER_BASIS, 
                                          num_iters_pivot_heur, hnf_Zbasis_leading_cols);
             vorder.invert();
-            do_pivoting = false;
+            pivoting = selected_pivoting::NONE;
             break;
     }
 
@@ -579,10 +583,20 @@ int main(int argc, char** argv)
 
     // Pivot ordering
     variable_order pivot_order(num_variables);
-    if (do_pivoting) {
-        // pivot_order_from_matrix(pivot_order, lattice_Zgenerators, pparams.target==compute_target::GRAVER_BASIS);
-        pivot_order_from_matrix_iter(pivot_order, lattice_Zgenerators, pparams.target==compute_target::GRAVER_BASIS, 
-                                     num_iters_pivot_heur, hnf_Zbasis_leading_cols);
+    switch (pivoting) {
+        case selected_pivoting::NONE:
+            break;
+        case selected_pivoting::MAT_HEUR:
+            pivot_order_from_matrix_iter(pivot_order, lattice_Zgenerators, 
+                                         pparams.target==compute_target::GRAVER_BASIS, 
+                                         num_iters_pivot_heur, hnf_Zbasis_leading_cols);
+            break;
+
+        case selected_pivoting::FROM_FILE: {
+                std::string pivot_fname = base_fname + ".piv";
+                pivot_order_from_file(pivot_order, vorder, pivot_fname.c_str());
+            }
+            break;
     }
 
     if (pparams.verbose) {

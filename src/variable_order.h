@@ -25,6 +25,8 @@ public:
 
     inline void invert() { var_to_level.swap(level_to_var); }
 
+    inline size_t num_variables() const { return var_to_level.size(); }
+
     // Pivoting for meddly
     // same as lambda means that lvl == lambda in pivot order
     inline bool is_same_as_lambda(size_t lambda, size_t lvl) const 
@@ -67,6 +69,10 @@ enum class selected_varorder {
     NONE, BOOST_SLOAN, SLOAN, FAST, PIVOTING
 };
 
+enum class selected_pivoting {
+    NONE, MAT_HEUR, FROM_FILE
+};
+
 // pivot ordering for Pottier-by-level
 // void pivot_order_from_matrix(variable_order& pivots,
 //                              const std::vector<std::vector<int>>& A,
@@ -77,6 +83,9 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
                                   const bool optimize_graver,
                                   const size_t num_iters,
                                   const std::vector<size_t>& fixed_vars);
+
+void pivot_order_from_file(variable_order& pivots, const variable_order& vorder,
+                           const char* fname);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __VARIABLE_ORDER_H__

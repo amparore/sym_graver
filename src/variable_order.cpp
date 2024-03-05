@@ -874,3 +874,17 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+void pivot_order_from_file(variable_order& pivots, const variable_order& vorder, 
+                           const char* fname) 
+{
+    ifstream ifs(fname);
+
+    for (size_t i=0; i<pivots.num_variables(); i++) {
+        size_t l;
+        ifs >> l;
+        pivots.bind_var2lvl(i, vorder.var2lvl(l));
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
