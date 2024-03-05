@@ -247,6 +247,7 @@ int main(int argc, char** argv)
     bool output_mat_dd = false;
     bool do_pivoting = true;
     bool print_rusage = false;
+    bool hnf_Zbasis = false;
     pottier_params_t pparams;
     perf_counters_t perf_counters;
     bool use_old_basisZgen = false;
@@ -261,6 +262,9 @@ int main(int argc, char** argv)
         }
         else if (0==strcmp(argv[ii], "-vb")) {
             pparams.verbose = pparams.verbose_for_basis = true;
+        }
+        else if (0==strcmp(argv[ii], "-vg")) {
+            pparams.verbose = pparams.verbose_for_Zgenerators = true;
         }
         else if (0==strcmp(argv[ii], "-vv")) {
             pparams.verbose = pparams.very_verbose = pparams.verbose_for_basis = true;
@@ -303,6 +307,9 @@ int main(int argc, char** argv)
         }
         else if (0==strcmp(argv[ii], "-cs") && ii+1 < argc) {
             meddly_cache_size = stoul(argv[++ii]);
+        }
+        else if (0==strcmp(argv[ii], "-hg")) {
+            hnf_Zbasis = true;
         }
         else if (0==strcmp(argv[ii], "-yd")) {
             pparams.by_levels = true;
@@ -387,6 +394,7 @@ int main(int argc, char** argv)
                  "         -x       Compute the set of extremal rays of the cone.\n"
                  "         -srx     Compute the smallest representative of extremal rays (default: primitive).\n"
                  "         -cs <x>  Set Meddly cache size as <x>.\n"
+                 "         -hg      Use Hermite normal form of the Z-basis.\n"
                  "Method:  -yl      Computate by levels. [default]\n"
                  "         -nl      Disable computation by levels.\n"
                  "         -z       Compute by levels and normalize by levels.\n"
@@ -491,17 +499,29 @@ int main(int argc, char** argv)
             lattice_Zgenerators = integral_kernel_Zgens(A, pparams.verbose_for_basis);
         }
 
-        if (pparams.verbose_show_mat(lattice_Zgenerators)) {
+        if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
             cout << "Z-basis for the integral kernel of A:" << endl; print_mat(lattice_Zgenerators); cout << endl;
         }
     }
     else {
         lattice_Zgenerators = A;
     }
+
     if (lattice_Zgenerators.size() == 0) {
         cerr << "Z-basis is empty." << endl;
-        // return 0;
     }
+    else if (hnf_Zbasis) { // Use the HNF of the Z-generator
+        std::vector<std::vector<int>> hnf_kerZ, U;
+        std::vector<size_t> leading_cols;
+        hermite_normal_form(lattice_Zgenerators, hnf_kerZ, U, &leading_cols, 
+                            pparams.verbose_for_basis);
+        lattice_Zgenerators = hnf_kerZ;
+
+        if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
+            cout << "HNF(Z-basis):" << endl; print_mat(lattice_Zgenerators); cout << endl;
+        }
+    }
+    // exit(0);
 
     //----------------------------------------------------
     // Variable ordering to minimize DD size

@@ -26,6 +26,7 @@ struct pottier_params_t {
     bool verbose = false;
     bool very_verbose = false;
     bool verbose_for_basis = false;
+    bool verbose_for_Zgenerators = false;
     bool by_degree = true;
     bool dynamic_svectors = false;
     bool primitive_extremal_rays = true;

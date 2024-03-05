@@ -381,7 +381,9 @@ sym_pottier(const meddly_context& ctx,
 {
     if (pparams.very_verbose && level>0) {
         const char* var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
-        cout << "\n\n\n\nStart of level "<<level<<"["<<var_name<<"]"<<endl; 
+        cout << "\n\n\n\n";
+        sep(pparams);sep(pparams);
+        cout<<"Start of level "<<level<<"["<<var_name<<"]"<<endl; 
         cout << "F^init:\n" << print_mdd_lambda(initGraver, ctx.vorder, ctx.pivot_order, level) << endl;
         cout << "N^init:\n" << print_mdd_lambda(N, ctx.vorder, ctx.pivot_order, level) << endl;
         cout << endl;
@@ -401,13 +403,6 @@ sym_pottier(const meddly_context& ctx,
 
     // F = N u initG
     F = sym_union(initGraver, N); 
-    // if (pparams.by_generators) {
-    //     F = initGraver;
-    // }
-    // else {
-    //     // F = N u initG
-    //     F = sym_union(initGraver, N); 
-    // }
 
     // cout << "(1) |initGraver|=" << initGraver.getCardinality() << ",n="<< initGraver.getNodeCount() << endl;
     // cout << "initGraver:\n" << print_mdd(initGraver, ctx.vorder) << endl;
@@ -421,10 +416,7 @@ sym_pottier(const meddly_context& ctx,
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
         MEDDLY::dd_edge prevF(ctx.forestMDD);
-        // do {
-        //     prevF = F;
-            F = sym_normal_form(ctx, pparams, F, F, level, false);
-        // } while (F != prevF);
+        F = sym_normal_form(ctx, pparams, F, F, level, false);
 
         // MEDDLY::dd_edge removed(ctx.forestMDD), F2(ctx.forestMDD);
         // // COMPL_PROC_OPS->get_op(level)->computeDDEdge(F, F, removed, false);
@@ -437,13 +429,8 @@ sym_pottier(const meddly_context& ctx,
         // F = F2;
     }       
 
-    // TODO: se si va per generatori, avremmo potuto non fare subito la F=union(initG, N), per non ricombinare con N
-    C = sym_s_vectors(ctx, pparams, F, N, level);
+    C = sym_s_vectors(ctx, pparams, F, is_emptyset(N) ? F : N, level);
     pparams.perf_C(C);
-
-    // if (pparams.by_generators) {
-    //     F = sym_union(F, N);
-    // }
 
     size_t iter=0;
     int degree = -1;
@@ -677,8 +664,8 @@ sym_pottier_PnL(const meddly_context& ctx,
             MEDDLY::dd_edge init_level = sym_intersection(N, nnz_sel);
             N = sym_difference(N, init_level);
 
-            if (init_level == emptySet)
-                init_level = G; // nothing new to add, the initial s-vectors is (G+G)
+            // if (init_level == emptySet)
+            //     init_level = G; // nothing new to add, the initial s-vectors is (G+G)
 
             // Complete the level
             G = sym_pottier(ctx, pparams, G, init_level, level, rem_neg_step);

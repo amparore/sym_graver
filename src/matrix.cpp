@@ -5,6 +5,7 @@
 #include <list>
 #include <cassert>
 #include <algorithm>
+#include <numeric>
 
 #include "math_utils.h"
 #include "matrix.h"
@@ -995,15 +996,48 @@ print_mat_hnf(const std::vector<std::vector<int>>& H, // n*m
     auto HH = H;
     auto UU = U;
     std::vector<size_t> indices(m);
-    for (size_t j=0; j<m; j++)
-        indices[j] = j;
-    for (size_t k=0; k<leading_cols.size(); k++) {
-    // for (ssize_t k=leading_cols.size()-1; k>=0; k--) {
-        // cout << "swap columns: "<<indices[k]<<" <> "<<leading_cols[k]<<endl;
-        swap_columns(HH, indices[k], leading_cols[k]);
-        // swap_columns(UU, indices[k], leading_cols[k]); // columns are over m, UU is n*n
-        std::swap(indices[k], indices[leading_cols[k]]);
+    // for (size_t j=0; j<m; j++)
+    //     indices[j] = j;
+
+    // from H to HH columns
+    for (size_t k=0, j=0; k<m; k++) {
+        if(k < leading_cols.size()) {
+            indices[k] = leading_cols[k];
+        }
+        else {
+            // find next j not in leading_cols[]
+            bool found = false;
+            while (!found) {
+                if (std::find(leading_cols.begin(), leading_cols.end(), j) == leading_cols.end()) {
+                    found = true;
+                }
+                else j++;
+            }
+            indices[k] = j++;
+        }
     }
+    for (size_t i=0; i<n; i++) {
+        for (size_t j=0; j<m; j++)
+            HH[i][j] = H[i][indices[j]];
+        for (size_t j=0; j<n; j++)
+            UU[i][j] = U[i][j<m ? indices[j] : j];
+    }
+
+    // for (size_t k=0; k<leading_cols.size(); k++) {
+    // // for (ssize_t k=leading_cols.size()-1; k>=0; k--) {
+    //     // cout << "swap columns: "<<indices[k]<<" <> "<<leading_cols[k]<<endl;
+    //     swap_columns(HH, indices[k], leading_cols[k]);
+    //     // swap_columns(UU, indices[k], leading_cols[k]); // columns are over m, UU is n*n
+    //     std::swap(indices[k], indices[leading_cols[k]]);
+    // }
+    cout << "leading_cols: ";
+    for (size_t k=0; k<leading_cols.size(); k++)
+        cout << leading_cols[k] << " ";
+    cout << endl;
+
+    cout << "indices:      ";
+    for (size_t i : indices) cout << i << " ";
+    cout << endl;
 
     // print H   ┼─│║═╬
     cout << "H:\n";
@@ -1094,7 +1128,7 @@ hnf_next_column_heur(const std::vector<std::vector<int>>& H,
 
             // cout << "  j2:"<<j2<<"/"<<m<<"  w:"<<std::get<0>(w)<<","<<std::get<1>(w)<<","<<std::get<2>(w)<<endl;
             if (std::get<1>(w) > 0) {
-                if (j == size_t(-1) || w < cpivot_val)
+                if (j == size_t(-1) || w <= cpivot_val)
                 {
                     j = j2;
                     cpivot_val = w;
@@ -1186,13 +1220,10 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
     if (n==0)
         return;
 
-    // for (size_t i=0; i<n; i++)
-    //     // reduce_gcd_HU(H[i], U, i);
-    //     reduce_gcd(H[i]);
-
     std::vector<bool> pivot_cols(m);
 
-    for (size_t k=0; k<n; k++) {
+    size_t k;
+    for (k=0; k<n; k++) {
         if (verbose) {
             cout << "\n\nStart of new iteration for k="<<k<<endl;
             print_mat_hnf(H, U, *leading_cols, k-1); cout << endl;
@@ -1201,6 +1232,10 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
         size_t j;
         if (!hnf_next_column_heur(H, pivot_cols, k, j))
             break; // no more pivots
+
+        if (verbose) {
+            cout << "Pivot column="<<j<<endl;
+        }
 
         leading_cols->push_back(j);
         pivot_cols[j] = true;
@@ -1226,14 +1261,21 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
             assert(j != size_t(-1) && H[k][j] != 0);
             // make leading positive
             if (H[k][j] < 0) {
+                if (verbose) cout << "Making pivot row' leading value positive." << endl;
                 negate_row(H[k]);
                 negate_row(U[k]);
             }
 
-            // reduce pivot j of all other rows rows 0..k-1, k+1..n
+            // reduce pivot j of all other rows 0..k-1, k+1..n
             for (size_t i0=0; i0<n; i0++) {
                 if (i0 != k) {
+                    // TODO: Test which combination is better.
                     int mult = -H[i0][j] / H[k][j];
+                    // int v = H[i0][j], r=abs(H[k][j]), mult=0;
+                    // while (v < 0) { v += r; mult++; }
+                    // while (v >= r) { v -= r; mult--; }
+                    // cout <<"H[i0][j]="<<H[i0][j]<<" H[k][j]="<<H[k][j]<<" mult="<<mult<<" v="<<v<<endl;
+                    
                     if (mult != 0) {
                         // cout << "  + add row "<<k<<" to "<<i0<<"  mult="<<mult<<endl;
                         // subtract row k to non-pivot row i0
