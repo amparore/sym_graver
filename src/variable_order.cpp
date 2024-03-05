@@ -782,12 +782,18 @@ void boost_sloan_varorder(const std::vector<std::vector<int>>& A,
 void pivot_order_from_matrix_iter(variable_order& pivots,
                                   const std::vector<std::vector<int>>& A,
                                   const bool optimize_graver,
-                                  const size_t num_iters) 
+                                  const size_t num_iters,
+                                  const std::vector<size_t>& fixed_vars) 
 {
     const size_t n = A.size();
     if (n == 0)
         return;
+
     const size_t m = A.front().size();
+    std::vector<bool> blocked_vars(m, false);
+    for (size_t var : fixed_vars)
+        blocked_vars[var] = true;
+
     typedef double weight_t;
     std::vector<weight_t> row_weights(n, weight_t(1));
     std::vector<weight_t> col_weights(m, weight_t(1));
@@ -798,8 +804,10 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
             for (size_t i=0; i<n; i++) {
                 weight_t rw = 0.0;
                 for (size_t j=0; j<m; j++) {
-                    if (A[i][j] != 0)
-                        rw += col_weights[j]; // column/var j is affected by row i
+                    if (!blocked_vars[j]) {
+                        if (A[i][j] != 0)
+                            rw += col_weights[j]; // column/var j is affected by row i
+                    }
                 }
                 row_weights[i] = max(weight_t(1), rw);
             }
@@ -807,35 +815,37 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
 
         // recompute column/variable weights making an estimate of the total operation count
         for (size_t j=0; j<m; j++) {
-            weight_t w;
-            if (optimize_graver) { // take interval / gcd
-                weight_t max_pos = 0, max_neg = 0;
-                int g = 0;
-                for (size_t i=0; i<n; i++) {
-                    if (A[i][j] > 0) {
-                        max_pos = max(max_pos, A[i][j] * row_weights[i]);
-                        g = gcd(g, A[i][j]);
+            if (!blocked_vars[j]) {
+                weight_t w;
+                if (optimize_graver) { // take interval / gcd
+                    weight_t max_pos = 0, max_neg = 0;
+                    int g = 0;
+                    for (size_t i=0; i<n; i++) {
+                        if (A[i][j] > 0) {
+                            max_pos = max(max_pos, A[i][j] * row_weights[i]);
+                            g = gcd(g, A[i][j]);
+                        }
+                        else if (A[i][j] < 0) {
+                            max_neg = max(max_neg, -A[i][j] * row_weights[i]);
+                            g = gcd(g, -A[i][j]);
+                        }
                     }
-                    else if (A[i][j] < 0) {
-                        max_neg = max(max_neg, -A[i][j] * row_weights[i]);
-                        g = gcd(g, -A[i][j]);
+                    w = max_pos + max_neg;
+                    if (g > 1)
+                        w /= g;
+                }
+                else { // take (sum(positives) * sum(negatives)) + sum
+                    weight_t pos=0, neg=0;
+                    for (size_t i=0; i<n; i++) {
+                        if (A[i][j] > 0) 
+                            pos += A[i][j] * row_weights[i];
+                        else if (A[i][j] < 0) 
+                            neg -= A[i][j] * row_weights[i];
                     }
+                    w = (pos * neg) + pos + neg;
                 }
-                w = max_pos + max_neg;
-                if (g > 1)
-                    w /= g;
+                col_weights[j] = w;
             }
-            else { // take (sum(positives) * sum(negatives)) + sum
-                weight_t pos=0, neg=0;
-                for (size_t i=0; i<n; i++) {
-                    if (A[i][j] > 0) 
-                        pos += A[i][j] * row_weights[i];
-                    else if (A[i][j] < 0) 
-                        neg -= A[i][j] * row_weights[i];
-                }
-                w = (pos * neg) + pos + neg;
-            }
-            col_weights[j] = w;
         }
 
         // cout << "Step: "<<step << endl;
@@ -850,9 +860,16 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
     for (size_t j=0; j<m; j++)
         sorted_weights[j] = make_pair(col_weights[j], j);
     std::sort(sorted_weights.begin(), sorted_weights.end());
+    // first put all fixed vars
+    size_t pos = 0;
+    for (size_t var : fixed_vars)
+        pivots.bind_var2lvl(pos++, var); 
+    // then put all the other vars, in weighted order
     for (size_t j=0; j<m; j++) {
+        size_t var = sorted_weights[j].second;
         // cout << "j:"<<j<<" w:"<<sorted_weights[j].first<<" var:"<<sorted_weights[j].second<<endl;
-        pivots.bind_var2lvl(j, sorted_weights[j].second); 
+        if (!blocked_vars[var])
+            pivots.bind_var2lvl(pos++, var); 
     }
 }
 

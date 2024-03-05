@@ -75,7 +75,8 @@ enum class selected_varorder {
 void pivot_order_from_matrix_iter(variable_order& pivots,
                                   const std::vector<std::vector<int>>& A,
                                   const bool optimize_graver,
-                                  const size_t num_iters);
+                                  const size_t num_iters,
+                                  const std::vector<size_t>& fixed_vars);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __VARIABLE_ORDER_H__
