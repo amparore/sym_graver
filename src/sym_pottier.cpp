@@ -276,15 +276,15 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
     }
 
-    cout << "                     QNF: " << flush;
-    MEDDLY::dd_edge I(ctx.forestMDD);
+    // cout << "                     QNF: " << flush;
+    MEDDLY::dd_edge ALL_I(ctx.forestMDD);
     while (!is_emptyset(A)) {
-        MEDDLY::dd_edge I2(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
-        // REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, R, D);
+        MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
+        REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
         // I2 = sym_difference(A, R);
         // I2 = sym_difference(I2, ctx.vzero);
-        REDUCE3->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
-        cout << D.getCardinality() << " " << flush;
+        // REDUCE3->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
+        // cout << D.getCardinality() << " " << flush;
 
         // cout << "QNF:\n";
         // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
@@ -293,16 +293,16 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         // cout << "R:\n" << print_mdd(R, ctx.vorder) << endl;
         // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
 
-        I = sym_union(I, I2);
-        // break;
+        ALL_I = sym_union(ALL_I, I);
+        break;
 
         // if (pparams.target == compute_target::GRAVER_BASIS)
         //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
 
         A = D;
     }
-    cout << endl;
-    return I;
+    // cout << endl;
+    return ALL_I;
 
     // MEDDLY::dd_edge Aprev(A.getForest());
     // do {

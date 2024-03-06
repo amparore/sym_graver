@@ -53,10 +53,10 @@ class reduce;
 DD_EXTERN reduce_opname *REDUCE_OPNAME;
 DD_EXTERN reduce *REDUCE;
 
-class reduce3_opname;
-class reduce3;
-DD_EXTERN reduce3_opname *REDUCE3_OPNAME;
-DD_EXTERN reduce3 *REDUCE3;
+// class reduce3_opname;
+// class reduce3;
+// DD_EXTERN reduce3_opname *REDUCE3_OPNAME;
+// DD_EXTERN reduce3 *REDUCE3;
 
 // class compl_proc_opname;
 // class compl_proc_table;
@@ -616,7 +616,7 @@ public:
                   const sv_sign sign_of_sum, 
                   const cmp_sign sign_of_comparison,
                   const size_t lambda,
-                  MEDDLY::dd_edge &reducibles, 
+                  MEDDLY::dd_edge &irreducibles, 
                   MEDDLY::dd_edge &reduced);
 
 protected:
@@ -636,46 +636,6 @@ public:
     /**/ : MEDDLY::opname("Reduce_LeqSq") {}
 
     reduce* 
-    buildOperation(MEDDLY::expert_forest *forestMDD,
-                   const variable_order *pivot_order);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// Reduction of elements that are less-equal-squared-but-not-equal up to lambda
-/////////////////////////////////////////////////////////////////////////////////////////
-
-class reduce3 : public base_NNItoNNN {
-public:
-    reduce3(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
-           const variable_order *pivot_order);
-
-    void 
-    computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
-                  const bool is_potentially_equal, 
-                  const bool is_b_potentially_zero,
-                  const sv_sign sign_of_sum, 
-                  const cmp_sign sign_of_comparison,
-                  const size_t lambda,
-                  MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
-                  MEDDLY::dd_edge &reduced);
-
-protected:
-    virtual std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
-    compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) override;
-
-    const variable_order *pivot_order; // pivoting order when proceeding by levels
-
-    // utility to perform node operations
-    MEDDLY::binary_operation *mddUnion, *mddDifference;
-};
-
-// Factory of reduce3 operators for specific MDD forests
-class reduce3_opname : public MEDDLY::opname {
-public:
-    inline reduce3_opname() 
-    /**/ : MEDDLY::opname("Reduce_LeqSq_IRD") {}
-
-    reduce3* 
     buildOperation(MEDDLY::expert_forest *forestMDD,
                    const variable_order *pivot_order);
 };

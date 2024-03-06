@@ -1471,7 +1471,7 @@ reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
                       const sv_sign sign_of_sum, 
                       const cmp_sign sign_of_comparison,
                       const size_t lambda,
-                      MEDDLY::dd_edge &reducibles, 
+                      MEDDLY::dd_edge &irreducibles, 
                       MEDDLY::dd_edge &reduced) 
 {
     reduce_flags_t rf;
@@ -1483,13 +1483,13 @@ reduce::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
 
     auto cnodes = compute(a.getNode(), b.getNode(), rf.value);
 
-    reducibles.set(cnodes.first);
+    irreducibles.set(cnodes.first);
     reduced.set(cnodes.second);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-// first=reducibles
+// first=irreducibles
 // second=reduced
 std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
 reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags) 
@@ -1497,13 +1497,13 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     reduce_flags_t rf;
     rf.value = flags;
 
-    if (a==0 || b==0) 
-        return std::make_pair(0, 0);
+    if (a==0) return std::make_pair(0, 0);
+    if (b==0) return std::make_pair(res1F->linkNode(a), 0);
     if (a==-1) {
         if (rf.bf.is_potentially_equal || rf.bf.is_b_potentially_zero)
-            return std::make_pair(0, 0);
+            return std::make_pair(-1, 0);
         else
-            return std::make_pair(-1, -1);
+            return std::make_pair(0, -1);
     }
     assert(b != -1);
 
@@ -1536,7 +1536,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     // else resAB_size = a_size;
     check_level_bound(res1F, res_level, resAB_size);
 
-    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
+    MEDDLY::unpacked_node* C_irreducibles1 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
     MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res2F, res_level, resAB_size);
 
     const bool a_full = A->isFull(), b_full = B->isFull();
@@ -1545,6 +1545,9 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
         if (a_full && 0==A->d(i))
             continue;
         int a_val = NodeToZ(a_full ? i : A->i(i));
+
+        MEDDLY::dd_edge irred_Ai(res1F);
+        irred_Ai.set(res1F->linkNode(A->d(i)));
 
         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
             if (b_full && 0==B->d(j))
@@ -1591,24 +1594,33 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 down_rf.bf.lambda = rf.bf.lambda;
 
                 std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down;
-                down = compute(A->d(i), B->d(j), down_rf.value);
+                down = compute(irred_Ai.getNode(), B->d(j), down_rf.value);
 
                 // cout << "lvl(a)="<<a_level<<" lvl(b)="<<b_level<<" a="<<a_val<<" b="<<b_val
                 //      << " is_eq="<<ij_pot_eq<<" b_zero="<<ij_b_pot_zero
                 //      << " sign_of_sum="<<down_rf.bf.sign_of_sum
                 //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
 
-                unionNodes(C_reducibles1, down.first, ZtoNode(a_val), res1F, mddUnion);
+                irred_Ai.set(down.first);
+                // unionNodes(C_reducibles1, down.first, ZtoNode(a_val), res1F, mddUnion);
                 unionNodes(C_reduced2, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
+
+                // THIS ONLY MAKES SENSE WHEN ALL PIVOT LEVELS ARE TO THE BOTTOM OF THE
+                // PROCESSED LEVELS.
+                // if (rf.bf.lambda != 0 && pivot_order->is_above_lambda(rf.bf.lambda, res_level)) {
+                //     assert(down.first == 0);
+                // }
             }
         }
+        unionNodes(C_irreducibles1, res1F->linkNode(irred_Ai.getNode()), 
+                    ZtoNode(a_val), res1F, mddUnion);
     }
 
     // cleanup
     MEDDLY::unpacked_node::recycle(B);
     MEDDLY::unpacked_node::recycle(A);
     // reduce and return result
-    result.first  = res1F->createReducedNode(-1, C_reducibles1);
+    result.first  = res1F->createReducedNode(-1, C_irreducibles1);
     result.second = res2F->createReducedNode(-1, C_reduced2);
     saveResult(key, /*a, divisor,*/ result);
 
@@ -1642,217 +1654,6 @@ reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
 
 
 
-
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-reduce3::reduce3(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
-               const variable_order *pivot_order)
-: base_NNItoNNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD, forestMDD), 
-  pivot_order(pivot_order)
-{ 
-    mddUnion = MEDDLY::getOperation(MEDDLY::UNION, forestMDD, forestMDD, forestMDD);
-    mddDifference = MEDDLY::getOperation(MEDDLY::DIFFERENCE, forestMDD, forestMDD, forestMDD);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-void 
-reduce3::computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
-                      const bool is_potentially_equal, 
-                      const bool is_b_potentially_zero,
-                      const sv_sign sign_of_sum, 
-                      const cmp_sign sign_of_comparison,
-                      const size_t lambda,
-                      MEDDLY::dd_edge &irreducibles, MEDDLY::dd_edge &reducibles, 
-                      MEDDLY::dd_edge &reduced) 
-{
-    reduce_flags_t rf;
-    rf.bf.is_potentially_equal = is_potentially_equal;
-    rf.bf.is_b_potentially_zero = is_b_potentially_zero;
-    rf.bf.sign_of_sum = sign_of_sum;
-    rf.bf.sign_of_comparison = sign_of_comparison;
-    rf.bf.lambda = lambda;
-
-    auto cnodes = compute(a.getNode(), b.getNode(), rf.value);
-
-    irreducibles.set(get<0>(cnodes));
-    reducibles.set(get<1>(cnodes));
-    reduced.set(get<2>(cnodes));
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-// 0=irreducibles
-// 1=reducibles
-// 2=reduced
-std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
-reduce3::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags) 
-{
-    reduce_flags_t rf;
-    rf.value = flags;
-
-    if (a==0) return std::make_tuple(0, 0, 0);
-    if (b==0) return std::make_tuple(res1F->linkNode(a), 0, 0);
-    if (a==-1) {
-        if (rf.bf.is_potentially_equal || rf.bf.is_b_potentially_zero)
-            return std::make_tuple(-1, 0, 0);
-        else
-            return std::make_tuple(0, -1, -1);
-    }
-    assert(b != -1);
-
-    std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> result;
-    MEDDLY::ct_entry_key* key = findResult(a, b, flags, result);
-    if (nullptr==key)
-        return result;
-
-    const int a_level = arg1F->getNodeLevel(a);
-    const int b_level = arg2F->getNodeLevel(b);
-    assert(a_level == b_level);
-    const int res_level = std::max(a_level, b_level);
-
-    MEDDLY::unpacked_node *A = (a_level < res_level)
-        ? MEDDLY::unpacked_node::newRedundant(arg1F, res_level, a, false)
-        : arg1F->newUnpacked(a, MEDDLY::SPARSE_ONLY);
-    MEDDLY::unpacked_node *B = (b_level < res_level)
-        ? MEDDLY::unpacked_node::newRedundant(arg2F, res_level, b, false)
-        : arg2F->newUnpacked(b, MEDDLY::SPARSE_ONLY);
-
-    const size_t a_size = get_node_size(A);
-    const size_t b_size = get_node_size(B);
-    const size_t resA_size = a_size;
-    const size_t resAB_size = a_size + b_size; // TODO: since b<=a, then a-b is <= a and reY_size should be a_size
-    // if (rf.bf.lambda != 0 && 
-    //     pivot_order->is_above_lambda(rf.bf.lambda, res_level)) 
-    // {
-    //     resAB_size = a_size + b_size;
-    // }
-    // else resAB_size = a_size;
-    check_level_bound(res3F, res_level, resAB_size);
-
-    MEDDLY::unpacked_node* C_irreducibles0 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
-    MEDDLY::unpacked_node* C_reducibles1 = MEDDLY::unpacked_node::newFull(res2F, res_level, resA_size);
-    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res3F, res_level, resAB_size);
-
-    const bool a_full = A->isFull(), b_full = B->isFull();
-
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
-            continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
-
-        MEDDLY::dd_edge irred_Ai(res1F);
-        irred_Ai.set(res1F->linkNode(A->d(i)));
-
-        // unionNodes(C_irreducibles0, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
-
-        for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-            if (b_full && 0==B->d(j))
-                continue;
-            int b_val = NodeToZ(b_full ? j : B->i(j));
-
-            bool ij_reduce;
-            bool ij_pot_eq = rf.bf.is_potentially_equal;
-            bool ij_b_pot_zero = rf.bf.is_b_potentially_zero;
-            cmp_sign ij_cmp_sign = (cmp_sign)rf.bf.sign_of_comparison;
-            if (rf.bf.lambda != 0 && pivot_order->is_above_lambda(rf.bf.lambda, res_level)) {
-                ij_reduce = true;
-            }
-            else {
-                if (ij_cmp_sign == CMP_UNDECIDED) {
-                    if      (b_val * a_val > 0)   ij_cmp_sign = CMP_POS;
-                    else if (b_val * a_val < 0)   ij_cmp_sign = CMP_NEG;
-                }
-                int b_cmp_sign = (ij_cmp_sign == CMP_NEG ? -1 : 1);
-                ij_reduce = less_equal_squared(b_val * b_cmp_sign, a_val);
-                ij_pot_eq = ij_pot_eq && (a_val == b_val);
-                ij_b_pot_zero = ij_b_pot_zero && (0 == b_val);
-            }
-
-            if (ij_reduce)
-            {
-                int b_cmp_sign = (ij_cmp_sign == CMP_NEG ? -1 : 1);
-                int a_minus_b = subtract_exact(a_val, b_val * b_cmp_sign);
-                // decide the sign of the result (if still undecided)
-                sv_sign curr_sign_of_sum = (sv_sign)rf.bf.sign_of_sum;
-                if (curr_sign_of_sum == SVS_UNDECIDED && 0!=a_minus_b) { 
-                    curr_sign_of_sum = (a_minus_b > 0) ? SVS_POS : SVS_NEG;
-                }
-                // compute (a-b) or -(a-b)
-                if (curr_sign_of_sum == SVS_NEG) {
-                    a_minus_b = -a_minus_b;
-                }
-
-                reduce_flags_t down_rf;
-                down_rf.bf.is_potentially_equal = ij_pot_eq;
-                down_rf.bf.is_b_potentially_zero = ij_b_pot_zero;
-                down_rf.bf.sign_of_sum = curr_sign_of_sum;
-                down_rf.bf.sign_of_comparison = ij_cmp_sign;
-                down_rf.bf.lambda = rf.bf.lambda;
-
-                std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle> down;
-                down = compute(irred_Ai.getNode(), B->d(j), down_rf.value);
-
-                // cout << "lvl(a)="<<a_level<<" lvl(b)="<<b_level<<" a="<<a_val<<" b="<<b_val
-                //      << " is_eq="<<ij_pot_eq<<" b_zero="<<ij_b_pot_zero
-                //      << " sign_of_sum="<<down_rf.bf.sign_of_sum
-                //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
-
-
-                irred_Ai.set(get<0>(down));
-                // res1F->unlinkNode(get<0>(down));
-                unionNodes(C_reducibles1, get<1>(down), ZtoNode(a_val), res2F, mddUnion);
-                unionNodes(C_reduced2, get<2>(down), ZtoNode(a_minus_b), res3F, mddUnion);
-            }
-        }
-        // cout << "  i="<<i<<"  ZtoNode("<<a_val<<")="<<ZtoNode(a_val)<<endl;
-        // differenceNodes(C_irreducibles0, res1F->linkNode(C_reducibles1->d(ZtoNode(a_val))), 
-        //                 ZtoNode(a_val), res1F, mddDifference);
-        unionNodes(C_irreducibles0, res1F->linkNode(irred_Ai.getNode()), ZtoNode(a_val), res1F, mddUnion);
-    }
-
-    // cleanup
-    MEDDLY::unpacked_node::recycle(B);
-    MEDDLY::unpacked_node::recycle(A);
-    // reduce3 and return result
-    get<0>(result) = res1F->createReducedNode(-1, C_irreducibles0);
-    get<1>(result) = res2F->createReducedNode(-1, C_reducibles1);
-    get<2>(result) = res3F->createReducedNode(-1, C_reduced2);
-    saveResult(key, /*a, divisor,*/ result);
-
-    return result;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-reduce3* 
-reduce3_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
-                              const variable_order *pivot_order)
-{
-    if (0==forestMDD) return 0;
-
-    if (forestMDD->isForRelations())
-        throw MEDDLY::error(MEDDLY::error::TYPE_MISMATCH, __FILE__, __LINE__);
-
-    if (forestMDD->getEdgeLabeling() == MEDDLY::edge_labeling::MULTI_TERMINAL) {
-        if (forestMDD->isForRelations())
-            throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED);
-
-        return new reduce3(this, forestMDD, pivot_order);
-    }
-    throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED, __FILE__, __LINE__);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -3235,8 +3036,8 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     REDUCE_OPNAME = new reduce_opname();
     REDUCE = REDUCE_OPNAME->buildOperation(forestMDDexp, pivot_order);
 
-    REDUCE3_OPNAME = new reduce3_opname();
-    REDUCE3 = REDUCE3_OPNAME->buildOperation(forestMDDexp, pivot_order);
+    // REDUCE3_OPNAME = new reduce3_opname();
+    // REDUCE3 = REDUCE3_OPNAME->buildOperation(forestMDDexp, pivot_order);
 
     // COMPL_PROC_OPNAME = new compl_proc_opname();
     // COMPL_PROC_OPS = new compl_proc_table(forestMDDexp);
