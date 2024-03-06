@@ -160,8 +160,7 @@ mdd_from_vectors(const std::vector<std::vector<int>>& vecs,
                  MEDDLY::forest* forestMDD, bool make_symmetric);
 
 inline bool is_emptyset(const MEDDLY::dd_edge& e) {
-    MEDDLY::expert_forest *forest = static_cast<MEDDLY::expert_forest *>(e.getForest());
-    return e.getNode() == forest->handleForValue(false);
+    return e.getNode() == e.getForest()->handleForValue(false);
 }
 
 MEDDLY::dd_edge
@@ -187,8 +186,10 @@ MEDDLY::dd_edge
 zero_vector(MEDDLY::forest *forestMDD);
 
 void unionNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node, 
-                unsigned pos, MEDDLY::expert_forest* resF,  
-                MEDDLY::binary_operation* mddUnion) ;
+                unsigned pos, MEDDLY::forest* resF,  
+                MEDDLY::binary_operation* mddUnion);
+
+double dd_cardinality(const MEDDLY::dd_edge& dd);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Save DD encoding Integers to dot/pdf format
@@ -212,8 +213,8 @@ void write_dd_as_pdf(const MEDDLY::dd_edge& e,
 
 class base_NNtoN : public MEDDLY::binary_operation {
 public:
-    base_NNtoN(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
-               MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res);
+    base_NNtoN(MEDDLY::binary_opname* opcode, MEDDLY::forest* arg1,
+               MEDDLY::forest* arg2, MEDDLY::forest* res);
 
     virtual void computeDDEdge(const MEDDLY::dd_edge &ar1, const MEDDLY::dd_edge &ar2, 
                                MEDDLY::dd_edge &res, bool userFlag) override;
@@ -238,8 +239,8 @@ protected:
 
 class base_NtoN : public MEDDLY::unary_operation {
 public:
-    base_NtoN(MEDDLY::unary_opname* opcode, MEDDLY::expert_forest* arg1,
-              MEDDLY::expert_forest* res);
+    base_NtoN(MEDDLY::unary_opname* opcode, MEDDLY::forest* arg1,
+              MEDDLY::forest* res);
 
     virtual void computeDDEdge(const MEDDLY::dd_edge &ar1, 
                                MEDDLY::dd_edge &res, bool userFlag) override;
@@ -264,7 +265,7 @@ protected:
 
 class base_NtoI : public MEDDLY::unary_operation {
 public:
-    base_NtoI(MEDDLY::unary_opname* opcode, MEDDLY::expert_forest* arg1);
+    base_NtoI(MEDDLY::unary_opname* opcode, MEDDLY::forest* arg1);
 
     virtual void computeDDEdge(const MEDDLY::dd_edge &ar1, 
                                MEDDLY::dd_edge &res, bool userFlag) override;
@@ -288,8 +289,8 @@ protected:
 
 class base_NItoN : public MEDDLY::operation {
 public:
-    base_NItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-               MEDDLY::expert_forest* _resF);
+    base_NItoN(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+               MEDDLY::forest* _resF);
     virtual ~base_NItoN();    
 
     void computeDDEdge(const MEDDLY::dd_edge &ar, const int b, MEDDLY::dd_edge &res);
@@ -297,8 +298,8 @@ public:
     bool checkForestCompatibility() const override;
 
 protected:
-    MEDDLY::expert_forest* argF;
-    MEDDLY::expert_forest* resF;
+    MEDDLY::forest* argF;
+    MEDDLY::forest* resF;
     // opnd_type resultType;
 
     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, const int b) = 0;
@@ -318,8 +319,8 @@ protected:
 
 class base_NNItoN : public MEDDLY::operation {
 public:
-    base_NNItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1,
-                MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res);
+    base_NNItoN(MEDDLY::opname* opcode, MEDDLY::forest* arg1,
+                MEDDLY::forest* arg2, MEDDLY::forest* res);
     virtual ~base_NNItoN();
 
     bool checkForestCompatibility() const override;
@@ -328,8 +329,8 @@ public:
     //                            MEDDLY::dd_edge &res, bool userFlag) override;
 
 protected:
-    MEDDLY::expert_forest* arg1F, *arg2F;
-    MEDDLY::expert_forest* resF;
+    MEDDLY::forest* arg1F, *arg2F;
+    MEDDLY::forest* resF;
 
     inline MEDDLY::ct_entry_key* 
     findResult(MEDDLY::node_handle a, MEDDLY::node_handle b, int i, 
@@ -350,8 +351,8 @@ protected:
 
 class base_NItoNN : public MEDDLY::operation {
 public:
-    base_NItoNN(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                MEDDLY::expert_forest* _res1F, MEDDLY::expert_forest* _res2F);
+    base_NItoNN(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                MEDDLY::forest* _res1F, MEDDLY::forest* _res2F);
     virtual ~base_NItoNN();    
 
     void computeDDEdge(const MEDDLY::dd_edge &ar, const int b, 
@@ -360,9 +361,9 @@ public:
     bool checkForestCompatibility() const override;
 
 protected:
-    MEDDLY::expert_forest* argF;
-    MEDDLY::expert_forest* res1F;
-    MEDDLY::expert_forest* res2F;
+    MEDDLY::forest* argF;
+    MEDDLY::forest* res1F;
+    MEDDLY::forest* res2F;
 
     virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, const int b) = 0;
@@ -385,15 +386,15 @@ protected:
 class base_NNItoNN : public MEDDLY::operation {
 public:
     base_NNItoNN(MEDDLY::opname* opcode, 
-                 MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
-                 MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2);
+                 MEDDLY::forest* arg1, MEDDLY::forest* arg2, 
+                 MEDDLY::forest* res1, MEDDLY::forest* res2);
     virtual ~base_NNItoNN();
 
     bool checkForestCompatibility() const override;
 
 protected:
-    MEDDLY::expert_forest* arg1F, *arg2F;
-    MEDDLY::expert_forest* res1F, *res2F;
+    MEDDLY::forest* arg1F, *arg2F;
+    MEDDLY::forest* res1F, *res2F;
 
     virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) = 0;
@@ -418,16 +419,16 @@ protected:
 class base_NNItoNNN : public MEDDLY::operation {
 public:
     base_NNItoNNN(MEDDLY::opname* opcode, 
-                  MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
-                  MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2, 
-                  MEDDLY::expert_forest* res3);
+                  MEDDLY::forest* arg1, MEDDLY::forest* arg2, 
+                  MEDDLY::forest* res1, MEDDLY::forest* res2, 
+                  MEDDLY::forest* res3);
     virtual ~base_NNItoNNN();
 
     bool checkForestCompatibility() const override;
 
 protected:
-    MEDDLY::expert_forest* arg1F, *arg2F;
-    MEDDLY::expert_forest* res1F, *res2F, *res3F;
+    MEDDLY::forest* arg1F, *arg2F;
+    MEDDLY::forest* res1F, *res2F, *res3F;
 
     virtual std::tuple<MEDDLY::node_handle, MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) = 0;
@@ -473,8 +474,8 @@ enum cmp_sign { CMP_UNDECIDED, CMP_POS, CMP_NEG, CMP_TOTAL };
 
 class s_vectors : public base_NNItoN {
 public:
-    s_vectors(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1,
-              MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+    s_vectors(MEDDLY::opname* opcode, MEDDLY::forest* arg1,
+              MEDDLY::forest* arg2, MEDDLY::forest* res,
               const variable_order *pivot_order);
 
     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b, 
@@ -499,9 +500,9 @@ public:
     /**/ : MEDDLY::opname("S-Vectors") {}
 
     s_vectors* 
-    buildOperation(MEDDLY::expert_forest* arg1,
-                   MEDDLY::expert_forest* arg2, 
-                   MEDDLY::expert_forest* res,
+    buildOperation(MEDDLY::forest* arg1,
+                   MEDDLY::forest* arg2, 
+                   MEDDLY::forest* res,
                    const variable_order *pivot_order);
 };
 
@@ -512,8 +513,8 @@ public:
 
 // class lesseq_sq : public base_NNtoN {
 // public:
-//     lesseq_sq(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
-//               MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+//     lesseq_sq(MEDDLY::binary_opname* opcode, MEDDLY::forest* arg1,
+//               MEDDLY::forest* arg2, MEDDLY::forest* res,
 //               const lesseq_sq_table* tab,
 //               bool isEq, bool isB0,
 //               bool _subtract, size_t lambda);
@@ -537,14 +538,14 @@ public:
 //     /**/ : MEDDLY::binary_opname("LessEqSquared") {}
 
 //     virtual MEDDLY::binary_operation* 
-//     buildOperation(MEDDLY::expert_forest* a1, 
-//                    MEDDLY::expert_forest* a2, 
-//                    MEDDLY::expert_forest* r) override;
+//     buildOperation(MEDDLY::forest* a1, 
+//                    MEDDLY::forest* a2, 
+//                    MEDDLY::forest* r) override;
 
 //     lesseq_sq* 
-//     buildOperation(MEDDLY::expert_forest* a1, 
-//                    MEDDLY::expert_forest* a2, 
-//                    MEDDLY::expert_forest* r,
+//     buildOperation(MEDDLY::forest* a1, 
+//                    MEDDLY::forest* a2, 
+//                    MEDDLY::forest* r,
 //                    const lesseq_sq_table* tab,
 //                    bool isEq, bool isB0, bool subtract,
 //                    size_t lambda);
@@ -555,12 +556,12 @@ public:
 //     // level * isEq * isB0 * subtract
 //     mutable std::vector<std::vector<std::vector<std::vector<lesseq_sq*>>>> table;
 // public:
-//     lesseq_sq_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
+//     lesseq_sq_table(MEDDLY::forest* forest, const variable_order *pivot_order);
 
 //     lesseq_sq* get_op(size_t level, bool isPotentiallyEqual, 
 //                       bool isBZero, bool subtract) const; 
 
-//     MEDDLY::expert_forest* forest;
+//     MEDDLY::forest* forest;
 //     const variable_order *pivot_order; // pivoting order when proceeding by levels
 // };
 
@@ -571,7 +572,7 @@ public:
 
 class leq_neq_sq : public base_NNItoN {
 public:
-    leq_neq_sq(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+    leq_neq_sq(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
                const variable_order *pivot_order, const bool subtract);
 
     void 
@@ -595,7 +596,7 @@ public:
     /**/ : MEDDLY::opname("LessEqNeqSquared") {}
 
     leq_neq_sq* 
-    buildOperation(MEDDLY::expert_forest* forestMDD,
+    buildOperation(MEDDLY::forest* forestMDD,
                    const variable_order *pivot_order,
                    const bool subtract);
 };
@@ -606,7 +607,7 @@ public:
 
 class reduce : public base_NNItoNN {
 public:
-    reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+    reduce(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
            const variable_order *pivot_order);
 
     void 
@@ -636,7 +637,7 @@ public:
     /**/ : MEDDLY::opname("Reduce_LeqSq") {}
 
     reduce* 
-    buildOperation(MEDDLY::expert_forest *forestMDD,
+    buildOperation(MEDDLY::forest *forestMDD,
                    const variable_order *pivot_order);
 };
 
@@ -647,8 +648,8 @@ public:
 
 // class compl_proc : public base_NNtoN {
 // public:
-//     compl_proc(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
-//                MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+//     compl_proc(MEDDLY::binary_opname* opcode, MEDDLY::forest* arg1,
+//                MEDDLY::forest* arg2, MEDDLY::forest* res,
 //                const compl_proc_table* tab,
 //                size_t _rlvl);
 
@@ -668,14 +669,14 @@ public:
 //     /**/ : MEDDLY::binary_opname("CompletionProcedure") {}
 
 //     virtual MEDDLY::binary_operation* 
-//     buildOperation(MEDDLY::expert_forest* a1, 
-//                    MEDDLY::expert_forest* a2, 
-//                    MEDDLY::expert_forest* r) override;
+//     buildOperation(MEDDLY::forest* a1, 
+//                    MEDDLY::forest* a2, 
+//                    MEDDLY::forest* r) override;
 
 //     compl_proc* 
-//     buildOperation(MEDDLY::expert_forest* a1, 
-//                    MEDDLY::expert_forest* a2, 
-//                    MEDDLY::expert_forest* r,
+//     buildOperation(MEDDLY::forest* a1, 
+//                    MEDDLY::forest* a2, 
+//                    MEDDLY::forest* r,
 //                    const compl_proc_table* tab,
 //                    size_t restricted_level=0);
 // };
@@ -685,7 +686,7 @@ public:
 //     // level
 //     std::vector<compl_proc*> table;
 // public:
-//     compl_proc_table(MEDDLY::expert_forest* forest);
+//     compl_proc_table(MEDDLY::forest* forest);
 
 //     inline compl_proc* get_op(size_t level) const 
 //     { return table[level]; }
@@ -698,8 +699,8 @@ public:
 // Return the set where only one vector between each pair (v, -v) is kept
 class sign_canon_mdd_op : public base_NtoN {
 public:
-    sign_canon_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::expert_forest* _argF,
-                      MEDDLY::expert_forest* _resF);
+    sign_canon_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::forest* _argF,
+                      MEDDLY::forest* _resF);
     virtual ~sign_canon_mdd_op();
 public:
     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a) override;
@@ -711,7 +712,7 @@ public:
     sign_canon_mdd_opname();
     
     virtual sign_canon_mdd_op* 
-    buildOperation(MEDDLY::expert_forest* arF, MEDDLY::expert_forest* resF);
+    buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -747,7 +748,7 @@ public:
 class divisors_finder_mdd_op : public base_NtoI {
 public:
     typedef int lut_key;
-    divisors_finder_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::expert_forest* arg);
+    divisors_finder_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::forest* arg);
 
     inline const std::vector<int>& look_up(lut_key i) const { return lut.look_up(i); }
 private:
@@ -774,8 +775,8 @@ public:
 
 class vdivide_mdd_op : public base_NItoNN {
 public:
-    vdivide_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                  MEDDLY::expert_forest* _resF);
+    vdivide_mdd_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                  MEDDLY::forest* _resF);
     virtual ~vdivide_mdd_op();    
 
 protected:
@@ -786,7 +787,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Factory
-class vdivide_mdd_opname : public MEDDLY::unary_opname {
+class vdivide_mdd_opname : public MEDDLY::opname {
 public:
     vdivide_mdd_opname();
     virtual MEDDLY::operation* buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF);
@@ -798,8 +799,8 @@ public:
 
 class vmult_op : public base_NItoN {
 public:
-    vmult_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-             MEDDLY::expert_forest* _resF);
+    vmult_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+             MEDDLY::forest* _resF);
     virtual ~vmult_op();    
 
 protected:
@@ -812,7 +813,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Factory
-class vmult_opname : public MEDDLY::unary_opname {
+class vmult_opname : public MEDDLY::opname {
 public:
     vmult_opname();
     virtual MEDDLY::operation* buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF);
@@ -826,8 +827,8 @@ public:
 
 class support_inclusion_op : public base_NNtoN {
 public:
-    support_inclusion_op(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1,
-                         MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+    support_inclusion_op(MEDDLY::binary_opname* opcode, MEDDLY::forest* arg1,
+                         MEDDLY::forest* arg2, MEDDLY::forest* res,
                          const support_inclusion_table* p_table, bool is_pot_eq_supp, 
                          bool subtract, size_t lambda);
 
@@ -848,14 +849,14 @@ public:
     /**/ : MEDDLY::binary_opname("SupportInclusion") {}
 
     virtual MEDDLY::binary_operation* 
-    buildOperation(MEDDLY::expert_forest* a1, 
-                   MEDDLY::expert_forest* a2, 
-                   MEDDLY::expert_forest* r) override;
+    buildOperation(MEDDLY::forest* a1, 
+                   MEDDLY::forest* a2, 
+                   MEDDLY::forest* r) override;
 
     support_inclusion_op* 
-    buildOperation(MEDDLY::expert_forest* a1, 
-                   MEDDLY::expert_forest* a2, 
-                   MEDDLY::expert_forest* r,
+    buildOperation(MEDDLY::forest* a1, 
+                   MEDDLY::forest* a2, 
+                   MEDDLY::forest* r,
                    const support_inclusion_table* p_table,
                    bool is_pot_eq_supp, bool subtract, size_t lambda);
 };
@@ -864,9 +865,9 @@ public:
 class support_inclusion_table {
     // level * isEq * subtract
     mutable std::vector<std::vector<std::vector<support_inclusion_op*>>> table;
-    MEDDLY::expert_forest* forest;
+    MEDDLY::forest* forest;
 public:
-    support_inclusion_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
+    support_inclusion_table(MEDDLY::forest* forest, const variable_order *pivot_order);
 
     support_inclusion_op* get_op(size_t level, bool isPotentiallyEqual, bool subtract) const;
 
@@ -880,8 +881,8 @@ public:
 
 class lv_selector_op : public base_NItoN {
 public:
-    lv_selector_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                   MEDDLY::expert_forest* _resF, const size_t lambda);
+    lv_selector_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                   MEDDLY::forest* _resF, const size_t lambda);
     virtual ~lv_selector_op();    
 
 protected:
@@ -907,9 +908,9 @@ public:
 class lv_selector_table {
     // level 
    mutable std::vector<lv_selector_op*> table;
-   MEDDLY::expert_forest* forest;
+   MEDDLY::forest* forest;
 public:
-    lv_selector_table(MEDDLY::expert_forest* forest);
+    lv_selector_table(MEDDLY::forest* forest);
 
     lv_selector_op* get_op(size_t level) const;
 };
@@ -924,14 +925,14 @@ class domain_values_enumerator {
     std::vector<bool> neg; // < 0
     std::vector<bool> visited;
 
-    void visit(const MEDDLY::expert_forest *argF, const MEDDLY::node_handle a);
+    void visit(const MEDDLY::forest *argF, const MEDDLY::node_handle a);
 
 public:
     domain_values_enumerator(size_t level) 
     /**/ : level(level), visited(1024), pos(4), neg(4) { }
 
     void visit(const MEDDLY::dd_edge& dd) { 
-        visit(static_cast<const MEDDLY::expert_forest*>(dd.getForest()), dd.getNode()); 
+        visit(static_cast<const MEDDLY::forest*>(dd.getForest()), dd.getNode()); 
     }
 
     void get_values(std::vector<int>& out) const;
@@ -954,7 +955,7 @@ inline int get_degree_of(int v, degree_type degtype) {
 class smallest_degree_op : public base_NtoI {
 public:
     smallest_degree_op(MEDDLY::unary_opname* oc, 
-                       MEDDLY::expert_forest* arg,
+                       MEDDLY::forest* arg,
                        const smallest_degree_table* p_table,
                        const degree_type degtype,
                        const size_t lambda);
@@ -982,9 +983,9 @@ public:
 class smallest_degree_table {
     // level * degtype
     mutable std::vector<std::vector<smallest_degree_op*>> table;
-    MEDDLY::expert_forest* forest;
+    MEDDLY::forest* forest;
 public:
-    smallest_degree_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
+    smallest_degree_table(MEDDLY::forest* forest, const variable_order *pivot_order);
 
     smallest_degree_op* get_op(size_t level, const degree_type degtype) const;
 
@@ -998,7 +999,7 @@ public:
 class degree_finder_op : public base_NtoI {
 public:
     degree_finder_op(MEDDLY::unary_opname* oc, 
-                     MEDDLY::expert_forest* arg,
+                     MEDDLY::forest* arg,
                      const degree_finder_table* p_table,
                      const degree_type degtype,
                      const size_t lambda);
@@ -1027,9 +1028,9 @@ public:
 class degree_finder_table {
     // level * degree_type
     mutable std::vector<std::vector<degree_finder_op*>> table;
-    MEDDLY::expert_forest* forest;
+    MEDDLY::forest* forest;
 public:
-    degree_finder_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
+    degree_finder_table(MEDDLY::forest* forest, const variable_order *pivot_order);
 
     degree_finder_op* get_op(size_t level, const degree_type degtype) const;
 
@@ -1050,8 +1051,8 @@ private:
 
 class degree_selector_op : public base_NItoN {
 public:
-    degree_selector_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                       MEDDLY::expert_forest* _resF,
+    degree_selector_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                       MEDDLY::forest* _resF,
                        const degree_selector_table* p_table,
                        const degree_type degtype,
                        const size_t lambda);
@@ -1084,9 +1085,9 @@ public:
 class degree_selector_table {
     // level 
     mutable std::vector<std::vector<degree_selector_op*>> table;
-    MEDDLY::expert_forest* forest;
+    MEDDLY::forest* forest;
 public:
-    degree_selector_table(MEDDLY::expert_forest* forest, const variable_order *pivot_order);
+    degree_selector_table(MEDDLY::forest* forest, const variable_order *pivot_order);
 
     degree_selector_op* get_op(size_t level, const degree_type degtype) const;
 

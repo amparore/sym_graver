@@ -35,7 +35,8 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
 
     MEDDLY::dd_edge list[1];
     list[0] = dd;
-    forestMDD->writeEdges(mofs, list, 1);
+    #warning ToBeDone
+    // forestMDD->writeEdges(mofs, list, 1);
     mofs.flush();
 }
 
@@ -669,7 +670,7 @@ int main(int argc, char** argv)
                 .dd_ext=".xraydd", .pdf_suffix="-exrays" };
             break;
     }
-    double card_G = G.getCardinality();
+    double card_G = dd_cardinality(G);
     cout << "\n"<<op.what<<" has "<< card_G << " entries.\n" << endl;
     if (pparams.very_verbose || (pparams.verbose && card_G<50)) {
         cout << print_mdd(G, vorder) << endl;
@@ -745,7 +746,7 @@ int main(int argc, char** argv)
                 cout << "[FAILED]" << endl;
 
                 if (pparams.verbose) {
-                cout << "Expected size: " << Hcheckdd.getCardinality() << endl;
+                cout << "Expected size: " << dd_cardinality(Hcheckdd) << endl;
                     MEDDLY::dd_edge diff(ctx.forestMDD);
                     // MEDDLY::apply(MEDDLY::DIFFERENCE, G, Hcheckdd, diff);
                     diff = sym_difference(G, Hcheckdd);

@@ -17,7 +17,7 @@ using namespace std;
 struct dot_of_DD {
     ofstream dot;
     std::set<MEDDLY::node_handle> visited;
-    MEDDLY::expert_forest *forest;
+    MEDDLY::forest *forest;
     std::vector<std::vector<std::string>> nodes_per_lvl; // unprimed and primed
     // const std::vector<bool> *pSingletonLevel;
     // const RSRG *rs;
@@ -40,12 +40,12 @@ struct dot_of_DD {
         const int node_level = forest->getNodeLevel(node);
 
         // MEDDLY::unpacked_node *rnode = MEDDLY::unpacked_node::newFromNode(forest, node, MEDDLY::unpacked_node::storage_style::FULL_NODE);
-        MEDDLY::unpacked_node *rnode = MEDDLY::unpacked_node::New();
+        MEDDLY::unpacked_node *rnode = MEDDLY::unpacked_node::New(forest);
         forest->unpackNode(rnode, node, MEDDLY::FULL_ONLY);
 
         assert(rnode->isFull());
         int end = rnode->getSize() - 1; // find last non-false edge
-        while (rnode->d(end) == forest->handleForValue(false))
+        while (rnode->down(end) == forest->handleForValue(false))
             end--;
 
         int series = node_level<0 ? 1 : 0;
@@ -60,7 +60,7 @@ struct dot_of_DD {
         // determine sorting order
         std::vector<std::pair<int, int>> order;
         for (int i = 0; i <= end; i++) {
-            if (rnode->d(i) == forest->handleForValue(false))
+            if (rnode->down(i) == forest->handleForValue(false))
                 continue;
 
             order.push_back(make_pair(NodeToZ(i), i));
@@ -71,16 +71,16 @@ struct dot_of_DD {
         int cnt = 0;
         for (const auto& visit_pair : order) {
             int i = visit_pair.second;
-            if (rnode->d(i) == forest->handleForValue(false))
+            if (rnode->down(i) == forest->handleForValue(false))
                 continue;
             
             dot << (cnt++==0 ? "" : "|") << "<i"<<i<<">" << NodeToZ(i);
-            if (rnode->d(i) == forest->handleForValue(true)) {
+            if (rnode->down(i) == forest->handleForValue(true)) {
                 if (write_terminals)
                     edges << "  n"<<node<<":i"<<i<<" -> nT;\n";
             }
             else {
-                edges << "  n"<<node<<":i"<<i<<" -> n"<<rnode->d(i)<<":n;\n";
+                edges << "  n"<<node<<":i"<<i<<" -> n"<<rnode->down(i)<<":n;\n";
             }
         }
         dot << "\"];\n";
@@ -88,14 +88,13 @@ struct dot_of_DD {
 
         // Visit recursively
         for (int i = 0; i <= end; i++)
-            visit(rnode->d(i));
+            visit(rnode->down(i));
 
-        MEDDLY::unpacked_node::recycle(rnode);
+        MEDDLY::unpacked_node::Recycle(rnode);
     }
 
     void start_visit(const MEDDLY::dd_edge& e) {
-        forest = static_cast<MEDDLY::expert_forest *>(e.getForest());
-        bool isForRel = forest->isForRelations();
+        bool isForRel = e.getForest()->isForRelations();
         int num_series = isForRel ? 2 : 1; // number of sets in nodes_per_lvl[]
         dot << "digraph structs {\n  newrank=true;\n  dpi=72;\n";
         dot << "  subgraph cluster1 { style=invis;\n";
@@ -114,7 +113,7 @@ struct dot_of_DD {
             // write places/levels in a separate cluster
             dot << "  subgraph cluster2 { style=invis;\n  node [shape=none, fontsize=60, margin=\"0.5,0.1\"];\n";
             for (int lvl=1; lvl<=max_levels; lvl++) {
-                const char *level_name = forest->getDomain()->getVar(lvl)->getName();
+                const std::string& level_name = e.getForest()->getDomain()->getVar(lvl)->getName();
                 for (size_t i=0; i<num_series; i++) {
                     dot << "  LVL"<<lvl<<"_"<<i<<" [label=\""
                         << level_name<<(i==1?"\\\'":"")<<"\"];\n";

@@ -52,18 +52,18 @@ void meddly_context::initialize(size_t meddly_cache_size)
     vector<int> domainBnd(num_levels);
     for (int i=0; i<num_levels; i++)
         domainBnd[i] = 1;
-    dom = MEDDLY::createDomainBottomUp(domainBnd.data(), num_levels);
+    dom = MEDDLY::domain::createBottomUp(domainBnd.data(), num_levels);
     for (int i=0; i<num_levels; i++) {
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "x%lu", vorder.lvl2var(i)+1);
-        dom->useVar(i + 1)->setName(strdup(buffer));
+        dom->getVar(i + 1)->setName(strdup(buffer));
     }
 
     // Initialize the MDD forest
     MEDDLY::policies mdd_fp(false);
     mdd_fp.setQuasiReduced();
     mdd_fp.setSparseStorage();
-    forestMDD = dom->createForest(false, MEDDLY::range_type::BOOLEAN, 
+    forestMDD = MEDDLY::forest::create(dom, MEDDLY::SET, MEDDLY::range_type::BOOLEAN, 
                                   MEDDLY::edge_labeling::MULTI_TERMINAL, mdd_fp);
 
     init_custom_meddly_operators(forestMDD, &pivot_order);
@@ -284,7 +284,7 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         // I2 = sym_difference(A, R);
         // I2 = sym_difference(I2, ctx.vzero);
         // REDUCE3->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
-        // cout << D.getCardinality() << " " << flush;
+        // cout << dd_cardinality(D) << " " << flush;
 
         // cout << "QNF:\n";
         // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
@@ -358,9 +358,9 @@ pottier_iter_banner_start(const meddly_context& ctx,
     }
     if (level != 0) {
         if (pparams.very_verbose || iter == 0) {
-            const char* var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
+            const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
             cout << "Level=" << level << "["<<var_name<<"]";
-            size_t spaces = 8 - strlen(var_name);
+            size_t spaces = 8 - var_name.size();
             if (level >= 1000) spaces--;
             if (level >= 100)  spaces--;
             if (level >= 10)   spaces--;
@@ -385,7 +385,7 @@ sym_pottier(const meddly_context& ctx,
             const size_t rem_neg_step)
 {
     if (pparams.very_verbose && level>0) {
-        const char* var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
+        const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
         cout << "\n\n\n\n";
         sep(pparams);sep(pparams);
         cout<<"Start of level "<<level<<"["<<var_name<<"]"<<endl; 
@@ -409,13 +409,13 @@ sym_pottier(const meddly_context& ctx,
     // F = N u initG
     F = sym_union(initGraver, N); 
 
-    // cout << "(1) |initGraver|=" << initGraver.getCardinality() << ",n="<< initGraver.getNodeCount() << endl;
+    // cout << "(1) |initGraver|=" << dd_cardinality(initGraver) << ",n="<< initGraver.getNodeCount() << endl;
     // cout << "initGraver:\n" << print_mdd(initGraver, ctx.vorder) << endl;
-    // cout << "(1) |N|=" << N.getCardinality() << ",n="<< N.getNodeCount() << endl;
+    // cout << "(1) |N|=" << dd_cardinality(N) << ",n="<< N.getNodeCount() << endl;
     // cout << "N:\n" << print_mdd(N, ctx.vorder) << endl;
-    // cout << "(1) |F|=" << F.getCardinality() << ",n="<< F.getNodeCount() << endl;
+    // cout << "(1) |F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount() << endl;
     // cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
-    // assert(F.getCardinality() >= std::min(initGraver.getCardinality(), N.getCardinality()));
+    // assert(dd_cardinality(F) >= std::min(dd_cardinality(initGraver), dd_cardinality(N)));
 
     if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
         // perform the completion procedure to extend to the new column
@@ -463,10 +463,10 @@ sym_pottier(const meddly_context& ctx,
 
         if (pparams.verbose) {
             pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
-            cout << "|F|=" << F.getCardinality() << ",n="<< F.getNodeCount();
-            cout << "  |C|=" << C.getCardinality() << ",n="<< C.getNodeCount();
+            cout << "|F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount();
+            cout << "  |C|=" << dd_cardinality(C) << ",n="<< C.getNodeCount();
             if (pparams.by_degree && degree>=0)
-                cout << "  |C("<<degree<<")|=" << S.getCardinality() << ",n="<< S.getNodeCount();
+                cout << "  |C("<<degree<<")|=" << dd_cardinality(S) << ",n="<< S.getNodeCount();
             cout << endl;
         }
 
@@ -499,7 +499,7 @@ sym_pottier(const meddly_context& ctx,
             SV = sym_difference(SV, S);
             SV = sym_difference(SV, F);
         }
-        // cout << "  |SV|=" << SV.getCardinality() << endl;
+        // cout << "  |SV|=" << dd_cardinality(SV) << endl;
 
         // if (pparams.by_degree) { // FIXME: check again this QNF
         //     C = sym_normal_form(ctx, pparams, C, S, level, false);
@@ -570,7 +570,7 @@ sym_pottier_grad(const meddly_context& ctx,
 
         if (pparams.verbose) {
             pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
-            cout << "|F|=" << F.getCardinality() << ",n="<< F.getNodeCount();
+            cout << "|F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount();
             cout << "  k="<<setw(4)<<k;
             cout << "-> "<<setw(4)<<(degreesPos.front() + degreesNeg.front());
             cout << "|d+|="<<setw(4)<<degreesPos.size();
@@ -607,9 +607,9 @@ sym_pottier_grad(const meddly_context& ctx,
 
                     if (pparams.verbose) {
                         pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
-                        cout << "  i="<<i<<" |Fi+|=" << Fi.getCardinality() << ",n="<< Fi.getNodeCount();
-                        cout << "  j="<<j<<" |Fj-|=" << Fj.getCardinality() << ",n="<< Fj.getNodeCount();
-                        cout << "  k="<<k<<" |SV|=" << SV.getCardinality() << ",n="<< SV.getNodeCount();
+                        cout << "  i="<<i<<" |Fi+|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
+                        cout << "  j="<<j<<" |Fj-|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
+                        cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
                         cout << endl;
                     }
 
@@ -619,8 +619,8 @@ sym_pottier_grad(const meddly_context& ctx,
                         SV = sym_normal_form(ctx, pparams, SV, SV, level, false);
                     }
 
-                    // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<SV2.getCardinality()
-                    //      << "  normForm(SV)="<<SV.getCardinality()<<endl;
+                    // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<dd_cardinality(SV2)
+                    //      << "  normForm(SV)="<<dd_cardinality(SV)<<endl;
 
                     if (pparams.very_verbose) {
                         cout << "F+("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
@@ -717,7 +717,7 @@ sym_pottier_PnL(const meddly_context& ctx,
         //             // MEDDLY::dd_edge rows_to_canon(ctx.forestMDD);
         //             // rows_to_canon = sym_intersection(G, sel);
         //             // if (!is_emptyset(rows_to_canon)) {
-        //             //     cout << " |rows_to_canon|="<<rows_to_canon.getCardinality()<<""<<endl;
+        //             //     cout << " |rows_to_canon|="<<dd_cardinality(rows_to_canon)<<""<<endl;
         //             //     cout << print_mdd(rows_to_canon, ctx.vorder) << endl;
         //             //     G = sym_difference(G, rows_to_canon);
         //             //     VMULT->computeDDEdge(rows_to_canon, -1, rows_to_canon);
@@ -791,8 +791,12 @@ sym_pottier_bygen(const meddly_context& ctx,
                 SUPPORT_INCL_TABLE->get_op(0, true, false)->computeDDEdge(G, G, non_minimal_supp, false);
                 G = sym_difference(G, non_minimal_supp);
             }
+
+            // Finally, reduce the basis G
+            G = sym_normal_form(ctx, pparams, G, G, 0, false);
+
     
-            // cout << "Gen="<<setw(3)<<row<<" ends with |G|="<<G.getCardinality()<<""<<endl;
+            // cout << "Gen="<<setw(3)<<row<<" ends with |G|="<<dd_cardinality(G)<<""<<endl;
             // cout << "\nG:\n" << print_mdd(G, ctx.vorder) << "\n\n" << endl;
        }
     }

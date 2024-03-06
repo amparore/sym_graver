@@ -41,7 +41,7 @@ std::ostream& operator<< (std::ostream& os, const mdd_printer& mp)
     if (mp.write_header) {
         for(size_t var=0; var < m; var++) {
             const size_t lvl = mp.vorder.var2lvl(var);
-            const char* var_name = mp.dd.getForest()->getDomain()->getVar(lvl + 1)->getName();
+            const char* var_name = mp.dd.getForest()->getDomain()->getVar(lvl + 1)->getName().c_str();
             col_spaces[var] = max(col_spaces[var], strlen(var_name));
             os << setw(col_spaces[var]) << var_name << " ";
         }
@@ -84,11 +84,10 @@ void check_level_bound(MEDDLY::forest* forest, int level, int bound)
     // if (bound > 20)
     //     throw std::exception();
 
-    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forest->getDomain();
-    if (dom_exp->getVariableBound(level) < bound) {
+    if (forest->getDomain()->getVariableBound(level) < bound) {
         // cout << "resizing bound of level "<<level<<" from "<<dom_exp->getVariableBound(level)
         //      << " to "<<bound<<endl;
-        dom_exp->enlargeVariableBound(level, false, bound);
+        forest->getDomain()->enlargeVariableBound(level, false, bound);
     }
 }
 
@@ -98,7 +97,6 @@ MEDDLY::dd_edge
 mdd_from_vectors(const std::vector<std::vector<int>>& vecs, 
                  MEDDLY::forest* forestMDD, bool make_symmetric) 
 {
-    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forestMDD->getDomain();
     const size_t num_rows = make_symmetric ? 2*vecs.size() : vecs.size();
     MEDDLY::dd_edge set(forestMDD);
     if (num_rows) {
@@ -109,13 +107,13 @@ mdd_from_vectors(const std::vector<std::vector<int>>& vecs,
         for (size_t i=0; i<num_rows; i++) {
             size_t row = i % vecs.size();
             int sign = (i < vecs.size()) ? 1 : -1;
-            assert(dom_exp->getNumVariables() == vecs.at(row).size());
-            ins_data[i].resize(dom_exp->getNumVariables() + 1);
+            assert(forestMDD->getDomain()->getNumVariables() == vecs.at(row).size());
+            ins_data[i].resize(forestMDD->getDomain()->getNumVariables() + 1);
 
             // encode integers and verify bounds
             for (size_t j=0; j<vecs[row].size(); j++) {
                 ins_data[i][j+1] = ZtoNode(sign * vecs[row][j]); // encode integers
-                if (ins_data[i][j+1] >= dom_exp->getVariableBound(j+1)) {
+                if (ins_data[i][j+1] >= forestMDD->getDomain()->getVariableBound(j+1)) {
                     check_level_bound(forestMDD, j+1, ins_data[i][j+1] + 1);
                 }
             }
@@ -132,9 +130,7 @@ mdd_from_vectors(const std::vector<std::vector<int>>& vecs,
 MEDDLY::dd_edge
 selector_for_sign_at_level(MEDDLY::forest *forestMDD, size_t level, int sign, int threshold) 
 {
-    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forestMDD->getDomain();
-
-    int bound = dom_exp->getVariableBound(level);
+    int bound = forestMDD->getDomain()->getVariableBound(level);
     bool terms[bound+1];
     for (int i=0; i<bound+1; i++)
         terms[i] = (NodeToZ(i) * sign) >= threshold;
@@ -149,9 +145,7 @@ selector_for_sign_at_level(MEDDLY::forest *forestMDD, size_t level, int sign, in
 MEDDLY::dd_edge
 selector_for_value_at_level(MEDDLY::forest *forestMDD, int value, size_t level) 
 {
-    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forestMDD->getDomain();
-
-    int bound = dom_exp->getVariableBound(level);
+    int bound = forestMDD->getDomain()->getVariableBound(level);
     bool terms[bound+1];
     for (int i=0; i<bound+1; i++)
         terms[i] = (NodeToZ(i) == value);
@@ -166,9 +160,7 @@ selector_for_value_at_level(MEDDLY::forest *forestMDD, int value, size_t level)
 MEDDLY::dd_edge
 selector_for_nonzeroes_at_level(MEDDLY::forest *forestMDD, size_t level) 
 {
-    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forestMDD->getDomain();
-
-    int bound = dom_exp->getVariableBound(level);
+    int bound = forestMDD->getDomain()->getVariableBound(level);
     bool terms[bound+1];
     for (int i=0; i<bound+1; i++)
         terms[i] = (NodeToZ(i) != 0);
@@ -234,9 +226,8 @@ selector_for_zeros_up_to_level(MEDDLY::forest *forestMDD, size_t max_level)
 
 MEDDLY::dd_edge
 zero_vector(MEDDLY::forest *forestMDD) {
-    MEDDLY::expert_domain* dom_exp = (MEDDLY::expert_domain*)forestMDD->getDomain();
     MEDDLY::dd_edge zero(forestMDD);
-    int num_levels = dom_exp->getNumVariables();
+    int num_levels = forestMDD->getDomain()->getNumVariables();
     std::vector<int> minterm(num_levels + 1);
     std::fill(minterm.begin(), minterm.end(), 0);
     const int* ins_ptr[1];
@@ -252,44 +243,44 @@ inline size_t
 get_node_size(MEDDLY::unpacked_node* n) {
     if (n->isFull()) {
         // find exact sizes (exclude trailing zeroes)
-        size_t size = n->getSize();
-        while (size > 0 && n->d(size - 1) == 0) 
+        unsigned size = n->getSize();
+        while (size > 0 && n->down(size - 1) == 0) 
             --size;
         return size;
     }
     else {
         // return the size containing the last nonzero
-        return n->i( n->getNNZs()-1 ) + 1;
+        return n->index( n->getSize()-1 ) + 1;
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 void unionNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node, 
-                unsigned pos, MEDDLY::expert_forest* resF,  
+                unsigned pos, MEDDLY::forest* resF,  
                 MEDDLY::binary_operation* mddUnion) 
 {
     if (node == 0)
         return; // nothing to add
     assert(pos < C->getSize());
     assert(C->isFull());
-    if (C->d(pos) == 0)
-        C->d_ref(pos) = node; // resF->linkNode(node); // FIXME: check
+    if (C->down(pos) == 0)
+        C->setFull(pos, node); // resF->linkNode(node); // FIXME: check
     else { // perform union
         MEDDLY::dd_edge dd1(resF), dd2(resF), union_dd(resF);
         dd1.set(node);
-        dd2.set(C->d(pos));
+        dd2.set(C->down(pos));
         mddUnion->computeTemp(dd1, dd2, union_dd);
         assert(pos < resF->getDomain()->getVariableBound(C->getLevel()));
-        C->set_d(pos, union_dd);
-        assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
+        C->setFull(pos, union_dd);
+        assert(resF->getNodeLevel(C->down(pos)) <= C->getLevel());
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 void differenceNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node, 
-                     unsigned pos, MEDDLY::expert_forest* resF,  
+                     unsigned pos, MEDDLY::forest* resF,  
                      MEDDLY::binary_operation* mddDifference) 
 {
     if (node == 0)
@@ -297,15 +288,23 @@ void differenceNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
     assert(pos < C->getSize());
     assert(C->isFull());
     
-    if (C->d(pos) != 0) { // perform difference
+    if (C->down(pos) != 0) { // perform difference
         MEDDLY::dd_edge dd1(resF), dd2(resF), diff_dd(resF);
-        dd1.set(C->d(pos));
+        dd1.set(C->down(pos));
         dd2.set(node);
         mddDifference->computeTemp(dd1, dd2, diff_dd);
         assert(pos < resF->getDomain()->getVariableBound(C->getLevel()));
-        C->set_d(pos, diff_dd);
-        assert(resF->getNodeLevel(C->d(pos)) <= C->getLevel());
+        C->setFull(pos, diff_dd);
+        assert(resF->getNodeLevel(C->down(pos)) <= C->getLevel());
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+double dd_cardinality(const MEDDLY::dd_edge& dd) {
+    double card;
+    MEDDLY::apply(MEDDLY::CARDINALITY, dd, card);
+    return card;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -332,8 +331,8 @@ void differenceNodes(MEDDLY::unpacked_node* C, MEDDLY::node_handle node,
 // Base class for binary operators performing: Node * Node -> Node 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-base_NNtoN::base_NNtoN(MEDDLY::binary_opname* opcode, MEDDLY::expert_forest* arg1, 
-                       MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res)
+base_NNtoN::base_NNtoN(MEDDLY::binary_opname* opcode, MEDDLY::forest* arg1, 
+                       MEDDLY::forest* arg2, MEDDLY::forest* res)
   : MEDDLY::binary_operation(opcode, 1, arg1, arg2, res)
 {
     MEDDLY::ct_entry_type* et;
@@ -398,8 +397,8 @@ void base_NNtoN::computeDDEdge(const MEDDLY::dd_edge &ar1, const MEDDLY::dd_edge
 // Base of unary operations with signature: node * integer -> node
 /////////////////////////////////////////////////////////////////////////////////////////
 
-base_NItoN::base_NItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                       MEDDLY::expert_forest* _resF)
+base_NItoN::base_NItoN(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                       MEDDLY::forest* _resF)
 /**/ : MEDDLY::operation(opcode, 1), argF(_argF), resF(_resF)
 {
     registerInForest(argF);
@@ -472,8 +471,8 @@ void base_NItoN::computeDDEdge(const MEDDLY::dd_edge &a, const int b, MEDDLY::dd
 // Base class for unary operators performing: Node -> Node 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-base_NtoN::base_NtoN(MEDDLY::unary_opname* opcode, MEDDLY::expert_forest* arg1, 
-                     MEDDLY::expert_forest* res)
+base_NtoN::base_NtoN(MEDDLY::unary_opname* opcode, MEDDLY::forest* arg1, 
+                     MEDDLY::forest* res)
   : MEDDLY::unary_operation(opcode, 1, arg1, res)
 {
     MEDDLY::ct_entry_type* et;
@@ -531,7 +530,7 @@ void base_NtoN::computeDDEdge(const MEDDLY::dd_edge &ar1,
 // Base class for unary operators performing: Node -> int 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-base_NtoI::base_NtoI(MEDDLY::unary_opname* opcode, MEDDLY::expert_forest* arg1)
+base_NtoI::base_NtoI(MEDDLY::unary_opname* opcode, MEDDLY::forest* arg1)
   : MEDDLY::unary_operation(opcode, 1, arg1, MEDDLY::opnd_type::INTEGER)
 {
     MEDDLY::ct_entry_type* et;
@@ -580,8 +579,8 @@ void base_NtoI::computeDDEdge(const MEDDLY::dd_edge &ar1,
 // Base class for binary operators performing: Node * Node * Integer -> Node 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-base_NNItoN::base_NNItoN(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1, 
-                         MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res)
+base_NNItoN::base_NNItoN(MEDDLY::opname* opcode, MEDDLY::forest* arg1, 
+                         MEDDLY::forest* arg2, MEDDLY::forest* res)
   : MEDDLY::operation(opcode, 1), arg1F(arg1), arg2F(arg2), resF(res)
 {
     MEDDLY::ct_entry_type* et;
@@ -642,8 +641,8 @@ base_NNItoN::saveResult(MEDDLY::ct_entry_key* key,
 // Base of unary operations with signature: node * integer -> node * node
 /////////////////////////////////////////////////////////////////////////////////////////
 
-base_NItoNN::base_NItoNN(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                         MEDDLY::expert_forest* _res1F, MEDDLY::expert_forest* _res2F)
+base_NItoNN::base_NItoNN(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                         MEDDLY::forest* _res1F, MEDDLY::forest* _res2F)
 /**/ : MEDDLY::operation(opcode, 1), argF(_argF), res1F(_res1F), res2F(_res2F)
 {
     registerInForest(argF);
@@ -727,8 +726,8 @@ void base_NItoNN::computeDDEdge(const MEDDLY::dd_edge &a, const int b,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 base_NNItoNN::base_NNItoNN(MEDDLY::opname* opcode, 
-                           MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
-                           MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2)
+                           MEDDLY::forest* arg1, MEDDLY::forest* arg2, 
+                           MEDDLY::forest* res1, MEDDLY::forest* res2)
 : MEDDLY::operation(opcode, 1), arg1F(arg1), arg2F(arg2), res1F(res1), res2F(res2)
 {
     MEDDLY::ct_entry_type* et;
@@ -789,9 +788,9 @@ base_NNItoNN::saveResult(MEDDLY::ct_entry_key* key,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 base_NNItoNNN::base_NNItoNNN(MEDDLY::opname* opcode, 
-                             MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
-                             MEDDLY::expert_forest* res1, MEDDLY::expert_forest* res2,
-                             MEDDLY::expert_forest* res3)
+                             MEDDLY::forest* arg1, MEDDLY::forest* arg2, 
+                             MEDDLY::forest* res1, MEDDLY::forest* res2,
+                             MEDDLY::forest* res3)
 : MEDDLY::operation(opcode, 1), arg1F(arg1), arg2F(arg2), 
   res1F(res1), res2F(res2), res3F(res3)
 {
@@ -890,8 +889,8 @@ static_assert(sizeof(s_vector_flags_t) == sizeof(int));
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-s_vectors::s_vectors(MEDDLY::opname* opcode, MEDDLY::expert_forest* arg1, 
-                     MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+s_vectors::s_vectors(MEDDLY::opname* opcode, MEDDLY::forest* arg1, 
+                     MEDDLY::forest* arg2, MEDDLY::forest* res,
                      const variable_order *pivot_order)
 : base_NNItoN(opcode, arg1, arg2, res), pivot_order(pivot_order)
 { }
@@ -942,15 +941,15 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
-        for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-            if (b_full && 0==B->d(j))
+        for (unsigned j = 0; j < (b_full ? b_size : B->getSize()); j++) { // for each b
+            if (b_full && 0==B->down(j))
                 continue;
-            int b_val = NodeToZ(b_full ? j : B->i(j));
+            int b_val = NodeToZ(b_full ? j : B->index(j));
 
             if (sum_or_diff==ab_sum_t::A_MINUS_B)
                 b_val = -b_val;
@@ -991,15 +990,15 @@ MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handl
 
             if (do_sum) {
                 MEDDLY::node_handle sum;
-                sum = compute(A->d(i), B->d(j), down_is_conf, sum_or_diff, curr_sign_of_sum, lambda);
+                sum = compute(A->down(i), B->down(j), down_is_conf, sum_or_diff, curr_sign_of_sum, lambda);
                 unionNodes(C, sum, ab_sum_idx, resF, mddUnion);
             }
         }
     }
 
     // cleanup
-    MEDDLY::unpacked_node::recycle(B);
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(B);
+    MEDDLY::unpacked_node::Recycle(A);
 
     // reduce and return result
     result = resF->createReducedNode(-1, C);
@@ -1031,8 +1030,8 @@ s_vectors::computeDDEdge(const MEDDLY::dd_edge &ar1, const MEDDLY::dd_edge &ar2,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 s_vectors* 
-s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1, 
-                                 MEDDLY::expert_forest* a2, MEDDLY::expert_forest* r,
+s_vectors_opname::buildOperation(MEDDLY::forest* a1, 
+                                 MEDDLY::forest* a2, MEDDLY::forest* r,
                                  const variable_order *pivot_order)
 {
     if (0==a1 || 0==a2 || 0==r) return 0;
@@ -1072,7 +1071,7 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 // /////////////////////////////////////////////////////////////////////////////////////////
 
 // lesseq_sq::lesseq_sq(MEDDLY::binary_opname* opcode, 
-// /**/        MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+// /**/        MEDDLY::forest* arg1, MEDDLY::forest* arg2, MEDDLY::forest* res,
 // /**/        const lesseq_sq_table* tab,
 // /**/        bool isEq, bool isB0,
 // /**/        bool _subtract, size_t lambda)
@@ -1122,15 +1121,15 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 
 //     const bool a_full = A->isFull(), b_full = B->isFull();
 
-//     for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-//         if (a_full && 0==A->d(i))
+//     for (size_t i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+//         if (a_full && 0==A->down(i))
 //             continue;
-//         int a_val = NodeToZ(a_full ? i : A->i(i));
+//         int a_val = NodeToZ(a_full ? i : A->index(i));
 
-//         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-//             if (b_full && 0==B->d(j))
+//         for (size_t j = 0; j < (b_full ? b_size : B->getSize()); j++) { // for each b
+//             if (b_full && 0==B->down(j))
 //                 continue;
-//             int b_val = NodeToZ(b_full ? j : B->i(j));
+//             int b_val = NodeToZ(b_full ? j : B->index(j));
 
 //             bool is_lesseq_sq;
 //             bool is_pot_eq = isPotentiallyEqual;
@@ -1156,15 +1155,15 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 //                 lesseq_sq* next_op = p_table->get_op(lambda, down_is_eq, 
 //                                                      down_is_b0, subtract);
 
-//                 MEDDLY::node_handle leq_ij = next_op->compute(A->d(i), B->d(j));
+//                 MEDDLY::node_handle leq_ij = next_op->compute(A->down(i), B->down(j));
 //                 unionNodes(C, leq_ij, idx, resF, mddUnion);
 //             }
 //         }
 //     }
 
 //     // cleanup
-//     MEDDLY::unpacked_node::recycle(B);
-//     MEDDLY::unpacked_node::recycle(A);
+//     MEDDLY::unpacked_node::Recycle(B);
+//     MEDDLY::unpacked_node::Recycle(A);
 //     // reduce and return result
 //     result = resF->createReducedNode(-1, C);
 //     saveResult(key, a, b, result);
@@ -1174,9 +1173,9 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 // /////////////////////////////////////////////////////////////////////////////////////////
 
 // lesseq_sq* 
-// lesseq_sq_opname::buildOperation(MEDDLY::expert_forest* a1, 
-//                                           MEDDLY::expert_forest* a2, 
-//                                           MEDDLY::expert_forest* r,
+// lesseq_sq_opname::buildOperation(MEDDLY::forest* a1, 
+//                                           MEDDLY::forest* a2, 
+//                                           MEDDLY::forest* r,
 //                                           const lesseq_sq_table* tab,
 //                                           bool isEq, bool isB0, bool subtract,
 //                                           size_t lambda)
@@ -1201,16 +1200,16 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 // }
 
 // MEDDLY::binary_operation* 
-// lesseq_sq_opname::buildOperation(MEDDLY::expert_forest* a1, 
-//                                           MEDDLY::expert_forest* a2, 
-//                                           MEDDLY::expert_forest* r)
+// lesseq_sq_opname::buildOperation(MEDDLY::forest* a1, 
+//                                           MEDDLY::forest* a2, 
+//                                           MEDDLY::forest* r)
 // {
 //     throw std::exception(); // Unimplemented
 // }
 
 // /////////////////////////////////////////////////////////////////////////////////////////
 
-// lesseq_sq_table::lesseq_sq_table(MEDDLY::expert_forest* forest,
+// lesseq_sq_table::lesseq_sq_table(MEDDLY::forest* forest,
 //                                  const variable_order *pivot_order) 
 // /**/ : forest(forest), pivot_order(pivot_order)
 // { }
@@ -1260,7 +1259,7 @@ s_vectors_opname::buildOperation(MEDDLY::expert_forest* a1,
 // Get the elements using the less-equal-but-not-equal-squared operator
 /////////////////////////////////////////////////////////////////////////////////////////
 
-leq_neq_sq::leq_neq_sq(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+leq_neq_sq::leq_neq_sq(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
                        const variable_order *pivot_order, const bool subtract)
 : base_NNItoN(opcode, forestMDD, forestMDD, forestMDD), 
 /**/ pivot_order(pivot_order), subtract(subtract)
@@ -1327,15 +1326,15 @@ leq_neq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, int flags)
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
-        for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-            if (b_full && 0==B->d(j))
+        for (unsigned j = 0; j < (b_full ? b_size : B->getSize()); j++) { // for each b
+            if (b_full && 0==B->down(j))
                 continue;
-            int b_val = NodeToZ(b_full ? j : B->i(j));
+            int b_val = NodeToZ(b_full ? j : B->index(j));
 
             bool ij_is_leq_sq;
             bool ij_is_pot_eq = lf.bf.is_potentially_equal;
@@ -1362,15 +1361,15 @@ leq_neq_sq::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, int flags)
                 down_lf.bf.is_b_potentially_zero = ij_is_b_pot_zero;
                 down_lf.bf.lambda = lf.bf.lambda;
 
-                MEDDLY::node_handle leq_ij = compute(A->d(i), B->d(j), down_lf.value);
+                MEDDLY::node_handle leq_ij = compute(A->down(i), B->down(j), down_lf.value);
                 unionNodes(C, leq_ij, idx, resF, mddUnion);
             }
         }
     }
 
     // cleanup
-    MEDDLY::unpacked_node::recycle(B);
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(B);
+    MEDDLY::unpacked_node::Recycle(A);
     // reduce and return result
     result = resF->createReducedNode(-1, C);
     saveResult(key, result);
@@ -1399,7 +1398,7 @@ leq_neq_sq:: computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 leq_neq_sq* 
-leq_neq_sq_opname::buildOperation(MEDDLY::expert_forest* forestMDD,
+leq_neq_sq_opname::buildOperation(MEDDLY::forest* forestMDD,
                                   const variable_order *pivot_order,
                                   const bool subtract)
 {
@@ -1453,7 +1452,7 @@ static_assert(sizeof(reduce_flags_t) == sizeof(int));
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-reduce::reduce(MEDDLY::opname* opcode, MEDDLY::expert_forest* forestMDD,
+reduce::reduce(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
                const variable_order *pivot_order)
 : base_NNItoNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD), 
   pivot_order(pivot_order)
@@ -1541,18 +1540,20 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
         MEDDLY::dd_edge irred_Ai(res1F);
-        irred_Ai.set(res1F->linkNode(A->d(i)));
+        irred_Ai.set(res1F->linkNode(A->down(i)));
 
-        for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-            if (b_full && 0==B->d(j))
+        for (unsigned j = 0; j < (b_full ? b_size : B->getSize()); j++) { // for each b
+            if (b_full && 0==B->down(j))
                 continue;
-            int b_val = NodeToZ(b_full ? j : B->i(j));
+            int b_val = NodeToZ(b_full ? j : B->index(j));
+            if (abs(b_val) > abs(a_val))
+                continue; // there are no more j that can reduce i.
 
             bool ij_reduce;
             bool ij_pot_eq = rf.bf.is_potentially_equal;
@@ -1594,7 +1595,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 down_rf.bf.lambda = rf.bf.lambda;
 
                 std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down;
-                down = compute(irred_Ai.getNode(), B->d(j), down_rf.value);
+                down = compute(irred_Ai.getNode(), B->down(j), down_rf.value);
 
                 // cout << "lvl(a)="<<a_level<<" lvl(b)="<<b_level<<" a="<<a_val<<" b="<<b_val
                 //      << " is_eq="<<ij_pot_eq<<" b_zero="<<ij_b_pot_zero
@@ -1612,13 +1613,14 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 // }
             }
         }
-        unionNodes(C_irreducibles1, res1F->linkNode(irred_Ai.getNode()), 
-                    ZtoNode(a_val), res1F, mddUnion);
+        C_irreducibles1->setFull(ZtoNode(a_val), irred_Ai);
+        // unionNodes(C_irreducibles1, res1F->linkNode(irred_Ai.getNode()), 
+        //             ZtoNode(a_val), res1F, mddUnion);
     }
 
     // cleanup
-    MEDDLY::unpacked_node::recycle(B);
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(B);
+    MEDDLY::unpacked_node::Recycle(A);
     // reduce and return result
     result.first  = res1F->createReducedNode(-1, C_irreducibles1);
     result.second = res2F->createReducedNode(-1, C_reduced2);
@@ -1630,7 +1632,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 reduce* 
-reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
+reduce_opname::buildOperation(MEDDLY::forest *forestMDD,
                               const variable_order *pivot_order)
 {
     if (0==forestMDD) return 0;
@@ -1670,8 +1672,8 @@ reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
 // /////////////////////////////////////////////////////////////////////////////////////////
 
 // compl_proc::compl_proc(MEDDLY::binary_opname* opcode, 
-// /**/                   MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, 
-// /**/                   MEDDLY::expert_forest* res,
+// /**/                   MEDDLY::forest* arg1, MEDDLY::forest* arg2, 
+// /**/                   MEDDLY::forest* res,
 // /**/                   const compl_proc_table* tab,
 // /**/                   size_t _rlvl)
 //   : base_NNtoN(opcode, arg1, arg2, res), p_table(tab), restricted_level(_rlvl)
@@ -1710,15 +1712,15 @@ reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
 
 //     const bool a_full = A->isFull(), b_full = B->isFull();
 
-//     for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-//         if (a_full && 0==A->d(i))
+//     for (size_t i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+//         if (a_full && 0==A->down(i))
 //             continue;
-//         int a_val = NodeToZ(a_full ? i : A->i(i));
+//         int a_val = NodeToZ(a_full ? i : A->index(i));
 
-//         for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-//             if (b_full && 0==B->d(j))
+//         for (size_t j = 0; j < (b_full ? b_size : B->getSize()); j++) { // for each b
+//             if (b_full && 0==B->down(j))
 //                 continue;
-//             int b_val = NodeToZ(b_full ? j : B->i(j));
+//             int b_val = NodeToZ(b_full ? j : B->index(j));
 
 //             bool is_selected_for_removal;
 //             if (res_level > restricted_level) { // take everything
@@ -1756,15 +1758,15 @@ reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
 //                 // compl_proc* next_op = p_table->get_op(restricted_level, down_is_eq, 
 //                 //                                      down_is_b0, subtract);
 
-//                 MEDDLY::node_handle res_ij = compute(A->d(i), B->d(j));
+//                 MEDDLY::node_handle res_ij = compute(A->down(i), B->down(j));
 //                 unionNodes(C, res_ij, idx, resF, mddUnion);
 //             }
 //         }
 //     }
 
 //     // cleanup
-//     MEDDLY::unpacked_node::recycle(B);
-//     MEDDLY::unpacked_node::recycle(A);
+//     MEDDLY::unpacked_node::Recycle(B);
+//     MEDDLY::unpacked_node::Recycle(A);
 //     // reduce and return result
 //     result = resF->createReducedNode(-1, C);
 //     saveResult(key, a, b, result);
@@ -1774,9 +1776,9 @@ reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
 // /////////////////////////////////////////////////////////////////////////////////////////
 
 // compl_proc* 
-// compl_proc_opname::buildOperation(MEDDLY::expert_forest* a1, 
-//                                   MEDDLY::expert_forest* a2, 
-//                                   MEDDLY::expert_forest* r,
+// compl_proc_opname::buildOperation(MEDDLY::forest* a1, 
+//                                   MEDDLY::forest* a2, 
+//                                   MEDDLY::forest* r,
 //                                   const compl_proc_table* tab,
 //                                   size_t restricted_level)
 // {
@@ -1799,16 +1801,16 @@ reduce_opname::buildOperation(MEDDLY::expert_forest *forestMDD,
 // }
 
 // MEDDLY::binary_operation* 
-// compl_proc_opname::buildOperation(MEDDLY::expert_forest* a1, 
-//                                           MEDDLY::expert_forest* a2, 
-//                                           MEDDLY::expert_forest* r)
+// compl_proc_opname::buildOperation(MEDDLY::forest* a1, 
+//                                           MEDDLY::forest* a2, 
+//                                           MEDDLY::forest* r)
 // {
 //     throw std::exception(); // Unimplemented
 // }
 
 // /////////////////////////////////////////////////////////////////////////////////////////
 
-// compl_proc_table::compl_proc_table(MEDDLY::expert_forest* forest) {
+// compl_proc_table::compl_proc_table(MEDDLY::forest* forest) {
 //     const size_t num_vars = forest->getNumVariables();
 //     table.resize(num_vars + 1);
 //     for (size_t lvl=0; lvl<=num_vars; ++lvl) {
@@ -1850,7 +1852,7 @@ sign_canon_mdd_opname::sign_canon_mdd_opname()
 { }
 
 sign_canon_mdd_op* 
-sign_canon_mdd_opname::buildOperation(MEDDLY::expert_forest* arF, MEDDLY::expert_forest* resF)
+sign_canon_mdd_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF)
 {
     if (0==arF || 0==resF) return 0;
     
@@ -1861,8 +1863,8 @@ sign_canon_mdd_op::~sign_canon_mdd_op() { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-sign_canon_mdd_op::sign_canon_mdd_op(MEDDLY::unary_opname* opcode, MEDDLY::expert_forest* _argF,
-                                     MEDDLY::expert_forest* _resF)
+sign_canon_mdd_op::sign_canon_mdd_op(MEDDLY::unary_opname* opcode, MEDDLY::forest* _argF,
+                                     MEDDLY::forest* _resF)
 /**/ : base_NtoN(opcode, _argF, _resF)
 { }
 
@@ -1889,30 +1891,30 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
 
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
         if (a_val > 0) { // keep as-is, end recursive descent
-            unionNodes(C, resF->linkNode(A->d(i)), 
+            unionNodes(C, resF->linkNode(A->down(i)), 
                         ZtoNode(a_val), resF, mddUnion);
         }
         else if (a_val == 0) { 
             // following a 0-path, not found yet the first nnz
             // continue descending
-            unionNodes(C, compute(A->d(i)), 
+            unionNodes(C, compute(A->down(i)), 
                         ZtoNode(a_val), resF, mddUnion);
         }
         else { // invert vectors from here down. Use VMULT
             assert(ZtoNode(-a_val) < resF->getDomain()->getVariableBound(a_level));
-            unionNodes(C, VMULT->compute(A->d(i), -1), 
+            unionNodes(C, VMULT->compute(A->down(i), -1), 
                         ZtoNode(-a_val), resF, mddUnion);
         }
     }
 
     // // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     result = resF->createReducedNode(-1, C);
     saveResult(key, a, result);
@@ -1939,7 +1941,7 @@ MEDDLY::node_handle sign_canon_mdd_op::compute(MEDDLY::node_handle a)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 vmult_opname::vmult_opname() 
-/**/ : unary_opname("VectorMultiply")
+/**/ : opname("VectorMultiply")
 { }
 
 MEDDLY::operation* 
@@ -1947,16 +1949,15 @@ vmult_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF)
 {
     if (0==arF || 0==resF) return 0;
     
-    return new vmult_op(this, (MEDDLY::expert_forest*)arF, 
-                             (MEDDLY::expert_forest*)resF);
+    return new vmult_op(this, arF, resF);
 }
 
 vmult_op::~vmult_op() { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-vmult_op::vmult_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                   MEDDLY::expert_forest* _resF)
+vmult_op::vmult_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                   MEDDLY::forest* _resF)
 /**/ : base_NItoN(opcode, _argF, _resF)
 { }
 
@@ -1976,7 +1977,7 @@ MEDDLY::node_handle vmult_op::compute(MEDDLY::node_handle a, const int multiplie
 
     // // Read the node and accumulate the LCM of the GCDs
     // MEDDLY::unpacked_node* A = MEDDLY::unpacked_node::newFromNode(argF, a, false);
-    MEDDLY::unpacked_node *A = MEDDLY::unpacked_node::New();
+    MEDDLY::unpacked_node *A = MEDDLY::unpacked_node::New(argF);
     argF->unpackNode(A, a, MEDDLY::FULL_OR_SPARSE);
     const int a_level = argF->getNodeLevel(a);
     const size_t a_size = get_node_size(A);
@@ -1987,19 +1988,19 @@ MEDDLY::node_handle vmult_op::compute(MEDDLY::node_handle a, const int multiplie
 
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
         int r_val = ZtoNode(multiply_exact(multiplier, a_val));
 
-        unionNodes(C, compute(A->d(i), multiplier), 
+        unionNodes(C, compute(A->down(i), multiplier), 
                    r_val, resF, mddUnion);
     }
 
     // // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     result = resF->createReducedNode(-1, C);
     saveResult(key, a, multiplier, result);
@@ -2035,7 +2036,7 @@ MEDDLY::node_handle vmult_op::compute(MEDDLY::node_handle a, const int multiplie
 /////////////////////////////////////////////////////////////////////////////////////////
 
 vdivide_mdd_opname::vdivide_mdd_opname() 
-/**/ : unary_opname("VecCanonicalize")
+/**/ : opname("VecCanonicalize")
 { }
 
 MEDDLY::operation* 
@@ -2043,16 +2044,15 @@ vdivide_mdd_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF)
 {
     if (0==arF || 0==resF) return 0;
     
-    return new vdivide_mdd_op(this, (MEDDLY::expert_forest*)arF, 
-                              (MEDDLY::expert_forest*)resF);
+    return new vdivide_mdd_op(this, arF, resF);
 }
 
 vdivide_mdd_op::~vdivide_mdd_op() { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-vdivide_mdd_op::vdivide_mdd_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                               MEDDLY::expert_forest* _resF)
+vdivide_mdd_op::vdivide_mdd_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                               MEDDLY::forest* _resF)
 /**/ : base_NItoNN(opcode, _argF, _resF, _resF)
 { }
 
@@ -2082,23 +2082,23 @@ vdivide_mdd_op::compute(MEDDLY::node_handle a, const int divisor)
 
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
         if (0 == (abs(a_val) % divisor)) { // path is divisible by @divisor
-            std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down = compute(A->d(i), divisor);
+            std::pair<MEDDLY::node_handle, MEDDLY::node_handle> down = compute(A->down(i), divisor);
             unionNodes(Cn, down.first, ZtoNode(a_val), res1F, mddUnion);
             unionNodes(Cy, down.second, ZtoNode(a_val / divisor), res2F, mddUnion);
         }
-        else { // path is not divisible by @divisor -> copy/ref A->d(i)
-            unionNodes(Cn, res1F->linkNode(A->d(i)), ZtoNode(a_val), res1F, mddUnion);
+        else { // path is not divisible by @divisor -> copy/ref A->down(i)
+            unionNodes(Cn, res1F->linkNode(A->down(i)), ZtoNode(a_val), res1F, mddUnion);
         }
     }
 
     // // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     result.first  = res1F->createReducedNode(-1, Cn);
     result.second = res2F->createReducedNode(-1, Cy);
@@ -2148,12 +2148,12 @@ divisors_finder_mdd_opname::buildOperation(MEDDLY::forest* arg)
 {
     if (0==arg) return 0;
     
-    return new divisors_finder_mdd_op(this, (MEDDLY::expert_forest*)arg);
+    return new divisors_finder_mdd_op(this, arg);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-divisors_finder_mdd_op::divisors_finder_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::expert_forest* arg) 
+divisors_finder_mdd_op::divisors_finder_mdd_op(MEDDLY::unary_opname* oc, MEDDLY::forest* arg) 
 /**/ : base_NtoI(oc, arg)
 {
     lut.insert(std::vector<int>{});  // 0 terminal
@@ -2186,12 +2186,12 @@ divisors_finder_mdd_op::compute(MEDDLY::node_handle a)
     const size_t a_size = get_node_size(A);
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
-        lut_key lk_i = compute(A->d(i));
+        lut_key lk_i = compute(A->down(i));
         const std::vector<int>& div_i = lut.look_up(lk_i);
         for (int v : div_i) {
             int new_div_i = gcd(v, abs(a_val));
@@ -2207,7 +2207,7 @@ divisors_finder_mdd_op::compute(MEDDLY::node_handle a)
     divisors.erase(std::unique(divisors.begin(), divisors.end()), divisors.end());
 
     // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     res = lut.insert(std::move(divisors));
     saveResult(key, a, res);
@@ -2244,7 +2244,7 @@ divisors_finder_mdd_op::compute(MEDDLY::node_handle a)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 support_inclusion_op::support_inclusion_op(MEDDLY::binary_opname* opcode, 
-/**/        MEDDLY::expert_forest* arg1, MEDDLY::expert_forest* arg2, MEDDLY::expert_forest* res,
+/**/        MEDDLY::forest* arg1, MEDDLY::forest* arg2, MEDDLY::forest* res,
 /**/        const support_inclusion_table* p_table, bool is_pot_eq_supp, bool subtract, size_t lambda)
   : base_NNtoN(opcode, arg1, arg2, res), p_table(p_table), 
     is_pot_eq_supp(is_pot_eq_supp), subtract(subtract), lambda(lambda)
@@ -2300,31 +2300,31 @@ MEDDLY::node_handle support_inclusion_op::compute(MEDDLY::node_handle a, MEDDLY:
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
-        for (size_t j = 0; j < (b_full ? b_size : B->getNNZs()); j++) { // for each b
-            if (b_full && 0==B->d(j))
+        for (unsigned j = 0; j < (b_full ? b_size : B->getSize()); j++) { // for each b
+            if (b_full && 0==B->down(j))
                 continue;
-            int b_val = NodeToZ(b_full ? j : B->i(j));
+            int b_val = NodeToZ(b_full ? j : B->index(j));
 
             MEDDLY::node_handle n = 0; // n = a if supp(a) subseteq_neq supp(b)
             if (lambda != 0 && p_table->pivot_order->is_above_lambda(lambda, res_level)) {
-                n = compute(A->d(i), B->d(j)); // no check
+                n = compute(A->down(i), B->down(j)); // no check
             }
             else if (a_val == 0) { // a==0 -> b can only be 0
                 if (b_val == 0) {
-                    n = compute(A->d(i), B->d(j));
+                    n = compute(A->down(i), B->down(j));
                 }
             }
             else { // a_val != 0 -> b can be any value or 0
                 if (is_pot_eq_supp && (b_val==0 || abs(b_val) < abs(a_val))) 
                     // b has smaller support than a, or b is smaller than a (for reduction)
-                    n = p_table->get_op(lambda, false, subtract)->compute(A->d(i), B->d(j));
+                    n = p_table->get_op(lambda, false, subtract)->compute(A->down(i), B->down(j));
                 else //if (multiply_exact(a_val, b_val) >= 0)
-                    n = compute(A->d(i), B->d(j));
+                    n = compute(A->down(i), B->down(j));
             }
             if (n != 0)
                 unionNodes(C, n, ZtoNode(subtract ? a_val - b_val : a_val), 
@@ -2333,8 +2333,8 @@ MEDDLY::node_handle support_inclusion_op::compute(MEDDLY::node_handle a, MEDDLY:
     }
 
     // cleanup
-    MEDDLY::unpacked_node::recycle(B);
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(B);
+    MEDDLY::unpacked_node::Recycle(A);
     // reduce and return result
     result = resF->createReducedNode(-1, C);
     saveResult(key, a, b, result);
@@ -2344,9 +2344,9 @@ MEDDLY::node_handle support_inclusion_op::compute(MEDDLY::node_handle a, MEDDLY:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 support_inclusion_op* 
-support_inclusion_opname::buildOperation(MEDDLY::expert_forest* a1, 
-                                         MEDDLY::expert_forest* a2, 
-                                         MEDDLY::expert_forest* r,
+support_inclusion_opname::buildOperation(MEDDLY::forest* a1, 
+                                         MEDDLY::forest* a2, 
+                                         MEDDLY::forest* r,
                                          const support_inclusion_table* p_table,
                                          bool is_pot_eq_supp, bool subtract,
                                          size_t lambda)
@@ -2370,15 +2370,15 @@ support_inclusion_opname::buildOperation(MEDDLY::expert_forest* a1,
 }
 
 MEDDLY::binary_operation* 
-support_inclusion_opname::buildOperation(MEDDLY::expert_forest* a1, 
-        MEDDLY::expert_forest* a2, MEDDLY::expert_forest* r)
+support_inclusion_opname::buildOperation(MEDDLY::forest* a1, 
+        MEDDLY::forest* a2, MEDDLY::forest* r)
 {
     throw std::exception(); // Unimplemented
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-support_inclusion_table::support_inclusion_table(MEDDLY::expert_forest* forest,
+support_inclusion_table::support_inclusion_table(MEDDLY::forest* forest,
                                  const variable_order *pivot_order) 
 /**/ : forest(forest), pivot_order(pivot_order)
 { }
@@ -2437,16 +2437,15 @@ lv_selector_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF, co
 {
     if (0==arF || 0==resF) return 0;
     
-    return new lv_selector_op(this, (MEDDLY::expert_forest*)arF, 
-                              (MEDDLY::expert_forest*)resF, lambda);
+    return new lv_selector_op(this, arF, resF, lambda);
 }
 
 lv_selector_op::~lv_selector_op() { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-lv_selector_op::lv_selector_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                             MEDDLY::expert_forest* _resF, const size_t lambda)
+lv_selector_op::lv_selector_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                             MEDDLY::forest* _resF, const size_t lambda)
 /**/ : base_NItoN(opcode, _argF, _resF), lambda(lambda)
 { }
 
@@ -2478,18 +2477,18 @@ MEDDLY::node_handle lv_selector_op::compute(MEDDLY::node_handle a, const int val
 
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
         // cout << "a_val:"<<a_val<<" a_level:"<<a_level<<" value:"<<value<<" lambda:"<<lambda<<endl;
         if (a_level != lambda || a_val == value) // select this path that has @value at level @lambda
-            unionNodes(C, compute(A->d(i), value), ZtoNode(a_val), resF, mddUnion);
+            unionNodes(C, compute(A->down(i), value), ZtoNode(a_val), resF, mddUnion);
     }
 
     // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     result = resF->createReducedNode(-1, C);
     saveResult(key, a, value, result);
@@ -2498,7 +2497,7 @@ MEDDLY::node_handle lv_selector_op::compute(MEDDLY::node_handle a, const int val
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-lv_selector_table::lv_selector_table(MEDDLY::expert_forest* forest)
+lv_selector_table::lv_selector_table(MEDDLY::forest* forest)
 : forest(forest)
 { }
 
@@ -2544,7 +2543,7 @@ lv_selector_op* lv_selector_table::get_op(size_t level) const
 // Enumerate all the distinct values that appear at a specified MDD level
 /////////////////////////////////////////////////////////////////////////////////////////
 
-void domain_values_enumerator::visit(const MEDDLY::expert_forest *argF,
+void domain_values_enumerator::visit(const MEDDLY::forest *argF,
                                      const MEDDLY::node_handle a) 
 {
     if (a <= 0)
@@ -2570,10 +2569,10 @@ void domain_values_enumerator::visit(const MEDDLY::expert_forest *argF,
     const bool a_full = A->isFull();
     const int a_level = argF->getNodeLevel(a);
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
         if (a_level == level) { // store the found values
             if (a_val < 0) {
@@ -2596,12 +2595,12 @@ void domain_values_enumerator::visit(const MEDDLY::expert_forest *argF,
             }
         }
         else if (a_level > level) { // recursive visit
-            visit(argF, A->d(i));
+            visit(argF, A->down(i));
         }
     }
 
     // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -2656,13 +2655,13 @@ smallest_degree_opname::buildOperation(MEDDLY::forest* arg,
 {
     if (0==arg) return 0;
     
-    return new smallest_degree_op(this, (MEDDLY::expert_forest*)arg, p_table, degtype, lambda);
+    return new smallest_degree_op(this, arg, p_table, degtype, lambda);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 smallest_degree_op::smallest_degree_op(MEDDLY::unary_opname* oc, 
-                                       MEDDLY::expert_forest* arg,
+                                       MEDDLY::forest* arg,
                                        const smallest_degree_table* p_table,
                                        const degree_type degtype,
                                        const size_t lambda) 
@@ -2695,12 +2694,12 @@ int smallest_degree_op::compute(MEDDLY::node_handle a)
     const size_t a_level = A->getLevel();
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
-        int down_degree = compute(A->d(i));
+        int down_degree = compute(A->down(i));
 
         int edge_degree = down_degree;
         if (p_table->pivot_order->is_below_lambda(lambda, a_level)) { 
@@ -2715,7 +2714,7 @@ int smallest_degree_op::compute(MEDDLY::node_handle a)
     }
 
     // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     res = smallest_degree;
     saveResult(key, a, res);
@@ -2724,7 +2723,7 @@ int smallest_degree_op::compute(MEDDLY::node_handle a)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-smallest_degree_table::smallest_degree_table(MEDDLY::expert_forest* forest,
+smallest_degree_table::smallest_degree_table(MEDDLY::forest* forest,
                                              const variable_order *pivot_order) 
 /**/ : forest(forest), pivot_order(pivot_order)
 { }
@@ -2776,13 +2775,13 @@ degree_finder_opname::buildOperation(MEDDLY::forest* arg,
 {
     if (0==arg) return 0;
     
-    return new degree_finder_op(this, (MEDDLY::expert_forest*)arg, p_table, degtype, lambda);
+    return new degree_finder_op(this, arg, p_table, degtype, lambda);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 degree_finder_op::degree_finder_op(MEDDLY::unary_opname* oc, 
-                                       MEDDLY::expert_forest* arg,
+                                       MEDDLY::forest* arg,
                                        const degree_finder_table* p_table,
                                        const degree_type degtype,
                                        const size_t lambda) 
@@ -2816,12 +2815,12 @@ int degree_finder_op::compute(MEDDLY::node_handle a)
     const size_t a_level = A->getLevel();
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
 
-        lut_key down_lk = compute(A->d(i));
+        lut_key down_lk = compute(A->down(i));
         const std::vector<int>& down_degrees = p_table->look_up(down_lk);
 
         int edge_incr = 0;
@@ -2839,7 +2838,7 @@ int degree_finder_op::compute(MEDDLY::node_handle a)
     degrees.erase(std::unique(degrees.begin(), degrees.end()), degrees.end());
 
     // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     res = p_table->lut.insert(std::move(degrees));
     saveResult(key, a, res);
@@ -2848,7 +2847,7 @@ int degree_finder_op::compute(MEDDLY::node_handle a)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-degree_finder_table::degree_finder_table(MEDDLY::expert_forest* forest,
+degree_finder_table::degree_finder_table(MEDDLY::forest* forest,
                                          const variable_order *pivot_order) 
 /**/ : forest(forest), pivot_order(pivot_order)
 {
@@ -2907,17 +2906,15 @@ degree_selector_opname::buildOperation(MEDDLY::forest* arF, MEDDLY::forest* resF
 {
     if (0==arF || 0==resF) return 0;
     
-    return new degree_selector_op(this, (MEDDLY::expert_forest*)arF, 
-                                  (MEDDLY::expert_forest*)resF,
-                                  p_table, degtype, lambda);
+    return new degree_selector_op(this, arF, resF, p_table, degtype, lambda);
 }
 
 degree_selector_op::~degree_selector_op() { }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-degree_selector_op::degree_selector_op(MEDDLY::opname* opcode, MEDDLY::expert_forest* _argF,
-                                       MEDDLY::expert_forest* _resF,
+degree_selector_op::degree_selector_op(MEDDLY::opname* opcode, MEDDLY::forest* _argF,
+                                       MEDDLY::forest* _resF,
                                        const degree_selector_table* p_table,
                                        const degree_type degtype, const size_t lambda)
 /**/ : base_NItoN(opcode, _argF, _resF), p_table(p_table), degtype(degtype), lambda(lambda)
@@ -2947,10 +2944,10 @@ MEDDLY::node_handle degree_selector_op::compute(MEDDLY::node_handle a, const int
 
     const bool a_full = A->isFull();
 
-    for (size_t i = 0; i < (a_full ? a_size : A->getNNZs()); i++) { // for each a
-        if (a_full && 0==A->d(i))
+    for (unsigned i = 0; i < (a_full ? a_size : A->getSize()); i++) { // for each a
+        if (a_full && 0==A->down(i))
             continue;
-        int a_val = NodeToZ(a_full ? i : A->i(i));
+        int a_val = NodeToZ(a_full ? i : A->index(i));
         
         int r_val = a_val;
         int down_degree = degree;
@@ -2959,12 +2956,12 @@ MEDDLY::node_handle degree_selector_op::compute(MEDDLY::node_handle a, const int
             down_degree -= get_degree_of(a_val, degtype);
         }
 
-        unionNodes(C, compute(A->d(i), down_degree), 
+        unionNodes(C, compute(A->down(i), down_degree), 
                    ZtoNode(r_val), resF, mddUnion);
     }
 
     // // Cleanup
-    MEDDLY::unpacked_node::recycle(A);
+    MEDDLY::unpacked_node::Recycle(A);
     // Save in cache
     result = resF->createReducedNode(-1, C);
     saveResult(key, a, degree, result);
@@ -2973,7 +2970,7 @@ MEDDLY::node_handle degree_selector_op::compute(MEDDLY::node_handle a, const int
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-degree_selector_table::degree_selector_table(MEDDLY::expert_forest* forest,
+degree_selector_table::degree_selector_table(MEDDLY::forest* forest,
                                              const variable_order *pivot_order) 
 /**/ : forest(forest), pivot_order(pivot_order)
 {
@@ -3020,33 +3017,31 @@ degree_selector_op* degree_selector_table::get_op(size_t level, const degree_typ
 
 void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_order *pivot_order) 
 {
-    MEDDLY::expert_forest *forestMDDexp = (MEDDLY::expert_forest*)forestMDD;
-
     // Declare out custom operators
     S_VECTORS_OPNAME = new s_vectors_opname();
-    S_VECTORS = new s_vectors(S_VECTORS_OPNAME, forestMDDexp, forestMDDexp, forestMDDexp, pivot_order);
+    S_VECTORS = new s_vectors(S_VECTORS_OPNAME, forestMDD, forestMDD, forestMDD, pivot_order);
 
     // LESSEQ_SQ_OPNAME = new lesseq_sq_opname();
-    // LESSEQ_SQ_OPS = new lesseq_sq_table(forestMDDexp, pivot_order);
+    // LESSEQ_SQ_OPS = new lesseq_sq_table(forestMDD, pivot_order);
 
     LEQ_NEQ_SQ_OPNAME = new leq_neq_sq_opname();
-    LEQ_NEQ_SQ_COMPARE = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDDexp, pivot_order, false);
-    LEQ_NEQ_SQ_SUBTRACT = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDDexp, pivot_order, true);
+    LEQ_NEQ_SQ_COMPARE = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDD, pivot_order, false);
+    LEQ_NEQ_SQ_SUBTRACT = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDD, pivot_order, true);
 
     REDUCE_OPNAME = new reduce_opname();
-    REDUCE = REDUCE_OPNAME->buildOperation(forestMDDexp, pivot_order);
+    REDUCE = REDUCE_OPNAME->buildOperation(forestMDD, pivot_order);
 
     // REDUCE3_OPNAME = new reduce3_opname();
-    // REDUCE3 = REDUCE3_OPNAME->buildOperation(forestMDDexp, pivot_order);
+    // REDUCE3 = REDUCE3_OPNAME->buildOperation(forestMDD, pivot_order);
 
     // COMPL_PROC_OPNAME = new compl_proc_opname();
-    // COMPL_PROC_OPS = new compl_proc_table(forestMDDexp);
+    // COMPL_PROC_OPS = new compl_proc_table(forestMDD);
 
     SIGN_CANON_OPNAME = new sign_canon_mdd_opname();
-    SIGN_CANON = SIGN_CANON_OPNAME->buildOperation(forestMDDexp, forestMDDexp);
+    SIGN_CANON = SIGN_CANON_OPNAME->buildOperation(forestMDD, forestMDD);
 
     VMULT_OPNAME = new vmult_opname();
-    VMULT = (vmult_op*)VMULT_OPNAME->buildOperation(forestMDDexp, forestMDD);
+    VMULT = (vmult_op*)VMULT_OPNAME->buildOperation(forestMDD, forestMDD);
 
     VDIVIDE_OPNAME = new vdivide_mdd_opname();
     VDIVIDE = (vdivide_mdd_op*)VDIVIDE_OPNAME->buildOperation(forestMDD, forestMDD);
@@ -3055,19 +3050,19 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     DIV_FINDER_MDD = (divisors_finder_mdd_op*)DIV_FINDER_MDD_OPNAME->buildOperation(forestMDD);
 
     SUPPORT_INCL_OPNAME = new support_inclusion_opname();
-    SUPPORT_INCL_TABLE = new support_inclusion_table(forestMDDexp, pivot_order);
+    SUPPORT_INCL_TABLE = new support_inclusion_table(forestMDD, pivot_order);
 
     LV_SELECTOR_OPNAME = new lv_selector_opname();
-    LV_SELECTOR_OPS = new lv_selector_table(forestMDDexp);
+    LV_SELECTOR_OPS = new lv_selector_table(forestMDD);
 
     SMALLEST_DEGREE_OPNAME = new smallest_degree_opname();
-    SMALLEST_DEGREE_TABLE = new smallest_degree_table(forestMDDexp, pivot_order);
+    SMALLEST_DEGREE_TABLE = new smallest_degree_table(forestMDD, pivot_order);
 
     DEGREE_FINDER_OPNAME = new degree_finder_opname();
-    DEGREE_FINDER_TABLE = new degree_finder_table(forestMDDexp, pivot_order);
+    DEGREE_FINDER_TABLE = new degree_finder_table(forestMDD, pivot_order);
 
     DEGREE_SELECTOR_OPNAME = new degree_selector_opname();
-    DEGREE_SELECTOR_TABLE = new degree_selector_table(forestMDDexp, pivot_order);
+    DEGREE_SELECTOR_TABLE = new degree_selector_table(forestMDD, pivot_order);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -39,7 +39,7 @@ struct pottier_params_t {
     perf_counters_t *perf = nullptr;
 
     inline void perf_C(const MEDDLY::dd_edge& C) const {
-        if (perf) {  perf->counter_C += C.getCardinality();  }
+        if (perf) {  perf->counter_C += dd_cardinality(C);  }
     }
 
     inline bool verbose_show_mat(const std::vector<std::vector<int>>& A) const {
