@@ -605,7 +605,7 @@ sym_pottier_grad(const meddly_context& ctx,
                                 /*level*/ pparams.target == compute_target::HILBERT_BASIS ? 0 : level);
                     pparams.perf_C(SV);
 
-                    if (pparams.verbose) {
+                    if (pparams.very_verbose) {
                         pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
                         cout << "  i="<<i<<" |Fi+|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
                         cout << "  j="<<j<<" |Fj-|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
@@ -793,7 +793,7 @@ sym_pottier_bygen(const meddly_context& ctx,
             }
 
             // Finally, reduce the basis G
-            G = sym_normal_form(ctx, pparams, G, G, 0, false);
+            // G = sym_normal_form(ctx, pparams, G, G, 0, false);
 
     
             // cout << "Gen="<<setw(3)<<row<<" ends with |G|="<<dd_cardinality(G)<<""<<endl;

@@ -33,9 +33,13 @@ void save_mat_dd(const std::string& base_fname, const char* ext,
     ofstream ofs(mat_fname);
     MEDDLY::ostream_output mofs(ofs);
 
-    MEDDLY::dd_edge list[1];
-    list[0] = dd;
-    #warning ToBeDone
+    MEDDLY::mdd_writer writer(mofs, forestMDD);
+    writer.writeRootEdge(dd);
+    writer.finish();
+
+    // MEDDLY::dd_edge list[1];
+    // list[0] = dd;
+    // #warning ToBeDone
     // forestMDD->writeEdges(mofs, list, 1);
     mofs.flush();
 }
