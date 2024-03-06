@@ -276,11 +276,15 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
     }
 
+    cout << "                     QNF: " << flush;
     MEDDLY::dd_edge I(ctx.forestMDD);
     while (!is_emptyset(A)) {
         MEDDLY::dd_edge I2(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
-        REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, R, D);
-        I2 = sym_difference(A, R);
+        // REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, R, D);
+        // I2 = sym_difference(A, R);
+        // I2 = sym_difference(I2, ctx.vzero);
+        REDUCE3->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
+        cout << D.getCardinality() << " " << flush;
 
         // cout << "QNF:\n";
         // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
@@ -290,13 +294,14 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
 
         I = sym_union(I, I2);
-        // TODO: check I does not contain the zero vector.
+        // break;
 
         // if (pparams.target == compute_target::GRAVER_BASIS)
         //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
 
         A = D;
     }
+    cout << endl;
     return I;
 
     // MEDDLY::dd_edge Aprev(A.getForest());
@@ -589,10 +594,8 @@ sym_pottier_grad(const meddly_context& ctx,
                     MEDDLY::dd_edge Fi(ctx.forestMDD), Fj(ctx.forestMDD), SV(ctx.forestMDD);
 
                     DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(Fpos, i, Fi);
-                    if (is_emptyset(Fi)) 
-                        continue;
                     DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(Fneg, j, Fj);
-                    if (is_emptyset(Fj)) 
+                    if (is_emptyset(Fi) || is_emptyset(Fj)) // should not happen...
                         continue;
 
                     // S-Vectors of degree k
@@ -601,11 +604,21 @@ sym_pottier_grad(const meddly_context& ctx,
                     SV = sym_s_vectors(ctx, pparams, Fi, Fj, 
                                 /*level*/ pparams.target == compute_target::HILBERT_BASIS ? 0 : level);
                     pparams.perf_C(SV);
+
+                    if (pparams.verbose) {
+                        pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
+                        cout << "  i="<<i<<" |Fi+|=" << Fi.getCardinality() << ",n="<< Fi.getNodeCount();
+                        cout << "  j="<<j<<" |Fj-|=" << Fj.getCardinality() << ",n="<< Fj.getNodeCount();
+                        cout << "  k="<<k<<" |SV|=" << SV.getCardinality() << ",n="<< SV.getNodeCount();
+                        cout << endl;
+                    }
+
                     // normalize
                     SV = sym_normal_form(ctx, pparams, SV, F, level, false);
+                    if (k==0) {
+                        SV = sym_normal_form(ctx, pparams, SV, SV, level, false);
+                    }
 
-                    SV = sym_normal_form(ctx, pparams, SV, SV, level, false);
-                    SV = sym_difference(SV, F);
                     // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<SV2.getCardinality()
                     //      << "  normForm(SV)="<<SV.getCardinality()<<endl;
 

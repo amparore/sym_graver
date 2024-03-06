@@ -123,6 +123,12 @@ void unit_test_reduce() {
     cout << "R:\n" << print_mdd(R, vorder) << endl;
     cout << "D:\n" << print_mdd(D, vorder) << endl;
 
+    cout << endl;
+    REDUCE3->computeDDEdge(A, B, true, true, sv_sign::SVS_UNDECIDED, cmp_sign::CMP_UNDECIDED, 0, I, R, D);
+    cout << "I:\n" << print_mdd(I, vorder) << endl;
+    cout << "R:\n" << print_mdd(R, vorder) << endl;
+    cout << "D:\n" << print_mdd(D, vorder) << endl;
+
     exit(0);
 }
 

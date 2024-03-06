@@ -10,7 +10,7 @@
 class variable_order {
     std::vector<size_t> var_to_level, level_to_var;
 public:
-    variable_order(size_t m);
+    variable_order(size_t m, bool init_reversed=false);
 
     inline size_t var2lvl(size_t var) const { return var_to_level[var]; }
     inline size_t lvl2var(size_t lvl) const { return level_to_var[lvl]; }
@@ -66,7 +66,7 @@ void sloan_varorder(const std::vector<std::vector<int>>& A,
                     variable_order &out_order);
 
 enum class selected_varorder {
-    NONE, BOOST_SLOAN, SLOAN, FAST, PIVOTING
+    NONE, BOOST_SLOAN, SLOAN, FAST, PIVOTING, FROM_FILE
 };
 
 enum class selected_pivoting {
@@ -84,8 +84,8 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
                                   const size_t num_iters,
                                   const std::vector<size_t>& fixed_vars);
 
-void pivot_order_from_file(variable_order& pivots, const variable_order& vorder,
-                           const char* fname);
+void read_order_from_file(variable_order& pivots, const variable_order* reorder, 
+                           const char* fname, bool reverse);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __VARIABLE_ORDER_H__

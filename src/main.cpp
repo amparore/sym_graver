@@ -350,6 +350,9 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-po")) {
             svo = selected_varorder::PIVOTING;
         }
+        else if (0==strcmp(argv[ii], "-vf")) {
+            svo = selected_varorder::FROM_FILE;
+        }
         else if (0==strcmp(argv[ii], "-dd")) {
             save_dd = true;
         }
@@ -417,6 +420,7 @@ int main(int argc, char** argv)
 #endif // HAS_BOOST_CPP
                  "         -sloan   Use Sloan algorithm to reorder variables (default).\n"
                  "         -fast    Use fast algorithm to reorder variables.\n"
+                 "         -vf      Read variable order from file <basename>.piv\n"
                  "         -po      Use pivoting order for both MDD levels and pivoting.\n"
                  ) << endl;
     }
@@ -540,7 +544,7 @@ int main(int argc, char** argv)
     p_reorder_mat = compute_Zgenerators ? &A : &lattice_Zgenerators;
 
     // Find a reasonable variable order for this problem
-    variable_order vorder(num_variables);
+    variable_order vorder(num_variables, true);
 
     switch (svo) {
         case selected_varorder::NONE:
@@ -562,6 +566,12 @@ int main(int argc, char** argv)
             vorder.invert();
             pivoting = selected_pivoting::NONE;
             break;
+        case selected_varorder::FROM_FILE: {
+                std::string order_fname = base_fname + ".piv";
+                read_order_from_file(vorder, nullptr, order_fname.c_str(), true);
+                vorder.invert();
+            }
+            break;
     }
 
     if (svo != selected_varorder::NONE) {
@@ -582,7 +592,7 @@ int main(int argc, char** argv)
     }
 
     // Pivot ordering
-    variable_order pivot_order(num_variables);
+    variable_order pivot_order(num_variables, true);
     switch (pivoting) {
         case selected_pivoting::NONE:
             break;
@@ -594,7 +604,7 @@ int main(int argc, char** argv)
 
         case selected_pivoting::FROM_FILE: {
                 std::string pivot_fname = base_fname + ".piv";
-                pivot_order_from_file(pivot_order, vorder, pivot_fname.c_str());
+                read_order_from_file(pivot_order, &vorder, pivot_fname.c_str(), false);
             }
             break;
     }

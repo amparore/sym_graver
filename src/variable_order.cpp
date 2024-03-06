@@ -27,11 +27,16 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-variable_order::variable_order(size_t m) {
+variable_order::variable_order(size_t m, bool init_reversed) {
     var_to_level.resize(m);
     level_to_var.resize(m);
-    std::iota(var_to_level.begin(), var_to_level.end(), 0);
-    std::iota(level_to_var.begin(), level_to_var.end(), 0);
+    // std::iota(var_to_level.begin(), var_to_level.end(), 0);
+    // std::iota(level_to_var.begin(), level_to_var.end(), 0);
+    std::fill(var_to_level.begin(), var_to_level.end(), 0);
+    std::fill(level_to_var.begin(), level_to_var.end(), 0);
+    for (size_t i=0; i<m; i++) {
+        bind_var2lvl(i, init_reversed? (m-i-1) : i);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -875,15 +880,21 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-void pivot_order_from_file(variable_order& pivots, const variable_order& vorder, 
-                           const char* fname) 
+void read_order_from_file(variable_order& pivots, const variable_order* reorder, 
+                           const char* fname, bool reverse)
 {
     ifstream ifs(fname);
 
-    for (size_t i=0; i<pivots.num_variables(); i++) {
-        size_t l;
+    for (size_t k=0; k<pivots.num_variables(); k++) {
+        size_t l = size_t(-1);
         ifs >> l;
-        pivots.bind_var2lvl(i, vorder.var2lvl(l));
+        if (l >= pivots.num_variables() || !ifs) {
+            cout << "could not read pivot file " << fname << endl;
+            exit(1);
+        }
+        size_t i = (reverse ? pivots.num_variables() - k - 1 : k);
+        size_t j = (reorder ? reorder->var2lvl(l) : l);
+        pivots.bind_var2lvl(i, j);
     }
 }
 
