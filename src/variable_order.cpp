@@ -866,15 +866,15 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
         sorted_weights[j] = make_pair(col_weights[j], j);
     std::sort(sorted_weights.begin(), sorted_weights.end());
     // first put all fixed vars
-    size_t pos = 0;
+    size_t pos = m-1;
     for (size_t var : fixed_vars)
-        pivots.bind_var2lvl(pos++, var); 
+        pivots.bind_var2lvl(var, pos--); //(pos++, var); 
     // then put all the other vars, in weighted order
     for (size_t j=0; j<m; j++) {
         size_t var = sorted_weights[j].second;
         // cout << "j:"<<j<<" w:"<<sorted_weights[j].first<<" var:"<<sorted_weights[j].second<<endl;
         if (!blocked_vars[var])
-            pivots.bind_var2lvl(pos++, var); 
+            pivots.bind_var2lvl(var, pos--);//(pos++, var); 
     }
 }
 
@@ -894,8 +894,101 @@ void read_order_from_file(variable_order& pivots, const variable_order* reorder,
         }
         size_t i = (reverse ? pivots.num_variables() - k - 1 : k);
         size_t j = (reorder ? reorder->var2lvl(l) : l);
-        pivots.bind_var2lvl(i, j);
+        pivots.bind_var2lvl(j, i);
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+bool
+find_pivots_in_Zbasis(const std::vector<std::vector<int>>& A,
+                      std::vector<size_t>& out_pivots, const bool verbose)
+{
+    // Identify the identity matrix in A, s.t. these variables are processed first
+    const size_t n = A.size();
+    if (n == 0)
+        return true;
+    const size_t m = A.front().size();
+
+    std::vector<bool> selected_vars(m, false);
+    std::vector<bool> ident_pivots(n, false);
+    std::vector<size_t> pivot_vars;
+    size_t num_idents = 0;
+    // size_t pos = m-1;
+
+    for (ptrdiff_t j=m-1; j>=0; j--) { 
+        size_t pivot = (size_t)-1;
+        bool is_ident = false, search = true;
+        for (size_t i=0; i<n && search; i++) {
+            if (A[i][j] != 0) {
+                if (A[i][j] == 1 && !ident_pivots[i] && search) {
+                    is_ident = true;
+                    pivot = i;
+                }
+                else search = false;
+            }
+        }
+        if (search && is_ident) {
+            ident_pivots[pivot] = true;
+            selected_vars[j] = true;
+            if (verbose)
+                cout << "variable x"<<(j+1)<<" is a pivot candidate for row "<<pivot<<endl;
+            ++num_idents;
+            pivot_vars.push_back(j);
+            // pivots.bind_var2lvl(pos--, j); 
+        }
+    }
+    if (num_idents != n) {
+        cout << "Not enough identity rows in the lattice generator!" << endl;
+        return false;
+    }
+    pivot_vars.swap(out_pivots);
+    return true;
+
+    // // select the remaining variables
+    // typedef size_t weight_t;
+    // std::vector<std::pair<weight_t, size_t>> sorted_weights;
+    // sorted_weights.reserve(m);
+
+    // for (size_t j=0; j<m; j++) {
+    //     if (selected_vars[j])
+    //         continue;
+
+    //     weight_t w;
+    //     if (optimize_graver) { // take interval / gcd
+    //         weight_t max_pos = 0, max_neg = 0;
+    //         int g = 0;
+    //         for (size_t i=0; i<n; i++) {
+    //             if (A[i][j] > 0) {
+    //                 max_pos = max(max_pos, weight_t(A[i][j]));
+    //                 g = gcd(g, A[i][j]);
+    //             }
+    //             else if (A[i][j] < 0) {
+    //                 max_neg = max(max_neg, -weight_t(A[i][j]));
+    //                 g = gcd(g, -A[i][j]);
+    //             }
+    //         }
+    //         w = max_pos + max_neg;
+    //         if (g > 1)
+    //             w /= g;
+    //     }
+    //     else { // take (sum(positives) * sum(negatives)) + sum
+    //         weight_t pos=0, neg=0;
+    //         for (size_t i=0; i<n; i++) {
+    //             if (A[i][j] > 0) 
+    //                 pos += A[i][j];
+    //             else if (A[i][j] < 0) 
+    //                 neg -= A[i][j];
+    //         }
+    //         w = (pos * neg) + pos + neg;
+    //     }
+
+    //     sorted_weights.push_back(std::make_pair(w, j));
+    // }
+    // std::sort(sorted_weights.begin(), sorted_weights.end());
+    // for (const auto& p : sorted_weights) {
+    //     pivots.bind_var2lvl(pos--, p.second);
+    // }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

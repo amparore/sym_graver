@@ -282,7 +282,7 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
         REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
         // I2 = sym_difference(A, R);
-        // I2 = sym_difference(I2, ctx.vzero);
+        // I = sym_difference(I, ctx.vzero);
         // REDUCE3->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
         // cout << dd_cardinality(D) << " " << flush;
 

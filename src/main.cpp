@@ -244,13 +244,13 @@ int main(int argc, char** argv)
     const char* basename = nullptr;
     bool transpose_input = false;
     bool do_check_output = false;
-    selected_varorder svo = selected_varorder::SLOAN;
+    selected_varorder svo = selected_varorder::PIVOTING;
     bool compute_Zgenerators = true;
     bool show_help = false;
     bool save_dd = false;
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
-    selected_pivoting pivoting = selected_pivoting::MAT_HEUR;
+    selected_pivoting pivoting = selected_pivoting::NONE;
     bool print_rusage = false;
     bool hnf_Zbasis = false;
     pottier_params_t pparams;
@@ -503,13 +503,14 @@ int main(int argc, char** argv)
 
     // Compute the Z-generators of the lattice
     std::vector<std::vector<int>> lattice_Zgenerators;
+    std::vector<size_t> leading_cols;
     if (compute_Zgenerators) {
         if (use_old_basisZgen) {
             // TODO: remove
             integral_kernel_old(A, lattice_Zgenerators, pparams.verbose_for_basis); 
         }
         else {
-            lattice_Zgenerators = integral_kernel_Zgens(A, pparams.verbose_for_basis);
+            lattice_Zgenerators = integral_kernel_Zgens(A, leading_cols, pparams.verbose_for_basis);
         }
 
         if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
@@ -520,20 +521,33 @@ int main(int argc, char** argv)
         lattice_Zgenerators = A;
     }
 
-    std::vector<size_t> hnf_Zbasis_leading_cols;
+    // std::vector<size_t> hnf_Zbasis_leading_cols;
     if (lattice_Zgenerators.size() == 0) {
         cerr << "Z-basis is empty." << endl;
     }
-    else if (hnf_Zbasis) { // Use the HNF of the Z-generator
-        std::vector<std::vector<int>> hnf_kerZ, U;
-        hermite_normal_form(lattice_Zgenerators, hnf_kerZ, U, 
-                            &hnf_Zbasis_leading_cols, 
-                            pparams.verbose_for_basis);
-        lattice_Zgenerators = hnf_kerZ;
-        hnf_Zbasis_leading_cols.clear(); // Do not use after, for pivoting.
+    else {
+        // Verify that we have the leading columns
+        if (leading_cols.size() != lattice_Zgenerators.front().size()) {
+            // try searching the leading columns
+            if (!find_pivots_in_Zbasis(lattice_Zgenerators, leading_cols, 
+                                       pparams.verbose_for_Zgenerators)) 
+            {
+                cout << "Input lattice generators are not in HNF form. Rebuilding." << endl;
+                hnf_Zbasis = true;
+            }
+        }
 
-        if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
-            cout << "HNF(Z-basis):" << endl; print_mat(lattice_Zgenerators); cout << endl;
+        if (hnf_Zbasis) { // Use the HNF of the Z-generator
+            std::vector<std::vector<int>> hnf_kerZ, U;
+            hermite_normal_form(lattice_Zgenerators, hnf_kerZ, U, 
+                                &leading_cols, 
+                                pparams.verbose_for_basis);
+            lattice_Zgenerators = hnf_kerZ;
+            // hnf_Zbasis_leading_cols.clear(); // Do not use after, for pivoting.
+
+            if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
+                cout << "HNF(Z-basis):" << endl; print_mat(lattice_Zgenerators); cout << endl;
+            }
         }
     }
     // exit(0);
@@ -566,15 +580,16 @@ int main(int argc, char** argv)
             fast_varorder(*p_reorder_mat, vorder);
             break;
         case selected_varorder::PIVOTING:
-            pivot_order_from_matrix_iter(vorder, lattice_Zgenerators, pparams.target==compute_target::GRAVER_BASIS, 
-                                         num_iters_pivot_heur, hnf_Zbasis_leading_cols);
-            vorder.invert();
+            pivot_order_from_matrix_iter(vorder, lattice_Zgenerators, 
+                                         pparams.target==compute_target::GRAVER_BASIS, 
+                                         num_iters_pivot_heur, leading_cols);
+            // vorder.invert();
             pivoting = selected_pivoting::NONE;
             break;
         case selected_varorder::FROM_FILE: {
                 std::string order_fname = base_fname + ".piv";
                 read_order_from_file(vorder, nullptr, order_fname.c_str(), true);
-                vorder.invert();
+                // vorder.invert();
             }
             break;
     }
@@ -604,7 +619,7 @@ int main(int argc, char** argv)
         case selected_pivoting::MAT_HEUR:
             pivot_order_from_matrix_iter(pivot_order, lattice_Zgenerators, 
                                          pparams.target==compute_target::GRAVER_BASIS, 
-                                         num_iters_pivot_heur, hnf_Zbasis_leading_cols);
+                                         num_iters_pivot_heur, leading_cols);
             break;
 
         case selected_pivoting::FROM_FILE: {
@@ -629,6 +644,12 @@ int main(int argc, char** argv)
         // }
         // cout << endl;
     }
+
+    // variable_order xx_pivot_order(num_variables, true);
+    // pivoting_for_PnL(xx_pivot_order, lattice_Zgenerators, false, true);
+    // cout << "New pivot order:\n";
+    // xx_pivot_order.print();
+
 
     // canonicalize_by_order(lattice_Zgenerators, pivot_order);
 

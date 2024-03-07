@@ -627,7 +627,7 @@ protected:
     const variable_order *pivot_order; // pivoting order when proceeding by levels
 
     // utility to perform node operations
-    MEDDLY::binary_operation *mddUnion, *mddDifference;
+    MEDDLY::binary_operation *mddUnion;
 };
 
 // Factory of reduce operators for specific MDD forests

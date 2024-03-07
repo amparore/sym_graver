@@ -1458,7 +1458,6 @@ reduce::reduce(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
   pivot_order(pivot_order)
 { 
     mddUnion = MEDDLY::getOperation(MEDDLY::UNION, forestMDD, forestMDD, forestMDD);
-    mddDifference = MEDDLY::getOperation(MEDDLY::DIFFERENCE, forestMDD, forestMDD, forestMDD);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1603,7 +1602,6 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
 
                 irred_Ai.set(down.first);
-                // unionNodes(C_reducibles1, down.first, ZtoNode(a_val), res1F, mddUnion);
                 unionNodes(C_reduced2, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
 
                 // THIS ONLY MAKES SENSE WHEN ALL PIVOT LEVELS ARE TO THE BOTTOM OF THE
@@ -1611,11 +1609,11 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 // if (rf.bf.lambda != 0 && pivot_order->is_above_lambda(rf.bf.lambda, res_level)) {
                 //     assert(down.first == 0);
                 // }
+                if (is_emptyset(irred_Ai))
+                    break; // nothing left to be reduced.
             }
         }
         C_irreducibles1->setFull(ZtoNode(a_val), irred_Ai);
-        // unionNodes(C_irreducibles1, res1F->linkNode(irred_Ai.getNode()), 
-        //             ZtoNode(a_val), res1F, mddUnion);
     }
 
     // cleanup

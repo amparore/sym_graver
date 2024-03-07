@@ -87,6 +87,10 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
 void read_order_from_file(variable_order& pivots, const variable_order* reorder, 
                            const char* fname, bool reverse);
 
+bool
+find_pivots_in_Zbasis(const std::vector<std::vector<int>>& A,
+                      std::vector<size_t>& pivot_vars, const bool verbose);
+
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __VARIABLE_ORDER_H__
 /////////////////////////////////////////////////////////////////////////////////////////

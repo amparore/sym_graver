@@ -1333,10 +1333,11 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 std::vector<std::vector<int>>
-integral_kernel_Zgens(const std::vector<std::vector<int>>& A, bool verbose)
+integral_kernel_Zgens(const std::vector<std::vector<int>>& A,  
+                      std::vector<size_t>& leading_cols, bool verbose)
 {
     std::vector<std::vector<int>> H, U, UA, basisZkerA;
-    std::vector<size_t> leading_cols;
+    leading_cols.clear();
     const size_t n = A.size();
 
     auto trA = transpose(A);

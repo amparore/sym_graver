@@ -67,7 +67,8 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
 
 // compute a set of Z-generators for the lattice of the kernel of A
 std::vector<std::vector<int>>
-integral_kernel_Zgens(const std::vector<std::vector<int>>& A,  bool verbose);
+integral_kernel_Zgens(const std::vector<std::vector<int>>& A,  
+                      std::vector<size_t>& leading_cols, bool verbose);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __MATRIX_H__
