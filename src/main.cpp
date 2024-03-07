@@ -244,13 +244,13 @@ int main(int argc, char** argv)
     const char* basename = nullptr;
     bool transpose_input = false;
     bool do_check_output = false;
-    selected_varorder svo = selected_varorder::PIVOTING;
+    selected_varorder svo = selected_varorder::PIVOTING;//SLOAN;
     bool compute_Zgenerators = true;
     bool show_help = false;
     bool save_dd = false;
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
-    selected_pivoting pivoting = selected_pivoting::NONE;
+    selected_pivoting pivoting = selected_pivoting::NONE; //MAT_HEUR;
     bool print_rusage = false;
     bool hnf_Zbasis = false;
     pottier_params_t pparams;
@@ -258,6 +258,7 @@ int main(int argc, char** argv)
     bool use_old_basisZgen = false;
     size_t num_iters_pivot_heur = 2;
     size_t meddly_cache_size = 1000000;
+    bool stop_before_gen = false;
 
     // Read command-line arguments
     int ii=1;
@@ -282,7 +283,7 @@ int main(int argc, char** argv)
         }
         else if (0==strcmp(argv[ii], "-yl")) {
             pparams.by_levels = true;
-            pparams.normalize_by_levels = false;
+            pparams.normalize_by_levels = true;
         }
         else if (0==strcmp(argv[ii], "-nl")) {
             pparams.by_levels = false;
@@ -291,7 +292,7 @@ int main(int argc, char** argv)
         //     pparams.by_levels = true;
         //     pparams.normalize_by_levels = true;
         // }
-        else if (0==strcmp(argv[ii], "-s")) { 
+        else if (0==strcmp(argv[ii], "-s")) { // TODO: should be the default method for Hilbert/rays
             pparams.by_levels = true;
             pparams.dynamic_svectors = true;
         }
@@ -370,11 +371,17 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-np")) {
             pivoting = selected_pivoting::NONE;
         }
+        else if (0==strcmp(argv[ii], "-pm")) {
+            pivoting = selected_pivoting::MAT_HEUR;
+        }
         else if (0==strcmp(argv[ii], "-pf")) {
             pivoting = selected_pivoting::FROM_FILE;
         }
         else if (0==strcmp(argv[ii], "-u")) {
             print_rusage = true;
+        }
+        else if (0==strcmp(argv[ii], "-stop")) {
+            stop_before_gen = true;
         }
         else if (0==strcmp(argv[ii], "-h")) {
             show_help = true;
@@ -549,6 +556,10 @@ int main(int argc, char** argv)
                 cout << "HNF(Z-basis):" << endl; print_mat(lattice_Zgenerators); cout << endl;
             }
         }
+
+        if (pparams.verbose) {
+            hnf_scores(lattice_Zgenerators);
+        }
     }
     // exit(0);
 
@@ -609,6 +620,12 @@ int main(int argc, char** argv)
         }
 
         lattice_Zgenerators = reorder_matrix(lattice_Zgenerators, vorder);
+
+        for (size_t i=0; i<leading_cols.size(); i++) {
+            size_t p = vorder.var2lvl(leading_cols[i]);
+            // cout << "i="<<i<<"  leading="<<(leading_cols[i]+1)<<" -> "<< (p+1) << endl;
+            leading_cols[i] = p;
+        }
     }
 
     // Pivot ordering
@@ -625,6 +642,7 @@ int main(int argc, char** argv)
         case selected_pivoting::FROM_FILE: {
                 std::string pivot_fname = base_fname + ".piv";
                 read_order_from_file(pivot_order, &vorder, pivot_fname.c_str(), false);
+                pivot_order.invert();
             }
             break;
     }
@@ -657,6 +675,9 @@ int main(int argc, char** argv)
         // row_footprint_form(rrffKerA);
         // cout << "RRFF(Kernel(A)):" << endl; print_mat(rrffKerA, true); cout << endl;
     // exit(0);
+
+    if (stop_before_gen)
+        return 0;
 
     // Initialize MEDDLY and create an MDD forest for the computations
     meddly_context ctx(num_variables, vorder, pivot_order);

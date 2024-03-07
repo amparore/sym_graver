@@ -70,6 +70,8 @@ std::vector<std::vector<int>>
 integral_kernel_Zgens(const std::vector<std::vector<int>>& A,  
                       std::vector<size_t>& leading_cols, bool verbose);
 
+void hnf_scores(const std::vector<std::vector<int>>& H);
+
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __MATRIX_H__
 /////////////////////////////////////////////////////////////////////////////////////////

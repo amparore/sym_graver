@@ -1122,13 +1122,14 @@ hnf_next_column_heur(const std::vector<std::vector<int>>& H,
                 if (H[i][j2] != 0) {
                     std::get<0>(w) = (cw[j2] == 1);
                     std::get<1>(w) = gcd(std::get<1>(w), abs(H[i][j2]));
-                    std::get<2>(w)++;
+                    std::get<2>(w) += 1;
+                    // std::get<2>(w) += abs(H[i][j2]);
                 }
             }
 
             // cout << "  j2:"<<j2<<"/"<<m<<"  w:"<<std::get<0>(w)<<","<<std::get<1>(w)<<","<<std::get<2>(w)<<endl;
             if (std::get<1>(w) > 0) {
-                if (j == size_t(-1) || w <= cpivot_val)
+                if (j == size_t(-1) || w < cpivot_val)
                 {
                     j = j2;
                     cpivot_val = w;
@@ -1359,5 +1360,34 @@ integral_kernel_Zgens(const std::vector<std::vector<int>>& A,
     return basisZkerA;
 }
 
-// /////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void hnf_scores(const std::vector<std::vector<int>>& H) {
+    const size_t n = H.size();
+    if (n==0)
+        return;
+    const size_t m = H.front().size();
+    size_t S1 = 0, S2 = 0, S3 = 0, S4 = 0;
+
+    for (size_t j=0; j<m; j++) {
+        size_t n_pos=0, c_pos=0, n_neg=0, c_neg=0;
+        for (size_t i=0; i<n; i++) {
+            n_pos += H[i][j] > 0;
+            c_pos += H[i][j] > 0 ? H[i][j] : 0;
+            n_neg += H[i][j] < 0;
+            c_neg += H[i][j] < 0 ? -H[i][j] : 0;
+        }
+        S1 += n_pos + n_neg;
+        S2 += (n_pos * n_neg) + n_pos + n_neg;
+        S3 += c_pos + c_neg;
+        S4 += (c_pos * c_neg) + c_pos + c_neg;
+    }
+
+    cout << "S1: " << S1 << endl;
+    cout << "S2: " << S2 << endl;
+    cout << "S3: " << S3 << endl;
+    cout << "S4: " << S4 << endl;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 

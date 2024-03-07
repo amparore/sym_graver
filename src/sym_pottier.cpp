@@ -193,7 +193,8 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
               const size_t level) 
 {
     MEDDLY::dd_edge SV(ctx.forestMDD);
-    if (level != 0 /*&& pparams.target == compute_target::EXTREME_RAYS*/) {
+    bool s_vectors_split_at_levels = false;
+    if (level != 0 && s_vectors_split_at_levels/*&& pparams.target == compute_target::EXTREME_RAYS*/) {
         // TODO: while s-vectors @ level appears to be faster in benchmark, this should be
         //   disabled through a command-line option.
         // Compute the S-Vectors at the specified level only
@@ -281,9 +282,7 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
     while (!is_emptyset(A)) {
         MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
         REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
-        // I2 = sym_difference(A, R);
         // I = sym_difference(I, ctx.vzero);
-        // REDUCE3->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I2, R, D);
         // cout << dd_cardinality(D) << " " << flush;
 
         // cout << "QNF:\n";
@@ -294,7 +293,9 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
 
         ALL_I = sym_union(ALL_I, I);
-        break;
+
+        if (!do_reduction)
+            break; // no need to iterate on the residuals
 
         // if (pparams.target == compute_target::GRAVER_BASIS)
         //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
@@ -421,7 +422,7 @@ sym_pottier(const meddly_context& ctx,
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
         MEDDLY::dd_edge prevF(ctx.forestMDD);
-        F = sym_normal_form(ctx, pparams, F, F, level, false);
+        F = sym_normal_form(ctx, pparams, F, F, level, true);
 
         // MEDDLY::dd_edge removed(ctx.forestMDD), F2(ctx.forestMDD);
         // // COMPL_PROC_OPS->get_op(level)->computeDDEdge(F, F, removed, false);
@@ -475,8 +476,8 @@ sym_pottier(const meddly_context& ctx,
 
         // cout << "normal_form" << endl;
         if (!pparams.by_degree)
-            S = sym_normal_form(ctx, pparams, S, S, level, false);
-        S = sym_normal_form(ctx, pparams, S, F, level, false);
+            S = sym_normal_form(ctx, pparams, S, S, level, true);
+        S = sym_normal_form(ctx, pparams, S, F, level, true);
         S = sym_difference(S, F);
 
         if (pparams.very_verbose)
@@ -535,7 +536,7 @@ sym_pottier_grad(const meddly_context& ctx,
     if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
-        F = sym_normal_form(ctx, pparams, F, F, level, false);
+        F = sym_normal_form(ctx, pparams, F, F, level, true);
     }
 
     if (is_emptyset(F))
@@ -601,8 +602,8 @@ sym_pottier_grad(const meddly_context& ctx,
                     // S-Vectors of degree k
                     // we can set level=0 since Fi and Fj are already sign-disjoint, so there is no need
                     // to use the sym_s_vectors_at_level() to split values and signs
-                    SV = sym_s_vectors(ctx, pparams, Fi, Fj, 
-                                /*level*/ pparams.target == compute_target::HILBERT_BASIS ? 0 : level);
+                    SV = sym_s_vectors(ctx, pparams, Fi, Fj, level);
+                                // /*level*/ pparams.target == compute_target::HILBERT_BASIS ? 0 : level);
                     pparams.perf_C(SV);
 
                     if (pparams.very_verbose) {

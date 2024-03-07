@@ -809,10 +809,10 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
             for (size_t i=0; i<n; i++) {
                 weight_t rw = 0.0;
                 for (size_t j=0; j<m; j++) {
-                    if (!blocked_vars[j]) {
+                    // if (!blocked_vars[j]) {
                         if (A[i][j] != 0)
                             rw += col_weights[j]; // column/var j is affected by row i
-                    }
+                    // }
                 }
                 row_weights[i] = max(weight_t(1), rw);
             }
@@ -820,7 +820,7 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
 
         // recompute column/variable weights making an estimate of the total operation count
         for (size_t j=0; j<m; j++) {
-            if (!blocked_vars[j]) {
+            // if (!blocked_vars[j]) {
                 weight_t w;
                 if (optimize_graver) { // take interval / gcd
                     weight_t max_pos = 0, max_neg = 0;
@@ -850,7 +850,7 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
                     w = (pos * neg) + pos + neg;
                 }
                 col_weights[j] = w;
-            }
+            // }
         }
 
         // cout << "Step: "<<step << endl;
@@ -865,6 +865,39 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
     for (size_t j=0; j<m; j++)
         sorted_weights[j] = make_pair(col_weights[j], j);
     std::sort(sorted_weights.begin(), sorted_weights.end());
+
+    // std::vector<size_t> after_pivot(m, n-1);
+    // for (size_t p=0; p<fixed_vars.size(); p++) {
+    //     // read all rows on the pivot columns
+    //     for (size_t i=0; i<n; i++) {
+    //         if (A[i][fixed_vars[p]] != 0) {
+    //             // scan row
+    //             for (size_t j=0; j<m; j++) {
+    //                 if (A[i][j] != 0)
+    //                     after_pivot[j] = p;
+    //             }
+    //         }
+    //     }
+    // }
+
+    // cout << "after_pivot: ";
+    // for (auto x : after_pivot) cout << x << " ";
+    // cout << endl;
+
+    // size_t pos = m-1;
+    // for (size_t p=0; p<fixed_vars.size(); p++) {
+    //     // put pivot variable
+    //     pivots.bind_var2lvl(fixed_vars[p], pos--);
+    //     cout << "insert pivot "<<fixed_vars[p]<<endl;
+    //     // put rows covered by the inserted pivot variables
+    //     for (const auto row : sorted_weights) {
+    //         if (after_pivot[row.second] == p && !blocked_vars[row.second]) {
+    //             pivots.bind_var2lvl(row.second, pos--);
+    //             cout << "  insert var "<<row.second<<endl;
+    //         }
+    //     }
+    // }
+
     // first put all fixed vars
     size_t pos = m-1;
     for (size_t var : fixed_vars)
