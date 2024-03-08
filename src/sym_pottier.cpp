@@ -890,27 +890,35 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
 
         // Generate the initial candidates of degree deg
         MEDDLY::dd_edge C(ctx.forestMDD);
+        // cout << "   start S-Vectors: "<<flush;
         for (ssize_t kk=1; ssize_t(deg-kk) >= 0; kk++) {
-            // cout << "      k="<<k<<" deg-k="<<(deg-k)<<"     deg="<<deg<<endl;
+            // cout << kk<< " "<<flush;
             MEDDLY::dd_edge C2(ctx.forestMDD);
             C2 = sym_s_vectors(ctx, pparams, vFd[deg-kk], vFd[kk], 0);
+            pparams.perf_C(C2);
             C = sym_union(C, C2);
         }
+        // cout<<endl;
 
         // for (ssize_t kk=1; ssize_t(deg-kk) >= 0; kk++) {
         //     MEDDLY::dd_edge C(ctx.forestMDD);
         //     C = sym_s_vectors(ctx, pparams, vFd[deg-kk], vFd[kk], 0);
 
         while (!is_emptyset(C)) {
-            C = sym_normal_form(ctx, pparams, C, C, 0, false);
+            // cout << "   start normal form: "<<flush;
             for (size_t d=0; d<deg; d++) {
+                // cout << "("<<dd_cardinality(C)<<","<<dd_cardinality(vFd[d])<<") " <<flush;
                 C = sym_normal_form(ctx, pparams, C, vFd[d], 0, false);
+                // cout << "* "<<flush;
                 C = sym_difference(C, vFd[d]);
             }
+            // cout << "D "<<flush;
             C = sym_difference(C, vFd[deg]);
+            // cout << "C("<<dd_cardinality(C)<<") " <<flush;
+            C = sym_normal_form(ctx, pparams, C, C, 0, false);
+            // cout<<endl;
                 
             if (pparams.verbose) {
-                // pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
                 cout << "    |F(deg="<<deg<<")|=" << dd_cardinality(vFd[deg]) << ",n="<< vFd[deg].getNodeCount();
                 cout << "  |C|=" << dd_cardinality(C) << ",n="<< C.getNodeCount();
                 cout << endl;
@@ -925,6 +933,7 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
             if (!is_emptyset(C)) {
                 vFd[deg] = sym_union(vFd[deg], C);
                 C = sym_s_vectors(ctx, pparams, C, initGraver, 0);
+                pparams.perf_C(C);
             }
         }
         // }
