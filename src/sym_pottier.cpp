@@ -277,30 +277,38 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
     }
 
-    // cout << "                     QNF: " << flush;
     MEDDLY::dd_edge ALL_I(ctx.forestMDD);
-    while (!is_emptyset(A)) {
+
+    if (!do_reduction) {
         MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
-        REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
-        // I = sym_difference(I, ctx.vzero);
-        // cout << dd_cardinality(D) << " " << flush;
+        GET_IRREDUCIBLES->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
+        ALL_I = I;
+    }
+    else {
+        // cout << "                     QNF: " << flush;
+        while (!is_emptyset(A)) {
+            MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
+            REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
+            // I = sym_difference(I, ctx.vzero);
+            // cout << dd_cardinality(D) << " " << flush;
 
-        // cout << "QNF:\n";
-        // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
-        // cout << "B:\n" << print_mdd(B, ctx.vorder) << endl;
-        // cout << "I:\n" << print_mdd(I2, ctx.vorder) << endl;
-        // cout << "R:\n" << print_mdd(R, ctx.vorder) << endl;
-        // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
+            // cout << "QNF:\n";
+            // cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
+            // cout << "B:\n" << print_mdd(B, ctx.vorder) << endl;
+            // cout << "I:\n" << print_mdd(I2, ctx.vorder) << endl;
+            // cout << "R:\n" << print_mdd(R, ctx.vorder) << endl;
+            // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
 
-        ALL_I = sym_union(ALL_I, I);
+            ALL_I = sym_union(ALL_I, I);
 
-        if (!do_reduction)
-            break; // no need to iterate on the residuals
+            // if (!do_reduction)
+            //     break;
 
-        // if (pparams.target == compute_target::GRAVER_BASIS)
-        //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
+            // if (pparams.target == compute_target::GRAVER_BASIS)
+            //     SIGN_CANON->computeDDEdge(D, D, false); // Not needed as it is done by REDUCE
 
-        A = D;
+            A = D;
+        }
     }
     // cout << endl;
     return ALL_I;

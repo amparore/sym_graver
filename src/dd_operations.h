@@ -52,6 +52,7 @@ class reduce_opname;
 class reduce;
 DD_EXTERN reduce_opname *REDUCE_OPNAME;
 DD_EXTERN reduce *REDUCE;
+DD_EXTERN reduce *GET_IRREDUCIBLES;
 
 // class reduce3_opname;
 // class reduce3;
@@ -608,7 +609,8 @@ public:
 class reduce : public base_NNItoNN {
 public:
     reduce(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
-           const variable_order *pivot_order);
+           const variable_order *pivot_order,
+           const bool compute_differences);
 
     void 
     computeDDEdge(const MEDDLY::dd_edge &a, const MEDDLY::dd_edge &b, 
@@ -628,6 +630,7 @@ protected:
 
     // utility to perform node operations
     MEDDLY::binary_operation *mddUnion;
+    const bool compute_differences;
 };
 
 // Factory of reduce operators for specific MDD forests
@@ -638,7 +641,8 @@ public:
 
     reduce* 
     buildOperation(MEDDLY::forest *forestMDD,
-                   const variable_order *pivot_order);
+                   const variable_order *pivot_order,
+                   const bool compute_differences);
 };
 
 // /////////////////////////////////////////////////////////////////////////////////////////

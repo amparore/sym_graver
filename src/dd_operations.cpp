@@ -1453,9 +1453,9 @@ static_assert(sizeof(reduce_flags_t) == sizeof(int));
 /////////////////////////////////////////////////////////////////////////////////////////
 
 reduce::reduce(MEDDLY::opname* opcode, MEDDLY::forest* forestMDD,
-               const variable_order *pivot_order)
+               const variable_order *pivot_order, const bool compute_differences)
 : base_NNItoNN(opcode, forestMDD, forestMDD, forestMDD, forestMDD), 
-  pivot_order(pivot_order)
+  pivot_order(pivot_order), compute_differences(compute_differences)
 { 
     mddUnion = MEDDLY::getOperation(MEDDLY::UNION, forestMDD, forestMDD, forestMDD);
 }
@@ -1533,9 +1533,12 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     // }
     // else resAB_size = a_size;
     check_level_bound(res1F, res_level, resAB_size);
+    MEDDLY::unpacked_node* C_irreducibles1;
+    MEDDLY::unpacked_node* C_reduced2;
 
-    MEDDLY::unpacked_node* C_irreducibles1 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
-    MEDDLY::unpacked_node* C_reduced2 = MEDDLY::unpacked_node::newFull(res2F, res_level, resAB_size);
+    C_irreducibles1 = MEDDLY::unpacked_node::newFull(res1F, res_level, resA_size);
+    if (compute_differences)
+        C_reduced2 = MEDDLY::unpacked_node::newFull(res2F, res_level, resAB_size);
 
     const bool a_full = A->isFull(), b_full = B->isFull();
 
@@ -1602,7 +1605,8 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 //      << " sign_of_comparison="<<down_rf.bf.sign_of_comparison<<endl;
 
                 irred_Ai.set(down.first);
-                unionNodes(C_reduced2, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
+                if (compute_differences)
+                    unionNodes(C_reduced2, down.second, ZtoNode(a_minus_b), res2F, mddUnion);
 
                 // THIS ONLY MAKES SENSE WHEN ALL PIVOT LEVELS ARE TO THE BOTTOM OF THE
                 // PROCESSED LEVELS.
@@ -1621,7 +1625,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     MEDDLY::unpacked_node::Recycle(A);
     // reduce and return result
     result.first  = res1F->createReducedNode(-1, C_irreducibles1);
-    result.second = res2F->createReducedNode(-1, C_reduced2);
+    result.second = (compute_differences ? res2F->createReducedNode(-1, C_reduced2) : 0);
     saveResult(key, /*a, divisor,*/ result);
 
     return result;
@@ -1631,7 +1635,8 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
 
 reduce* 
 reduce_opname::buildOperation(MEDDLY::forest *forestMDD,
-                              const variable_order *pivot_order)
+                              const variable_order *pivot_order,
+                              const bool compute_differences)
 {
     if (0==forestMDD) return 0;
 
@@ -1642,7 +1647,7 @@ reduce_opname::buildOperation(MEDDLY::forest *forestMDD,
         if (forestMDD->isForRelations())
             throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED);
 
-        return new reduce(this, forestMDD, pivot_order);
+        return new reduce(this, forestMDD, pivot_order, compute_differences);
     }
     throw MEDDLY::error(MEDDLY::error::NOT_IMPLEMENTED, __FILE__, __LINE__);
 }
@@ -3027,7 +3032,8 @@ void init_custom_meddly_operators(MEDDLY::forest* forestMDD, const variable_orde
     LEQ_NEQ_SQ_SUBTRACT = LEQ_NEQ_SQ_OPNAME->buildOperation(forestMDD, pivot_order, true);
 
     REDUCE_OPNAME = new reduce_opname();
-    REDUCE = REDUCE_OPNAME->buildOperation(forestMDD, pivot_order);
+    REDUCE = REDUCE_OPNAME->buildOperation(forestMDD, pivot_order, true);
+    GET_IRREDUCIBLES = REDUCE_OPNAME->buildOperation(forestMDD, pivot_order, false);
 
     // REDUCE3_OPNAME = new reduce3_opname();
     // REDUCE3 = REDUCE3_OPNAME->buildOperation(forestMDD, pivot_order);

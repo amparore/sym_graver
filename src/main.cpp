@@ -244,13 +244,13 @@ int main(int argc, char** argv)
     const char* basename = nullptr;
     bool transpose_input = false;
     bool do_check_output = false;
-    selected_varorder svo = selected_varorder::PIVOTING;//SLOAN;
+    selected_varorder svo = selected_varorder::SLOAN;//SLOAN;
     bool compute_Zgenerators = true;
     bool show_help = false;
     bool save_dd = false;
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
-    selected_pivoting pivoting = selected_pivoting::NONE; //MAT_HEUR;
+    selected_pivoting pivoting = selected_pivoting::MAT_HEUR; //MAT_HEUR;
     bool print_rusage = false;
     bool hnf_Zbasis = false;
     pottier_params_t pparams;
