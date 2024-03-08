@@ -875,7 +875,7 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
 
     std::vector<MEDDLY::dd_edge> vFd;
     vFd.push_back(initGraver); // F0
-    size_t deg = 0;
+    size_t deg = 0, max_deg = 1;
 
     do {
         if (pparams.very_verbose) {
@@ -932,6 +932,7 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
 
             if (!is_emptyset(C)) {
                 vFd[deg] = sym_union(vFd[deg], C);
+                max_deg = deg;
                 C = sym_s_vectors(ctx, pparams, C, initGraver, 0);
                 pparams.perf_C(C);
             }
@@ -946,7 +947,7 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
             }
         }
     }
-    while (!is_emptyset(vFd[deg]));
+    while (deg <= 2*max_deg);//(!is_emptyset(vFd[deg]));
 
     MEDDLY::dd_edge Fout(ctx.forestMDD);
     for (size_t d=0; d<deg; d++)

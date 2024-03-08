@@ -1525,7 +1525,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
     const size_t a_size = get_node_size(A);
     const size_t b_size = get_node_size(B);
     const size_t resA_size = a_size;
-    const size_t resAB_size = a_size + b_size; // TODO: since b<=a, then a-b is <= a and reY_size should be a_size
+    const size_t resAB_size = a_size + b_size + 1; // TODO: since b<=a, then a-b is <= a and reY_size should be a_size
     // if (rf.bf.lambda != 0 && 
     //     pivot_order->is_above_lambda(rf.bf.lambda, res_level)) 
     // {
