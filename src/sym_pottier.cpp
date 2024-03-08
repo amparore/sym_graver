@@ -520,6 +520,14 @@ sym_pottier(const meddly_context& ctx,
         iter++;
     } while (C != prevC);
 
+    if (pparams.verbose) {
+        pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
+        cout << "|F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount();
+        if (pparams.by_degree && degree>=0)
+            cout << "  max_degree="<<degree<<")";
+        cout << endl;
+    }
+
     return F;
 }
 
@@ -783,8 +791,12 @@ sym_pottier_bygen(const meddly_context& ctx,
 
             if (pparams.very_verbose) 
                 cout << "\nAdding generator "<<row<<endl;
+
             // Extend Graver basis G with the new generator g
-            G = sym_pottier_PnL(ctx, pparams, G, g, &rem_neg_levels, row);
+            if (pparams.graded_EaC)
+                G = sym_pottier_EaC_graded(ctx, pparams, G, g, row);
+            else
+                G = sym_pottier_PnL(ctx, pparams, G, g, &rem_neg_levels, row);
 
             // For Hilbert basis and extreme rays sets, drop negative vectors (when possible)
             if (pparams.target != compute_target::GRAVER_BASIS /*&& !by_level*/) {
@@ -839,6 +851,224 @@ sym_pottier_bygen(const meddly_context& ctx,
     G = sym_normal_form(ctx, pparams, G, G, 0, false);
     
     return G;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+// Pottier algorithm for the computation of the Graver basis in symbolic form
+MEDDLY::dd_edge
+sym_pottier_EaC_graded(const meddly_context& ctx, 
+                       const pottier_params_t& pparams,
+                       MEDDLY::dd_edge initGraver, // Graver basis not including N
+                       MEDDLY::dd_edge g, // new generator
+                       size_t gen_counter)
+{
+    if (pparams.verbose) {
+        cout<<"Extending with generator g_"<<gen_counter<<endl; 
+    }
+    if (pparams.very_verbose) {
+        sep(pparams);sep(pparams);
+        cout << "F^init:\n" << print_mdd(initGraver, ctx.vorder) << endl;
+        cout << "g:     \n" << print_mdd(g, ctx.vorder) << endl;
+        cout << endl;
+    }
+
+    std::vector<MEDDLY::dd_edge> vFd;
+    vFd.push_back(initGraver); // F0
+    size_t deg = 0;
+
+    do {
+        if (pparams.very_verbose) {
+            cout << "New degree "<<deg << endl;
+        }
+
+        deg++;
+        MEDDLY::dd_edge Fdeg(ctx.forestMDD);
+        if (deg == 1)
+            Fdeg = g;
+        vFd.push_back(Fdeg);
+
+        // Generate the initial candidates of degree deg
+        MEDDLY::dd_edge C(ctx.forestMDD);
+        for (ssize_t kk=1; ssize_t(deg-kk) >= 0; kk++) {
+            // cout << "      k="<<k<<" deg-k="<<(deg-k)<<"     deg="<<deg<<endl;
+            MEDDLY::dd_edge C2(ctx.forestMDD);
+            C2 = sym_s_vectors(ctx, pparams, vFd[deg-kk], vFd[kk], 0);
+            C = sym_union(C, C2);
+        }
+
+        // for (ssize_t kk=1; ssize_t(deg-kk) >= 0; kk++) {
+        //     MEDDLY::dd_edge C(ctx.forestMDD);
+        //     C = sym_s_vectors(ctx, pparams, vFd[deg-kk], vFd[kk], 0);
+
+        while (!is_emptyset(C)) {
+            C = sym_normal_form(ctx, pparams, C, C, 0, false);
+            for (size_t d=0; d<deg; d++) {
+                C = sym_normal_form(ctx, pparams, C, vFd[d], 0, false);
+                C = sym_difference(C, vFd[d]);
+            }
+            C = sym_difference(C, vFd[deg]);
+                
+            if (pparams.verbose) {
+                // pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
+                cout << "    |F(deg="<<deg<<")|=" << dd_cardinality(vFd[deg]) << ",n="<< vFd[deg].getNodeCount();
+                cout << "  |C|=" << dd_cardinality(C) << ",n="<< C.getNodeCount();
+                cout << endl;
+
+                if (pparams.very_verbose) {
+                    cout << "F(deg="<<deg<<"):\n" << print_mdd(vFd[deg], ctx.vorder) << endl;
+                    cout << "C:\n" << print_mdd(C, ctx.vorder) << endl;
+                    cout << endl;
+                }
+            }
+
+            if (!is_emptyset(C)) {
+                vFd[deg] = sym_union(vFd[deg], C);
+                C = sym_s_vectors(ctx, pparams, C, initGraver, 0);
+            }
+        }
+        // }
+
+        if (pparams.verbose) {
+                cout << "    |F(deg="<<deg<<")|=" << dd_cardinality(vFd[deg]) << ",n="<< vFd[deg].getNodeCount();
+                cout << "  completed."<<endl;
+                if (pparams.very_verbose) {
+                    cout << "F(deg="<<deg<<"):\n" << print_mdd(vFd[deg], ctx.vorder) << endl;
+            }
+        }
+    }
+    while (!is_emptyset(vFd[deg]));
+
+    MEDDLY::dd_edge Fout(ctx.forestMDD);
+    for (size_t d=0; d<deg; d++)
+        Fout = sym_union(Fout, vFd[d]);
+
+    if (pparams.verbose) {
+            cout << "    |G_"<<(gen_counter)<<"|=" << dd_cardinality(Fout) << ",n="<< Fout.getNodeCount();
+            cout << "  completed."<<endl;
+            if (pparams.very_verbose) {
+                cout << "G_"<<(gen_counter)<<":\n" << print_mdd(Fout, ctx.vorder) << endl;
+        }
+    }
+
+    return Fout;
+
+    // bool reduce_C = true;
+    // degree_type degtype = ((pparams.target == compute_target::HILBERT_BASIS) ? 
+    //                          degree_type::BY_VALUE : degree_type::BY_SUPPORT);
+
+    // MEDDLY::dd_edge F(ctx.forestMDD);
+    // MEDDLY::dd_edge C(ctx.forestMDD);
+    // MEDDLY::dd_edge prevC(ctx.forestMDD);
+    // // const MEDDLY::dd_edge empty_set(ctx.forestMDD);
+    // // sep(pparams);
+
+    // // F = N u initG
+    // F = sym_union(initGraver, N); 
+
+    // // cout << "(1) |initGraver|=" << dd_cardinality(initGraver) << ",n="<< initGraver.getNodeCount() << endl;
+    // // cout << "initGraver:\n" << print_mdd(initGraver, ctx.vorder) << endl;
+    // // cout << "(1) |N|=" << dd_cardinality(N) << ",n="<< N.getNodeCount() << endl;
+    // // cout << "N:\n" << print_mdd(N, ctx.vorder) << endl;
+    // // cout << "(1) |F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount() << endl;
+    // // cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
+    // // assert(dd_cardinality(F) >= std::min(dd_cardinality(initGraver), dd_cardinality(N)));
+
+    // if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
+    //     // perform the completion procedure to extend to the new column
+    //     // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
+    //     MEDDLY::dd_edge prevF(ctx.forestMDD);
+    //     F = sym_normal_form(ctx, pparams, F, F, level, true);
+
+    //     // MEDDLY::dd_edge removed(ctx.forestMDD), F2(ctx.forestMDD);
+    //     // // COMPL_PROC_OPS->get_op(level)->computeDDEdge(F, F, removed, false);
+    //     // F2 = sym_difference(prevF, F);
+    //     // cout << "initial F:\n" << print_mdd(prevF, ctx.vorder) << endl;
+    //     // if (F != F2) {
+    //     //     cout << "removed:\n" << print_mdd(F2, ctx.vorder) << endl;
+    //     //     cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
+    //     // }
+    //     // F = F2;
+    // }       
+
+    // C = sym_s_vectors(ctx, pparams, F, is_emptyset(N) ? F : N, level);
+    // pparams.perf_C(C);
+
+    // size_t iter=0;
+    // int degree = -1;
+    // do {
+    //     // Get the subset S of C that will be normalized and furtherly combined
+    //     MEDDLY::dd_edge S(ctx.forestMDD);
+    //     if (pparams.by_degree) { // get the subset of C having the smallest degree
+    //         assert(level != 0);
+    //         int prev_degree = degree;
+    //         SMALLEST_DEGREE_TABLE->get_op(level, degtype)->computeDDEdge(C, degree);
+    //         DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(C, degree, S);
+    //         // if (!is_emptyset(S)) {
+    //         //     if (!(prev_degree==-1 || prev_degree<=degree)) {
+    //         //         cout << "\n\n\n";
+    //         //         cout << "prev_degree="<<prev_degree<<" degree="<<degree<<endl;
+    //         //         cout << "**C:\n" << print_mdd_lambda(C, ctx.vorder, ctx.pivot_order, level) << endl;
+    //         //         cout << "**S:\n" << print_mdd_lambda(S, ctx.vorder, ctx.pivot_order, level) << endl;
+    //         //     }
+    //         //     assert(prev_degree==-1 || prev_degree<=degree);
+    //         // }
+    //     }
+    //     else { // ignore degrees, take all C at once
+    //         S = C;
+    //     }
+
+    //     if (pparams.verbose) {
+    //         pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
+    //         cout << "|F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount();
+    //         cout << "  |C|=" << dd_cardinality(C) << ",n="<< C.getNodeCount();
+    //         if (pparams.by_degree && degree>=0)
+    //             cout << "  |C("<<degree<<")|=" << dd_cardinality(S) << ",n="<< S.getNodeCount();
+    //         cout << endl;
+    //     }
+
+    //     prevC = C;
+    //     C = sym_difference(C, S);
+
+    //     // cout << "normal_form" << endl;
+    //     if (!pparams.by_degree)
+    //         S = sym_normal_form(ctx, pparams, S, S, level, true);
+    //     S = sym_normal_form(ctx, pparams, S, F, level, true);
+    //     S = sym_difference(S, F);
+
+    //     if (pparams.very_verbose)
+    //         cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl;
+    //     if (is_emptyset(S) && is_emptyset(C))
+    //         break;
+    //     if (pparams.very_verbose) {
+    //         if (!pparams.by_degree) cout << "C:\n";
+    //         else cout << "C("<<degree<<"):\n";
+    //         cout << print_mdd_lambda(S, ctx.vorder, ctx.pivot_order, level) << endl;
+    //     }
+
+    //     F = sym_union(F, S);
+    //     MEDDLY::dd_edge SV(ctx.forestMDD);
+    //     SV = sym_s_vectors(ctx, pparams, F, S, level);
+    //     pparams.perf_C(SV);
+
+    //     if (reduce_C) {
+    //         SV = sym_difference(SV, prevC);
+    //         SV = sym_difference(SV, S);
+    //         SV = sym_difference(SV, F);
+    //     }
+    //     // cout << "  |SV|=" << dd_cardinality(SV) << endl;
+
+    //     // if (pparams.by_degree) { // FIXME: check again this QNF
+    //     //     C = sym_normal_form(ctx, pparams, C, S, level, false);
+    //     // }
+
+    //     C = sym_union(C, SV);
+    //     // F = sym_union(F, S);
+
+    //     iter++;
+    // } while (C != prevC);
+
+    // return F;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

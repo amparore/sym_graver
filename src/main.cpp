@@ -299,6 +299,10 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-ye")) {
             pparams.by_generators = true;
         }
+        else if (0==strcmp(argv[ii], "-yeg")) {
+            pparams.by_generators = true;
+            pparams.graded_EaC = true;
+        }
         else if (0==strcmp(argv[ii], "-ne")) {
             pparams.by_generators = false;
         }

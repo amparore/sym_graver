@@ -30,6 +30,7 @@ struct pottier_params_t {
     bool by_degree = true;
     bool dynamic_svectors = false;
     bool primitive_extremal_rays = true;
+    bool graded_EaC = false;
     compute_target target = compute_target::HILBERT_BASIS;
 
     // At which step in the by-gen process it becomes possible 
@@ -140,6 +141,13 @@ MEDDLY::dd_edge
 sym_pottier_bygen(const meddly_context& ctx, 
                   const pottier_params_t& pparams,
                   const std::vector<std::vector<int>>& lattice_Zgenerators);
+
+MEDDLY::dd_edge
+sym_pottier_EaC_graded(const meddly_context& ctx, 
+                       const pottier_params_t& pparams,
+                       MEDDLY::dd_edge initGraver, // Graver basis not including N
+                       MEDDLY::dd_edge g, // new generator
+                       size_t gen_counter);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __SYMBOLIC_POTTIER_H__
