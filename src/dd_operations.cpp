@@ -1494,6 +1494,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
 {
     reduce_flags_t rf;
     rf.value = flags;
+    // counter_steps++;
 
     if (a==0) return std::make_pair(0, 0);
     if (b==0) return std::make_pair(res1F->linkNode(a), 0);

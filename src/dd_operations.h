@@ -622,6 +622,8 @@ public:
                   MEDDLY::dd_edge &irreducibles, 
                   MEDDLY::dd_edge &reduced);
 
+    // long counter_steps = 0; // TODO: remove
+
 protected:
     virtual std::pair<MEDDLY::node_handle, MEDDLY::node_handle>
     compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int i) override;

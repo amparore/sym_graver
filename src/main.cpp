@@ -667,6 +667,10 @@ int main(int argc, char** argv)
         // cout << endl;
     }
 
+    if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
+        cout << "Reordered Z-basis for the integral kernel of A:" << endl; print_mat(lattice_Zgenerators); cout << endl;
+    }
+
     // variable_order xx_pivot_order(num_variables, true);
     // pivoting_for_PnL(xx_pivot_order, lattice_Zgenerators, false, true);
     // cout << "New pivot order:\n";
@@ -721,7 +725,11 @@ int main(int argc, char** argv)
             break;
     }
     double card_G = dd_cardinality(G);
-    cout << "\n"<<op.what<<" has "<< card_G << " entries.\n" << endl;
+    cout << "\n"<<op.what<<" has "<< card_G << " entries";
+    if (pparams.verbose) {
+        cout << " and " << G.getNodeCount() << " nodes";
+    }
+    cout << ".\n" << endl;
     if (pparams.very_verbose || (pparams.verbose && card_G<50)) {
         cout << print_mdd(G, vorder) << endl;
     }
@@ -742,6 +750,9 @@ int main(int argc, char** argv)
 
     if (print_rusage)
         print_cpu_rusage();
+
+    // cout << "reduce steps: " << REDUCE->counter_steps << " + " 
+    //      << GET_IRREDUCIBLES->counter_steps << endl;
 
     //----------------------------------------------------
     // Check correctness of generated solutions.

@@ -269,6 +269,20 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
                 MEDDLY::dd_edge A, const MEDDLY::dd_edge B, 
                 const size_t level, bool do_reduction) 
 {
+    // if (dd_cardinality(A) != 1) {
+    //     MEDDLY::dd_edge R(ctx.forestMDD);
+    //     for (MEDDLY::enumerator path(A); path != 0; ++path) {
+    //         const int *ptrs[1];
+    //         ptrs[0] = path.getAssignments();
+    //         MEDDLY::dd_edge vecA(ctx.forestMDD);
+    //         ctx.forestMDD->createEdge(ptrs, 1, vecA);
+
+    //         MEDDLY::dd_edge reduced = sym_normal_form(ctx, pparams, vecA, B, level, do_reduction);
+    //         R = sym_union(R, reduced);
+    //     }
+    //     return R;
+    // }
+
     const size_t normalization_level = (pparams.normalize_by_levels ? level : 0);
     sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
     cmp_sign cs = pparams.target == compute_target::GRAVER_BASIS ? CMP_UNDECIDED : CMP_POS;
@@ -906,7 +920,7 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
 
         while (!is_emptyset(C)) {
             // cout << "   start normal form: "<<flush;
-            for (size_t d=0; d<deg; d++) {
+            for (size_t d=0; d<=min(deg-1, max_deg); d++) {
                 // cout << "("<<dd_cardinality(C)<<","<<dd_cardinality(vFd[d])<<") " <<flush;
                 C = sym_normal_form(ctx, pparams, C, vFd[d], 0, false);
                 // cout << "* "<<flush;
@@ -950,7 +964,7 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
     while (deg <= 2*max_deg);//(!is_emptyset(vFd[deg]));
 
     MEDDLY::dd_edge Fout(ctx.forestMDD);
-    for (size_t d=0; d<deg; d++)
+    for (size_t d=0; d<vFd.size(); d++)
         Fout = sym_union(Fout, vFd[d]);
 
     if (pparams.verbose) {
