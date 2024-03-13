@@ -27,6 +27,8 @@ public:
 
     inline size_t num_variables() const { return var_to_level.size(); }
 
+    const std::vector<size_t>& get_level_to_var() const { return level_to_var; }
+
     // Pivoting for meddly
     // same as lambda means that lvl == lambda in pivot order
     inline bool is_same_as_lambda(size_t lambda, size_t lvl) const 

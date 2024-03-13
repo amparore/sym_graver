@@ -445,6 +445,7 @@ int main(int argc, char** argv)
         return 1;
     }
     if (pparams.target == compute_target::EXTREME_RAYS) {
+        // TODO: check if it is needed.
         pparams.by_levels = true; // extreme rays can only be computed by variables
     }
     if (pparams.target == compute_target::GRAVER_BASIS) {
@@ -459,6 +460,15 @@ int main(int argc, char** argv)
     if (!pparams.by_levels) {
         pparams.by_degree = false;
     }
+
+    // // if we are using any algorithm except basic Pottier (so project&lift , or extend&complete)
+    // // then the input matrix needs to be in upper triangular form.
+    // // Disable pivoting and enable HNF of the Z-generator after the variable order
+    // // has been decided.
+    // if (pparams.by_levels || pparams.by_generators) {
+    //     pivoting = selected_pivoting::NONE;
+    //     hnf_Zbasis = true;
+    // }
 
     const std::string base_fname(basename);
 
@@ -551,7 +561,7 @@ int main(int argc, char** argv)
         if (hnf_Zbasis) { // Use the HNF of the Z-generator
             std::vector<std::vector<int>> hnf_kerZ, U;
             hermite_normal_form(lattice_Zgenerators, hnf_kerZ, U, 
-                                &leading_cols, 
+                                &leading_cols, false,
                                 pparams.verbose_for_basis);
             lattice_Zgenerators = hnf_kerZ;
             // hnf_Zbasis_leading_cols.clear(); // Do not use after, for pivoting.
@@ -631,6 +641,21 @@ int main(int argc, char** argv)
             leading_cols[i] = p;
         }
     }
+
+    // // bring the Z-generator in HNF form using the selected variable order
+    // if (hnf_Zbasis) {
+    //     std::vector<std::vector<int>> hnf_kerZ, U;
+    //     hermite_normal_form(lattice_Zgenerators, hnf_kerZ, U, 
+    //                         &leading_cols, true,
+    //                         pparams.verbose_for_basis);
+    //     lattice_Zgenerators = hnf_kerZ;
+    //     // hnf_Zbasis_leading_cols.clear(); // Do not use after, for pivoting.
+
+    //     if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
+    //         cout << "HNF(Z-basis):" << endl; print_mat(lattice_Zgenerators); cout << endl;
+    //     }
+    //     pivoting = selected_pivoting::NONE;
+    // }
 
     // Pivot ordering
     variable_order pivot_order(num_variables, true);

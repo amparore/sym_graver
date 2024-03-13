@@ -63,6 +63,7 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
                     std::vector<std::vector<int>>& H,
                     std::vector<std::vector<int>>& U,
                     std::vector<size_t> *leading_cols,
+                    const bool forced_pivot_order = false,
                     bool verbose = false);
 
 // compute a set of Z-generators for the lattice of the kernel of A

@@ -241,6 +241,7 @@ zero_vector(MEDDLY::forest *forestMDD) {
 // Get the effective size (in node domain) of an unpacked_node
 inline size_t 
 get_node_size(MEDDLY::unpacked_node* n) {
+    assert(!n->isFull());
     if (n->isFull()) {
         // find exact sizes (exclude trailing zeroes)
         unsigned size = n->getSize();

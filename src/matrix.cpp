@@ -1105,9 +1105,33 @@ hnf_preanalysis(const std::vector<std::vector<int>>& H, size_t k)
 static inline bool
 hnf_next_column_heur(const std::vector<std::vector<int>>& H, 
                      const std::vector<bool>& pivot_cols,
-                     const size_t k, size_t &j)
+                     const size_t k, size_t &j,
+                     const bool forced_pivot_order,
+                     size_t &fpo)
 {
     const size_t n = H.size(), m = H.front().size();
+
+    if (forced_pivot_order) {
+        // we already have a pivot order. Just search the next non-zero column
+        // and store the number in fpo (going in decreasing order)
+        while (fpo>0) // forced pivot order index
+        {
+            fpo--;
+            assert(fpo < m);
+            assert(!pivot_cols[fpo]);
+            bool col_nnz = true;
+            for (size_t i=k; i<n && col_nnz; i++) {
+                if (H[i][fpo] != 0) {
+                    col_nnz = false;
+                }
+            }
+            if (!col_nnz) {
+                j = fpo;
+                return true;
+            }
+        }
+        return false;
+    }
 
     std::vector<int> cw = hnf_preanalysis(H, k);
 
@@ -1209,6 +1233,7 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
                     std::vector<std::vector<int>>& H,
                     std::vector<std::vector<int>>& U,
                     std::vector<size_t> *leading_cols,
+                    const bool forced_pivot_order,
                     bool verbose) 
 {
     std::vector<size_t> _lc;
@@ -1223,7 +1248,7 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
 
     std::vector<bool> pivot_cols(m);
 
-    size_t k;
+    size_t k, fpo=m;
     for (k=0; k<n; k++) {
         if (verbose) {
             cout << "\n\nStart of new iteration for k="<<k<<endl;
@@ -1231,7 +1256,7 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
         }
         // Find the pivot column
         size_t j;
-        if (!hnf_next_column_heur(H, pivot_cols, k, j))
+        if (!hnf_next_column_heur(H, pivot_cols, k, j, forced_pivot_order, fpo))
             break; // no more pivots
 
         if (verbose) {
@@ -1347,7 +1372,7 @@ integral_kernel_Zgens(const std::vector<std::vector<int>>& A,
         reduce_column_gcd(trA, j);
 
     // compute: H = U * transpose(A) * T
-    hermite_normal_form(trA, H, U, &leading_cols, verbose);
+    hermite_normal_form(trA, H, U, &leading_cols, false, verbose);
     const size_t rankA = leading_cols.size();
 
     // Take the last n-rank(A) rows of U as the Z-basis for the integral kernel of A

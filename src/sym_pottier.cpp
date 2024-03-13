@@ -563,6 +563,7 @@ sym_pottier_grad(const meddly_context& ctx,
     // F = N u initG
     F = sym_union(initGraver, N); 
 
+    // TODO: check why EXTREME_RAYS - this should not be there
     if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
