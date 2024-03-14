@@ -267,7 +267,7 @@ sym_normal_form_extremal_rays(const meddly_context& ctx, const pottier_params_t&
 MEDDLY::dd_edge
 sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
                 MEDDLY::dd_edge A, const MEDDLY::dd_edge B, 
-                const size_t level, bool do_reduction) 
+                const size_t level, bool do_reduction, qnf_op qop) 
 {
     // if (dd_cardinality(A) != 1) {
     //     MEDDLY::dd_edge R(ctx.forestMDD);
@@ -286,6 +286,7 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
     const size_t normalization_level = (pparams.normalize_by_levels ? level : 0);
     sv_sign svs = pparams.target == compute_target::GRAVER_BASIS ? SVS_UNDECIDED : SVS_POS;
     cmp_sign cs = pparams.target == compute_target::GRAVER_BASIS ? CMP_UNDECIDED : CMP_POS;
+    bool is_potentially_eq = (qop == qnf_op::LEQ_NEQ ? true : false);
 
     if (pparams.target == compute_target::EXTREME_RAYS) {
         return sym_normal_form_extremal_rays(ctx, pparams, A, B, level);
@@ -295,14 +296,14 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
 
     if (!do_reduction) {
         MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
-        GET_IRREDUCIBLES->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
+        GET_IRREDUCIBLES->computeDDEdge(A, B, is_potentially_eq, true, svs, cs, normalization_level, I, D);
         ALL_I = I;
     }
     else {
         // cout << "                     QNF: " << flush;
         while (!is_emptyset(A)) {
             MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
-            REDUCE->computeDDEdge(A, B, true, true, svs, cs, normalization_level, I, D);
+            REDUCE->computeDDEdge(A, B, is_potentially_eq, true, svs, cs, normalization_level, I, D);
             // I = sym_difference(I, ctx.vzero);
             // cout << dd_cardinality(D) << " " << flush;
 
@@ -444,7 +445,7 @@ sym_pottier(const meddly_context& ctx,
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
         MEDDLY::dd_edge prevF(ctx.forestMDD);
-        F = sym_normal_form(ctx, pparams, F, F, level, true);
+        F = sym_normal_form(ctx, pparams, F, F, level, true, qnf_op::LEQ_NEQ);
 
         // MEDDLY::dd_edge removed(ctx.forestMDD), F2(ctx.forestMDD);
         // // COMPL_PROC_OPS->get_op(level)->computeDDEdge(F, F, removed, false);
@@ -497,9 +498,9 @@ sym_pottier(const meddly_context& ctx,
         C = sym_difference(C, S);
 
         // cout << "normal_form" << endl;
+        S = sym_normal_form(ctx, pparams, S, F, level, true, qnf_op::LEQ);
         if (!pparams.by_degree)
-            S = sym_normal_form(ctx, pparams, S, S, level, true);
-        S = sym_normal_form(ctx, pparams, S, F, level, true);
+            S = sym_normal_form(ctx, pparams, S, S, level, true, qnf_op::LEQ_NEQ);
         S = sym_difference(S, F);
 
         if (pparams.very_verbose)
@@ -567,7 +568,7 @@ sym_pottier_grad(const meddly_context& ctx,
     if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
-        F = sym_normal_form(ctx, pparams, F, F, level, true);
+        F = sym_normal_form(ctx, pparams, F, F, level, true, qnf_op::LEQ_NEQ);
     }
 
     if (is_emptyset(F))
@@ -646,9 +647,9 @@ sym_pottier_grad(const meddly_context& ctx,
                     }
 
                     // normalize
-                    SV = sym_normal_form(ctx, pparams, SV, F, level, false);
+                    SV = sym_normal_form(ctx, pparams, SV, F, level, false, qnf_op::LEQ);
                     if (k==0) {
-                        SV = sym_normal_form(ctx, pparams, SV, SV, level, false);
+                        SV = sym_normal_form(ctx, pparams, SV, SV, level, false, qnf_op::LEQ_NEQ);
                     }
 
                     // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<dd_cardinality(SV2)
@@ -863,7 +864,7 @@ sym_pottier_bygen(const meddly_context& ctx,
     // Finally, apply again the normal form, as the Pottier algorithm only
     // guarantees that G is a superset of the Graver basis, and 
     // we do not proceed by a graded order
-    G = sym_normal_form(ctx, pparams, G, G, 0, false);
+    G = sym_normal_form(ctx, pparams, G, G, 0, false, qnf_op::LEQ_NEQ);
     
     return G;
 }
@@ -923,14 +924,14 @@ sym_pottier_EaC_graded(const meddly_context& ctx,
             // cout << "   start normal form: "<<flush;
             for (size_t d=0; d<=min(deg-1, max_deg); d++) {
                 // cout << "("<<dd_cardinality(C)<<","<<dd_cardinality(vFd[d])<<") " <<flush;
-                C = sym_normal_form(ctx, pparams, C, vFd[d], 0, false);
+                C = sym_normal_form(ctx, pparams, C, vFd[d], 0, false, qnf_op::LEQ_NEQ);
                 // cout << "* "<<flush;
                 C = sym_difference(C, vFd[d]);
             }
             // cout << "D "<<flush;
             C = sym_difference(C, vFd[deg]);
             // cout << "C("<<dd_cardinality(C)<<") " <<flush;
-            C = sym_normal_form(ctx, pparams, C, C, 0, false);
+            C = sym_normal_form(ctx, pparams, C, C, 0, false, qnf_op::LEQ_NEQ);
             // cout<<endl;
                 
             if (pparams.verbose) {

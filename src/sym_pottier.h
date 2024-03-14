@@ -104,10 +104,12 @@ sym_normal_form_extremal_rays(const meddly_context& ctx, const pottier_params_t&
                               MEDDLY::dd_edge A, const MEDDLY::dd_edge B, 
                               const size_t level);
 
+enum class qnf_op { LEQ, LEQ_NEQ };
+
 MEDDLY::dd_edge
 sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
                 MEDDLY::dd_edge A, const MEDDLY::dd_edge B, 
-                const size_t level, bool do_reduction);
+                const size_t level, bool do_reduction, qnf_op qop);
 
 // Pottier algorithm for the computation of the Graver basis in symbolic form
 MEDDLY::dd_edge
