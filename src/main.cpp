@@ -273,7 +273,7 @@ int main(int argc, char** argv)
             pparams.verbose = pparams.verbose_for_Zgenerators = true;
         }
         else if (0==strcmp(argv[ii], "-vv")) {
-            pparams.verbose = pparams.very_verbose = pparams.verbose_for_basis = true;
+            pparams.verbose = pparams.very_verbose = /*pparams.verbose_for_basis =*/ true;
         }
         else if (0==strcmp(argv[ii], "-t")) {
             transpose_input = true;
@@ -573,6 +573,11 @@ int main(int argc, char** argv)
 
         if (pparams.verbose) {
             hnf_scores(lattice_Zgenerators);
+
+            cout << "Pivot variables: ";
+            for (size_t p : leading_cols)
+                cout << "x"<<(p+1) << " ";
+            cout << endl;
         }
     }
     // exit(0);
@@ -585,6 +590,7 @@ int main(int argc, char** argv)
     // In principle it should be the constraints matrix A, 
     // but if it is not available, we will use lattice_Zgenerators.
     const std::vector<std::vector<int>> *p_reorder_mat; // problem constraints
+    std::vector<bool> pivot_variables(num_variables, false);
     p_reorder_mat = compute_Zgenerators ? &A : &lattice_Zgenerators;
 
     // Find a reasonable variable order for this problem
@@ -633,12 +639,13 @@ int main(int argc, char** argv)
             cout << "Reordered Input matrix:" << endl; print_mat(reorderedA, true); cout << endl;
         }
 
+        // Reorder the problem variables according to the DD variable order *vorder
         lattice_Zgenerators = reorder_matrix(lattice_Zgenerators, vorder);
-
         for (size_t i=0; i<leading_cols.size(); i++) {
             size_t p = vorder.var2lvl(leading_cols[i]);
             // cout << "i="<<i<<"  leading="<<(leading_cols[i]+1)<<" -> "<< (p+1) << endl;
             leading_cols[i] = p;
+            pivot_variables[p] = true;
         }
     }
 
@@ -713,7 +720,7 @@ int main(int argc, char** argv)
         return 0;
 
     // Initialize MEDDLY and create an MDD forest for the computations
-    meddly_context ctx(num_variables, vorder, pivot_order);
+    meddly_context ctx(num_variables, vorder, pivot_order, std::move(pivot_variables));
     ctx.initialize(meddly_cache_size);
 
     //----------------------------------------------------

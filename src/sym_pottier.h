@@ -60,10 +60,14 @@ struct meddly_context {
     MEDDLY::forest       *forestMDD = nullptr; // MDD forest
     const size_t          num_levels;   // number of variables/levels
     MEDDLY::dd_edge       vzero;        // zero vector
+    const std::vector<bool> pivot_variables; // variables pivot in the Hermite Normal Form
 
 
-    meddly_context(size_t num_levels, const variable_order& vorder, const variable_order& pivot_order)
-    /**/ : num_levels(num_levels), vorder(vorder), pivot_order(pivot_order) {}
+    meddly_context(size_t num_levels, const variable_order& vorder, 
+                   const variable_order& pivot_order,
+                   std::vector<bool>&& pivot_variables)
+    /**/ : num_levels(num_levels), vorder(vorder), pivot_order(pivot_order), 
+           pivot_variables(pivot_variables) {}
 
     void initialize(size_t meddly_cache_size);
 };

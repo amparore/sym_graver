@@ -27,8 +27,9 @@ void unit_test_vcanon() {
     };
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);
+    std::vector<bool> pivot_variables(num_levels, false);
 
-    meddly_context ctx(num_levels, vorder, pivot_order);
+    meddly_context ctx(num_levels, vorder, pivot_order, std::move(pivot_variables));
     size_t meddly_cache_size = 1000000;
     ctx.initialize(meddly_cache_size);
     MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
@@ -56,8 +57,9 @@ void unit_test_svectors() {
     };
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);
+    std::vector<bool> pivot_variables(num_levels, false);
 
-    meddly_context ctx(num_levels, vorder, pivot_order);
+    meddly_context ctx(num_levels, vorder, pivot_order, std::move(pivot_variables));
     size_t meddly_cache_size = 1000000;
     ctx.initialize(meddly_cache_size);
     MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
@@ -103,8 +105,9 @@ void unit_test_reduce() {
     };
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);
+    std::vector<bool> pivot_variables(num_levels, false);
 
-    meddly_context ctx(num_levels, vorder, pivot_order);
+    meddly_context ctx(num_levels, vorder, pivot_order, std::move(pivot_variables));
     size_t meddly_cache_size = 1000000;
     ctx.initialize(meddly_cache_size);
     MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
@@ -151,8 +154,9 @@ void unit_test_sign_canon() {
 
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);
+    std::vector<bool> pivot_variables(num_levels, false);
 
-    meddly_context ctx(num_levels, vorder, pivot_order);
+    meddly_context ctx(num_levels, vorder, pivot_order, std::move(pivot_variables));
     size_t meddly_cache_size = 1000000;
     ctx.initialize(meddly_cache_size);
     MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);
@@ -176,8 +180,9 @@ void unit_test_minimal_supports() {
 
     const size_t num_levels = mA[0].size();
     variable_order vorder(num_levels), pivot_order(num_levels);
+    std::vector<bool> pivot_variables(num_levels, false);
 
-    meddly_context ctx(num_levels, vorder, pivot_order);
+    meddly_context ctx(num_levels, vorder, pivot_order, std::move(pivot_variables));
     size_t meddly_cache_size = 1000000;
     ctx.initialize(meddly_cache_size);
     MEDDLY::dd_edge A = mdd_from_vectors(mA, ctx.forestMDD, false);

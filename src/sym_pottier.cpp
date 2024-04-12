@@ -382,12 +382,14 @@ pottier_iter_banner_start(const meddly_context& ctx,
     }
     if (level != 0) {
         if (pparams.very_verbose || iter == 0) {
+            const bool is_pivot = ctx.pivot_variables[level-1];
             const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
-            cout << "Level=" << level << "["<<var_name<<"]";
+            cout << "Level=" << level << "["<<var_name<<(is_pivot ? "*" : "")<<"]";
             size_t spaces = 8 - var_name.size();
             if (level >= 1000) spaces--;
             if (level >= 100)  spaces--;
             if (level >= 10)   spaces--;
+            if (is_pivot)      spaces--;
             for (size_t i=0; i<spaces; i++)
                 cout << " ";
         }
@@ -412,7 +414,7 @@ sym_pottier(const meddly_context& ctx,
         const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
         cout << "\n\n\n\n";
         sep(pparams);sep(pparams);
-        cout<<"Start of level "<<level<<"["<<var_name<<"]"<<endl; 
+        cout<<"Start of level "<<level<<"["<<var_name<<(ctx.pivot_variables[level-1]?"*":"")<<"]"<<endl; 
         cout << "F^init:\n" << print_mdd_lambda(initGraver, ctx.vorder, ctx.pivot_order, level) << endl;
         cout << "N^init:\n" << print_mdd_lambda(N, ctx.vorder, ctx.pivot_order, level) << endl;
         cout << endl;
@@ -548,6 +550,40 @@ sym_pottier(const meddly_context& ctx,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+bool
+min_max_degrees(const std::vector<int>& degreesPos,
+                const std::vector<int>& degreesNeg,
+                bool is_graver,
+                int &min_degree, int &max_degree)
+{
+    min_degree = std::numeric_limits<int>::max();
+    max_degree = 0;
+
+    if (is_graver) {
+        if (degreesPos.empty() && degreesNeg.empty())
+            return false;
+
+        if (!degreesPos.empty()) {
+            min_degree = min(min_degree, 2 * degreesPos.back());
+            max_degree = max(max_degree, 2 * degreesPos.front());
+        }
+        if (!degreesNeg.empty()) {
+            min_degree = min(min_degree, 2 * degreesNeg.back());
+            max_degree = max(max_degree, 2 * degreesNeg.front());
+        }
+    }
+    else {
+        if (degreesPos.empty() || degreesNeg.empty())
+            return false;
+
+        min_degree = degreesPos.back() + degreesNeg.back();
+        max_degree = degreesPos.front() + degreesNeg.front();
+    }
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 // Pottier algorithm for the computation of the Graver basis in symbolic form
 // Dynamically generate the S-Vectors by degree, instead of storing them in the C set
 MEDDLY::dd_edge
@@ -577,6 +613,7 @@ sym_pottier_grad(const meddly_context& ctx,
                              degree_type::BY_SUPPORT : degree_type::BY_VALUE);
 
     int k = -1; // next degree to generate
+    int min_gen_degree, max_gen_degree; // range of producible degree
     size_t iter = 0;
     while (true) {
         // rebuild selectors since domain size could change between iterations
@@ -585,7 +622,7 @@ sym_pottier_grad(const meddly_context& ctx,
         // separate positives and negatives at @level in F
         MEDDLY::dd_edge Fpos = sym_intersection(F, selPos);
         MEDDLY::dd_edge Fneg = sym_intersection(F, selNeg);
-        if (is_emptyset(Fpos) || is_emptyset(Fneg))
+        if (is_emptyset(Fpos) && is_emptyset(Fneg))
             break;
 
         // Enumerate the degrees of F
@@ -596,20 +633,29 @@ sym_pottier_grad(const meddly_context& ctx,
         const std::vector<int>& degreesNeg = DEGREE_FINDER_TABLE->look_up(lkN);
         assert(!degreesPos.empty() && !degreesNeg.empty());
 
-        if (k == -1) {
-            // determine smallest producible degree
-            if (pparams.target == compute_target::GRAVER_BASIS)
-                k = 2 * min(degreesPos.back(), degreesNeg.back());
-            else
-                k = degreesPos.back() + degreesNeg.back();
-        }
-        size_t max_gen_degree; // largest producible degree
-        if (pparams.target == compute_target::GRAVER_BASIS)
-            max_gen_degree = 2 * max(degreesPos.front(), degreesNeg.front());
-        else
-            max_gen_degree = degreesPos.front() + degreesNeg.front();
-        if (k > max_gen_degree) 
+        cout << "|d+|="<<degreesPos.size()<<" ";
+        cout << "|d-|="<<degreesNeg.size();
+        cout << endl;
+
+        if (!min_max_degrees(degreesPos, degreesNeg, pparams.target==compute_target::GRAVER_BASIS,
+                             min_gen_degree, max_gen_degree))
             break;
+
+        if (k == -1)
+            k = min_gen_degree;
+
+        // if (k == -1) {
+        //     // determine smallest producible degree
+        //     if (pparams.target == compute_target::GRAVER_BASIS)
+        //         k = 2 * min(degreesPos.back(), degreesNeg.back());
+        //     else
+        //         k = degreesPos.back() + degreesNeg.back();
+        // }
+        // // always update the maximum producible degree (it changes during the iterations)
+        // if (pparams.target == compute_target::GRAVER_BASIS)
+        //     max_gen_degree = 2 * max(degreesPos.front(), degreesNeg.front());
+        // else
+        //     max_gen_degree = degreesPos.front() + degreesNeg.front();
 
         if (pparams.verbose) {
             pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
@@ -629,6 +675,9 @@ sym_pottier_grad(const meddly_context& ctx,
             cout << endl;
         }
 
+        if (k > max_gen_degree) 
+            break;
+
         // Generate the S-Vectors of degree k
         bool added = false;
         bool added_using_deg0 = false;
@@ -638,26 +687,30 @@ sym_pottier_grad(const meddly_context& ctx,
             char signI, signJ;
             ab_sum_t svect_op;
             sv_sign svs;
-            if (turn == 0) { // (F+) + (F-)
-                degreesI = &degreesPos;     degreesJ = &degreesNeg;
-                FI = &Fpos;                 FJ = &Fneg;
-                signI = '+';                signJ = '-';
-                svect_op = ab_sum_t::A_PLUS_B;
-                svs = SVS_POS;
-            }
-            else if (turn == 1) { // (F+) - (F+)
-                degreesI = degreesJ = &degreesPos;
-                FI = FJ = &Fpos;
-                signI = signJ = '+';
-                svect_op = ab_sum_t::A_MINUS_B;
-                svs = SVS_UNDECIDED;
-            }
-            else if (turn == 2) { // (F-) - (F-)
-                degreesI = degreesJ = &degreesNeg;
-                FI = FJ = &Fneg;
-                signI = signJ = '-';
-                svect_op = ab_sum_t::A_MINUS_B;
-                svs = SVS_UNDECIDED;
+            switch (turn) {
+                case 0: // (F+) + (F-)
+                    degreesI = &degreesPos;     degreesJ = &degreesNeg;
+                    FI = &Fpos;                 FJ = &Fneg;
+                    signI = '+';                signJ = '-';
+                    svect_op = ab_sum_t::A_PLUS_B;
+                    svs = SVS_POS;
+                    break;
+
+                case 1: // (F+) - (F+)
+                    degreesI = degreesJ = &degreesPos;
+                    FI = FJ = &Fpos;
+                    signI = signJ = '+';
+                    svect_op = ab_sum_t::A_MINUS_B;
+                    svs = SVS_UNDECIDED;
+                    break;
+
+                case 2: // (F-) - (F-)
+                    degreesI = degreesJ = &degreesNeg;
+                    FI = FJ = &Fneg;
+                    signI = signJ = '-';
+                    svect_op = ab_sum_t::A_MINUS_B;
+                    svs = SVS_UNDECIDED;
+                    break;
             }
 
             // Generate the combinations of i+j = k
@@ -675,6 +728,7 @@ sym_pottier_grad(const meddly_context& ctx,
                         // we can set level=0 since Fi and Fj are already sign-disjoint, so there is no need
                         // to use the sym_s_vectors_at_level() to split values and signs
                         S_VECTORS->computeDDEdge(Fi, Fj, true, svect_op, svs, level, SV);
+                        SV = sym_difference(SV, ctx.vzero);
                         pparams.perf_C(SV);
                         if (pparams.target == compute_target::EXTREME_RAYS && pparams.primitive_extremal_rays) {
                             // Canonicalize the summed entries (this passes from smallest lattice 
@@ -787,6 +841,14 @@ sym_pottier_grad(const meddly_context& ctx,
             k++;
         iter++;
     }
+
+    if (pparams.verbose && iter==0) {
+            pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
+            cout << "|F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount();
+            cout << "  k="<<k<<"("<<min_gen_degree<<"-"<<max_gen_degree<<")";
+            
+            cout << "  nothing to do." << endl;
+        }
 
     return F;
 }
