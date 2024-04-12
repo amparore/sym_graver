@@ -67,7 +67,7 @@ std::ostream& operator<< (std::ostream& os, const mdd_printer& mp)
                 os << "\033[39m";
             }
             if (mp.lambda>0 && mp.pivot_order->is_below_lambda(mp.lambda, lvl+1))
-                degree += value;
+                degree += abs(value);
         }
         if (mp.lambda>0)
             os << " [" << degree << "]";
@@ -2832,6 +2832,7 @@ int degree_finder_op::compute(MEDDLY::node_handle a)
         if (p_table->pivot_order->is_below_lambda(lambda, a_level)) { 
             // level contributes to the degree
             edge_incr = get_degree_of(a_val, degtype);
+            assert(edge_incr >= 0);
         }
 
         for (int d : down_degrees)

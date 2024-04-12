@@ -45,8 +45,8 @@ target_include_directories(sym_hilbert  PRIVATE  ${BOOST_CPP_HEADERS_PATH})
 target_link_libraries(sym_hilbert  ${MEDDLY_LIBRARY})
 
 # Type of build
-set(CMAKE_BUILD_TYPE Debug)
-# set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 # Build for profiling
 # set(CMAKE_CXX_FLAGS "-pg")

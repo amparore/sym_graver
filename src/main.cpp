@@ -294,7 +294,7 @@ int main(int argc, char** argv)
         // }
         else if (0==strcmp(argv[ii], "-s")) { // TODO: should be the default method for Hilbert/rays
             pparams.by_levels = true;
-            pparams.dynamic_svectors = true;
+            pparams.graded_order = true;
         }
         else if (0==strcmp(argv[ii], "-ye")) {
             pparams.by_generators = true;
@@ -448,9 +448,9 @@ int main(int argc, char** argv)
         // TODO: check if it is needed.
         pparams.by_levels = true; // extreme rays can only be computed by variables
     }
-    if (pparams.target == compute_target::GRAVER_BASIS) {
-        pparams.dynamic_svectors = false; // degree is defined only for Hilbert/rays
-    }
+    // if (pparams.target == compute_target::GRAVER_BASIS) {
+    //     pparams.dynamic_svectors = false; // degree is defined only for Hilbert/rays
+    // }
     if (pparams.target != compute_target::HILBERT_BASIS || pparams.by_generators) {
         pparams.by_degree = false; // only for Hilbert bases
     }

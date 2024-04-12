@@ -28,7 +28,7 @@ struct pottier_params_t {
     bool verbose_for_basis = false;
     bool verbose_for_Zgenerators = false;
     bool by_degree = true;
-    bool dynamic_svectors = false;
+    bool graded_order = false;
     bool primitive_extremal_rays = true;
     bool graded_EaC = false;
     compute_target target = compute_target::HILBERT_BASIS;
