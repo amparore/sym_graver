@@ -952,7 +952,6 @@ enum class degree_type {
     BY_VALUE, BY_SUPPORT
 };
 inline int get_degree_of(int v, degree_type degtype) {
-    assert(v >= 0);
     return (degtype == degree_type::BY_VALUE) ? abs(v) : (v!=0);
 }
 

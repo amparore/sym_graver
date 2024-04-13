@@ -382,7 +382,7 @@ pottier_iter_banner_start(const meddly_context& ctx,
     }
     if (level != 0) {
         if (pparams.very_verbose || iter == 0) {
-            const bool is_pivot = ctx.pivot_variables[level-1];
+            const bool is_pivot = ctx.leading_variables[level-1];
             const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
             cout << "Level=" << level << "["<<var_name<<(is_pivot ? "*" : "")<<"]";
             size_t spaces = 8 - var_name.size();
@@ -414,7 +414,7 @@ sym_pottier(const meddly_context& ctx,
         const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
         cout << "\n\n\n\n";
         sep(pparams);sep(pparams);
-        cout<<"Start of level "<<level<<"["<<var_name<<(ctx.pivot_variables[level-1]?"*":"")<<"]"<<endl; 
+        cout<<"Start of level "<<level<<"["<<var_name<<(ctx.leading_variables[level-1]?"*":"")<<"]"<<endl; 
         cout << "F^init:\n" << print_mdd_lambda(initGraver, ctx.vorder, ctx.pivot_order, level) << endl;
         cout << "N^init:\n" << print_mdd_lambda(N, ctx.vorder, ctx.pivot_order, level) << endl;
         cout << endl;
@@ -631,11 +631,11 @@ sym_pottier_grad(const meddly_context& ctx,
         DEGREE_FINDER_TABLE->get_op(level, degtype)->computeDDEdge(Fneg, lkN);
         const std::vector<int>& degreesPos = DEGREE_FINDER_TABLE->look_up(lkP);
         const std::vector<int>& degreesNeg = DEGREE_FINDER_TABLE->look_up(lkN);
-        assert(!degreesPos.empty() && !degreesNeg.empty());
+        // assert(!degreesPos.empty() && !degreesNeg.empty());
 
-        cout << "|d+|="<<degreesPos.size()<<" ";
-        cout << "|d-|="<<degreesNeg.size();
-        cout << endl;
+        // cout << "|d+|="<<degreesPos.size()<<" ";
+        // cout << "|d-|="<<degreesNeg.size();
+        // cout << endl;
 
         if (!min_max_degrees(degreesPos, degreesNeg, pparams.target==compute_target::GRAVER_BASIS,
                              min_gen_degree, max_gen_degree))
@@ -643,6 +643,8 @@ sym_pottier_grad(const meddly_context& ctx,
 
         if (k == -1)
             k = min_gen_degree;
+        else if (k > max_gen_degree) 
+            break;
 
         // if (k == -1) {
         //     // determine smallest producible degree
@@ -675,8 +677,6 @@ sym_pottier_grad(const meddly_context& ctx,
             cout << endl;
         }
 
-        if (k > max_gen_degree) 
-            break;
 
         // Generate the S-Vectors of degree k
         bool added = false;

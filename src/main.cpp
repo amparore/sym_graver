@@ -571,10 +571,10 @@ int main(int argc, char** argv)
             }
         }
 
-        if (pparams.verbose) {
+        if (pparams.verbose_for_Zgenerators) {
             hnf_scores(lattice_Zgenerators);
 
-            cout << "Pivot variables: ";
+            cout << "Leading variables (before reordering): ";
             for (size_t p : leading_cols)
                 cout << "x"<<(p+1) << " ";
             cout << endl;
@@ -590,7 +590,7 @@ int main(int argc, char** argv)
     // In principle it should be the constraints matrix A, 
     // but if it is not available, we will use lattice_Zgenerators.
     const std::vector<std::vector<int>> *p_reorder_mat; // problem constraints
-    std::vector<bool> pivot_variables(num_variables, false);
+    std::vector<bool> leading_variables(num_variables, false);
     p_reorder_mat = compute_Zgenerators ? &A : &lattice_Zgenerators;
 
     // Find a reasonable variable order for this problem
@@ -645,7 +645,6 @@ int main(int argc, char** argv)
             size_t p = vorder.var2lvl(leading_cols[i]);
             // cout << "i="<<i<<"  leading="<<(leading_cols[i]+1)<<" -> "<< (p+1) << endl;
             leading_cols[i] = p;
-            pivot_variables[p] = true;
         }
     }
 
@@ -664,6 +663,20 @@ int main(int argc, char** argv)
     //     pivoting = selected_pivoting::NONE;
     // }
 
+    // Mark the variables that are basic variables (pivot columns) in the HNF matrix
+    for (size_t var : leading_cols)
+        leading_variables[var] = true;
+    // for (size_t i=0; i<leading_cols.size(); i++) {
+    //     leading_variables[leading_cols[i]] = true;
+    // }
+
+    if (pparams.verbose) {
+        cout << "Leading variables: ";
+        for (size_t var : leading_cols)
+            cout << "x"<<(var+1) << " ";
+        cout << endl;
+    }
+    
     // Pivot ordering
     variable_order pivot_order(num_variables, true);
     switch (pivoting) {
@@ -699,6 +712,19 @@ int main(int argc, char** argv)
         // cout << endl;
     }
 
+    bool leading_first = true, leading_phase = true;
+    for (size_t var=0; var<num_variables; var++) {
+        const size_t level = pivot_order.var2lvl(var); // i-th pivot level
+        bool is_leading_var = leading_variables[level];
+        if (leading_phase && !is_leading_var)
+            leading_phase = false;
+        else if (!leading_phase && is_leading_var)
+            leading_first = false;
+    }
+    if (!leading_first) {
+        cout << "WARNING: pivot order does not follow the leading variables order!" << endl;
+    }
+
     if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
         cout << "Reordered Z-basis for the integral kernel of A:" << endl; print_mat(lattice_Zgenerators); cout << endl;
     }
@@ -720,7 +746,7 @@ int main(int argc, char** argv)
         return 0;
 
     // Initialize MEDDLY and create an MDD forest for the computations
-    meddly_context ctx(num_variables, vorder, pivot_order, std::move(pivot_variables));
+    meddly_context ctx(num_variables, vorder, pivot_order, std::move(leading_variables));
     ctx.initialize(meddly_cache_size);
 
     //----------------------------------------------------

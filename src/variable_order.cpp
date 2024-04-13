@@ -899,15 +899,15 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
     // }
 
     // first put all fixed vars
-    size_t pos = m-1;
+    size_t pos = 0;
     for (size_t var : fixed_vars)
-        pivots.bind_var2lvl(var, pos--); //(pos++, var); 
+        pivots.bind_var2lvl(pos++, var); 
     // then put all the other vars, in weighted order
     for (size_t j=0; j<m; j++) {
         size_t var = sorted_weights[j].second;
         // cout << "j:"<<j<<" w:"<<sorted_weights[j].first<<" var:"<<sorted_weights[j].second<<endl;
         if (!blocked_vars[var])
-            pivots.bind_var2lvl(var, pos--);//(pos++, var); 
+            pivots.bind_var2lvl(pos++, var); 
     }
 }
 
