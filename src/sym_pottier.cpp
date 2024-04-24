@@ -304,7 +304,8 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
         while (!is_emptyset(A)) {
             MEDDLY::dd_edge I(ctx.forestMDD), D(ctx.forestMDD); // R(ctx.forestMDD), 
             REDUCE->computeDDEdge(A, B, is_potentially_eq, true, svs, cs, normalization_level, I, D);
-            // I = sym_difference(I, ctx.vzero);
+            I = sym_difference(I, ctx.vzero);
+            D = sym_difference(D, ctx.vzero);
             // cout << dd_cardinality(D) << " " << flush;
 
             // cout << "QNF:\n";
@@ -313,6 +314,14 @@ sym_normal_form(const meddly_context& ctx, const pottier_params_t& pparams,
             // cout << "I:\n" << print_mdd(I2, ctx.vorder) << endl;
             // cout << "R:\n" << print_mdd(R, ctx.vorder) << endl;
             // cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
+
+            if (dd_cardinality(D) > 0) {
+                cout << "A:\n" << print_mdd(A, ctx.vorder) << endl;
+                cout << "B:\n" << print_mdd(B, ctx.vorder) << endl;
+                cout << "I:\n" << print_mdd(I, ctx.vorder) << endl;
+                cout << "D:\n" << print_mdd(D, ctx.vorder) << endl;
+                exit(2);
+            }
 
             ALL_I = sym_union(ALL_I, I);
 
@@ -423,8 +432,8 @@ sym_pottier(const meddly_context& ctx,
         return sym_pottier_grad(ctx, pparams, initGraver, N, level, rem_neg_step);
 
     bool reduce_C = true;
-    degree_type degtype = ((pparams.target == compute_target::HILBERT_BASIS) ? 
-                             degree_type::BY_VALUE : degree_type::BY_SUPPORT);
+    degree_type degtype = ((pparams.target == compute_target::EXTREME_RAYS) ? 
+                             degree_type::BY_SUPPORT : degree_type::BY_VALUE);
 
     MEDDLY::dd_edge F(ctx.forestMDD);
     MEDDLY::dd_edge C(ctx.forestMDD);
@@ -443,11 +452,11 @@ sym_pottier(const meddly_context& ctx,
     // cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
     // assert(dd_cardinality(F) >= std::min(dd_cardinality(initGraver), dd_cardinality(N)));
 
-    if (level != 0 && !pparams.normalize_by_levels && pparams.target!=compute_target::EXTREME_RAYS) {
+    if (level != 0 && /*!pparams.normalize_by_levels &&*/ pparams.target!=compute_target::EXTREME_RAYS) {
         // perform the completion procedure to extend to the new column
         // since we are extending the lesseq_sq operation to column j, we need to renormalize F 
-        MEDDLY::dd_edge prevF(ctx.forestMDD);
-        F = sym_normal_form(ctx, pparams, F, F, level, true, qnf_op::LEQ_NEQ);
+        // MEDDLY::dd_edge prevF(ctx.forestMDD);
+        F = sym_normal_form(ctx, pparams, F, N, level, true, qnf_op::LEQ_NEQ);
 
         // MEDDLY::dd_edge removed(ctx.forestMDD), F2(ctx.forestMDD);
         // // COMPL_PROC_OPS->get_op(level)->computeDDEdge(F, F, removed, false);
@@ -458,6 +467,7 @@ sym_pottier(const meddly_context& ctx,
         //     cout << "F:\n" << print_mdd(F, ctx.vorder) << endl;
         // }
         // F = F2;
+        // cout << "(2) |F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount() << endl;
     }       
 
     C = sym_s_vectors(ctx, pparams, F, is_emptyset(N) ? F : N, level);
@@ -500,10 +510,10 @@ sym_pottier(const meddly_context& ctx,
         C = sym_difference(C, S);
 
         // cout << "normal_form" << endl;
-        S = sym_normal_form(ctx, pparams, S, F, level, true, qnf_op::LEQ);
+        S = sym_normal_form(ctx, pparams, S, F, level, false, qnf_op::LEQ);
         if (!pparams.by_degree)
-            S = sym_normal_form(ctx, pparams, S, S, level, true, qnf_op::LEQ_NEQ);
-        S = sym_difference(S, F);
+            S = sym_normal_form(ctx, pparams, S, S, level, false, qnf_op::LEQ_NEQ);
+        // S = sym_difference(S, F);
 
         if (pparams.very_verbose)
             cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl;
@@ -845,7 +855,7 @@ sym_pottier_grad(const meddly_context& ctx,
     if (pparams.verbose && iter==0) {
             pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
             cout << "|F|=" << dd_cardinality(F) << ",n="<< F.getNodeCount();
-            cout << "  k="<<k<<"("<<min_gen_degree<<"-"<<max_gen_degree<<")";
+            // cout << "  k="<<k<<"("<<min_gen_degree<<"-"<<max_gen_degree<<")";
             
             cout << "  nothing to do." << endl;
         }
@@ -878,6 +888,12 @@ sym_pottier_PnL(const meddly_context& ctx,
             MEDDLY::dd_edge init_level = sym_intersection(N, nnz_sel);
             N = sym_difference(N, init_level);
 
+            if (dd_cardinality(init_level) > 1) {
+                cout << "ERROR: selecting more than one initial vector!" << endl;
+                cout << "init:\n" << print_mdd_lambda(init_level, ctx.vorder, ctx.pivot_order, level) << endl << endl;
+                exit(4);
+            }
+
             // if (init_level == emptySet)
             //     init_level = G; // nothing new to add, the initial s-vectors is (G+G)
 
@@ -891,6 +907,10 @@ sym_pottier_PnL(const meddly_context& ctx,
                     G = sym_intersection(G, non_neg_sel);
                 }
             }
+
+            // if (var>15) {
+            //     exit(6);
+            // }
         }
 
         // // Compute by levels, following the pivoting order
@@ -952,7 +972,7 @@ sym_pottier_bygen(const meddly_context& ctx,
     const MEDDLY::dd_edge empty_set(ctx.forestMDD);
     // We should start with the symmetrized HNF generators only when computing the Graver basis
     const bool make_sign_canonic = (pparams.target == compute_target::GRAVER_BASIS);
-    const bool make_gen_sym = (pparams.target != compute_target::GRAVER_BASIS);
+    const bool make_gen_sym = false;//(pparams.target != compute_target::GRAVER_BASIS);
     if (lattice_Zgenerators.empty())
         return G;
 
@@ -1007,6 +1027,11 @@ sym_pottier_bygen(const meddly_context& ctx,
         MEDDLY::dd_edge initF = mdd_from_vectors(lattice_Zgenerators, ctx.forestMDD, make_gen_sym);
         if (make_sign_canonic)
             SIGN_CANON->computeDDEdge(initF, initF, false);
+
+        if (pparams.very_verbose) {
+            cout << "Initial Z-generators:\n" << print_mdd_lambda(initF, ctx.vorder, ctx.pivot_order, 0) << endl;
+        }
+
         // Compute all generators at once
         G = sym_pottier_PnL(ctx, pparams, empty_set, initF, nullptr, size_t(-1));
     }

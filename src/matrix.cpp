@@ -994,7 +994,7 @@ print_mat_hnf(const std::vector<std::vector<int>>& H, // n*m
     const size_t m = H.front().size();
 
     auto HH = H;
-    auto UU = U;
+    // auto UU = U;
     std::vector<size_t> indices(m);
     // for (size_t j=0; j<m; j++)
     //     indices[j] = j;
@@ -1016,11 +1016,18 @@ print_mat_hnf(const std::vector<std::vector<int>>& H, // n*m
             indices[k] = j++;
         }
     }
+    // cout << "n="<<n<<" m="<<m<<" indices: ";
+    // for (size_t i :indices) cout << i << " ";
+    // cout << endl;
+
+
     for (size_t i=0; i<n; i++) {
         for (size_t j=0; j<m; j++)
             HH[i][j] = H[i][indices[j]];
-        for (size_t j=0; j<n; j++)
-            UU[i][j] = U[i][j<m ? indices[j] : j];
+        // for (size_t j=0; j<n; j++) {
+        //     assert((j<m ? indices[j] : j) < n);
+        //     UU[i][j] = U[i][j<m ? indices[j] : j];
+        // }
     }
 
     // for (size_t k=0; k<leading_cols.size(); k++) {
@@ -1060,7 +1067,7 @@ print_mat_hnf(const std::vector<std::vector<int>>& H, // n*m
     cout << "U:\n";
     for (size_t i=0; i<n; i++) {
         for (size_t j=0; j<n; j++) {
-            cout << setw(3) << UU.at(i).at(j);
+            cout << setw(3) << U.at(i).at(j);
             if (j==j0) cout << "│";
             else cout << " ";
         }
@@ -1281,6 +1288,7 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
             }
 
             // Move the pivot row in position k
+            assert(k<n && rpivot_k<n && j<m);
             std::swap(H[k], H[rpivot_k]);
             std::swap(U[k], U[rpivot_k]); // TODO: check
 
@@ -1300,7 +1308,7 @@ hermite_normal_form(const std::vector<std::vector<int>>& A,
                     // int v = H[i0][j], r=abs(H[k][j]), mult=0;
                     // while (v < 0) { v += r; mult++; }
                     // while (v >= r) { v -= r; mult--; }
-                    // cout <<"H[i0][j]="<<H[i0][j]<<" H[k][j]="<<H[k][j]<<" mult="<<mult<<" v="<<v<<endl;
+                    // cout <<"H[i0][j]="<<H[i0][j]<<" H[k][j]="<<H[k][j]<<" mult="<<mult<<endl; // " v="<<v<<
                     
                     if (mult != 0) {
                         // cout << "  + add row "<<k<<" to "<<i0<<"  mult="<<mult<<endl;

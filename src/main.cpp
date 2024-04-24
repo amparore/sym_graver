@@ -451,15 +451,15 @@ int main(int argc, char** argv)
     // if (pparams.target == compute_target::GRAVER_BASIS) {
     //     pparams.dynamic_svectors = false; // degree is defined only for Hilbert/rays
     // }
-    if (pparams.target != compute_target::HILBERT_BASIS || pparams.by_generators) {
-        pparams.by_degree = false; // only for Hilbert bases
-    }
+    // if (pparams.target != compute_target::HILBERT_BASIS || pparams.by_generators) {
+    //     pparams.by_degree = false; // only for Hilbert bases
+    // }
     if (pparams.by_generators) {
         pparams.normalize_by_levels = false;
     }
-    if (!pparams.by_levels) {
-        pparams.by_degree = false;
-    }
+    // if (!pparams.by_levels) {
+    //     pparams.by_degree = false;
+    // }
 
     // // if we are using any algorithm except basic Pottier (so project&lift , or extend&complete)
     // // then the input matrix needs to be in upper triangular form.
@@ -544,6 +544,7 @@ int main(int argc, char** argv)
 
     // std::vector<size_t> hnf_Zbasis_leading_cols;
     if (lattice_Zgenerators.size() == 0) {
+        leading_cols.clear();
         cerr << "Z-basis is empty." << endl;
     }
     else {
@@ -642,6 +643,7 @@ int main(int argc, char** argv)
         // Reorder the problem variables according to the DD variable order *vorder
         lattice_Zgenerators = reorder_matrix(lattice_Zgenerators, vorder);
         for (size_t i=0; i<leading_cols.size(); i++) {
+            assert(leading_cols[i] < num_variables);
             size_t p = vorder.var2lvl(leading_cols[i]);
             // cout << "i="<<i<<"  leading="<<(leading_cols[i]+1)<<" -> "<< (p+1) << endl;
             leading_cols[i] = p;
@@ -666,9 +668,6 @@ int main(int argc, char** argv)
     // Mark the variables that are basic variables (pivot columns) in the HNF matrix
     for (size_t var : leading_cols)
         leading_variables[var] = true;
-    // for (size_t i=0; i<leading_cols.size(); i++) {
-    //     leading_variables[leading_cols[i]] = true;
-    // }
 
     if (pparams.verbose) {
         cout << "Leading variables: ";
@@ -722,12 +721,23 @@ int main(int argc, char** argv)
             leading_first = false;
     }
     if (!leading_first) {
-        cout << "WARNING: pivot order does not follow the leading variables order!" << endl;
+        cout << "ERROR: pivot order does not follow the leading variables order!" << endl;
+        return 1;
     }
 
     if (pparams.verbose_show_mat(lattice_Zgenerators) || pparams.verbose_for_Zgenerators) {
         cout << "Reordered Z-basis for the integral kernel of A:" << endl; print_mat(lattice_Zgenerators); cout << endl;
     }
+
+    {
+        // std::vector<std::vector<int>> reorderedA = reorder_matrix(*p_reorder_mat, vorder);
+        pivot_order.invert();
+        std::vector<std::vector<int>> reorderedB = reorder_matrix(lattice_Zgenerators, pivot_order);
+        pivot_order.invert();
+
+        cout << "Reordered Input matrix [2]:" << endl; print_mat(reorderedB, true); cout << endl;
+    }
+
 
     // variable_order xx_pivot_order(num_variables, true);
     // pivoting_for_PnL(xx_pivot_order, lattice_Zgenerators, false, true);
@@ -867,12 +877,21 @@ int main(int argc, char** argv)
                 if (pparams.verbose) {
                 cout << "Expected size: " << dd_cardinality(Hcheckdd) << endl;
                     MEDDLY::dd_edge diff(ctx.forestMDD);
+                    double diff_card;
                     // MEDDLY::apply(MEDDLY::DIFFERENCE, G, Hcheckdd, diff);
                     diff = sym_difference(G, Hcheckdd);
-                    cout << "G \\ Expected:\n" << print_mdd(diff, ctx.vorder) << endl;
+                    diff_card = dd_cardinality(diff);
+                    cout << "G \\ Expected ("<<diff_card<<"):\n";
+                    if (diff_card < 100) {
+                        cout << print_mdd(diff, ctx.vorder) << endl;
+                    }
                     // MEDDLY::apply(MEDDLY::DIFFERENCE, Hcheckdd, G, diff);
                     diff = sym_difference(Hcheckdd, G);
-                    cout << "Expected \\ G:\n" << print_mdd(diff, ctx.vorder) << endl;
+                    diff_card = dd_cardinality(diff);
+                    cout << "Expected \\ G ("<<diff_card<<"):\n";
+                    if (diff_card < 100) {
+                        cout << print_mdd(diff, ctx.vorder) << endl;
+                    }
                 }
 
                 return 2;

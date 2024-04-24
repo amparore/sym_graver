@@ -27,7 +27,7 @@ struct pottier_params_t {
     bool very_verbose = false;
     bool verbose_for_basis = false;
     bool verbose_for_Zgenerators = false;
-    bool by_degree = true;
+    bool by_degree = false;
     bool graded_order = false;
     bool primitive_extremal_rays = true;
     bool graded_EaC = false;
