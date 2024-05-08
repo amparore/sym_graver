@@ -735,7 +735,9 @@ int main(int argc, char** argv)
         std::vector<std::vector<int>> reorderedB = reorder_matrix(lattice_Zgenerators, pivot_order);
         pivot_order.invert();
 
-        cout << "Reordered Input matrix [2]:" << endl; print_mat(reorderedB, true); cout << endl;
+        cout << "Reordered Input matrix [rows="<<reorderedB.size()
+             << ", vars="<<(reorderedB.empty()?-1 : reorderedB.front().size())<<"]:" 
+             << endl; print_mat(reorderedB, true); cout << endl;
     }
 
 
