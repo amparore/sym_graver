@@ -753,6 +753,10 @@ int main(int argc, char** argv)
         // row_footprint_form(rrffKerA);
         // cout << "RRFF(Kernel(A)):" << endl; print_mat(rrffKerA, true); cout << endl;
     // exit(0);
+    if (pparams.perf) {
+        cout << "Z-Generators: " << lattice_Zgenerators.size() << endl;
+        cout << "Variables: " << num_variables << endl;
+    }
 
     if (stop_before_gen)
         return 0;
@@ -816,6 +820,7 @@ int main(int argc, char** argv)
     }
     if (pparams.perf) {
         cout << "Total S-Vectors processed: "<<pparams.perf->counter_C<<endl;
+        cout << "Basis: " << card_G << endl;
     }
 
     if (print_rusage)
