@@ -727,6 +727,10 @@ sym_pottier_grad(const meddly_context& ctx,
             for (int i : *degreesI) {
                 for (int j : *degreesJ) {
                     if (i + j == k) {
+                        // skip useless pairs for Graver semi-basis when subtracting from the same sets 
+                        if (pparams.target==compute_target::GRAVER_BASIS && svect_op==ab_sum_t::A_MINUS_B && i>j)
+                            continue;
+
                         MEDDLY::dd_edge Fi(ctx.forestMDD), Fj(ctx.forestMDD), SV(ctx.forestMDD);
 
                         DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FI, i, Fi);
@@ -746,7 +750,7 @@ sym_pottier_grad(const meddly_context& ctx,
                             SV = sym_canonicalize_gcd(ctx, SV);
                         }
 
-                        if (pparams.very_verbose) {
+                        if (pparams.verbose) {
                             pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
                             cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
                             cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
