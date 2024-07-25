@@ -923,6 +923,8 @@ sym_pottier_PnL(const meddly_context& ctx,
 
             if (dd_cardinality(init_level) > 1) {
                 cout << "ERROR: selecting more than one initial vector!" << endl;
+                const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
+                cout << "Before start of level "<<level<<"["<<var_name<<(ctx.leading_variables[level-1]?"*":"")<<"]"<<endl; 
                 cout << "init:\n" << print_mdd_lambda(init_level, ctx.vorder, ctx.pivot_order, level) << endl << endl;
                 exit(4);
             }

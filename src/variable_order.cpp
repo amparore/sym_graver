@@ -951,12 +951,13 @@ find_pivots_in_Zbasis(const std::vector<std::vector<int>>& A,
     size_t num_idents = 0;
     // size_t pos = m-1;
 
-    for (ptrdiff_t j=m-1; j>=0; j--) { 
+    for (size_t j=0; j<m; j++) { 
+    // for (ptrdiff_t j=m-1; j>=0; j--) { 
         size_t pivot = (size_t)-1;
         bool is_ident = false, search = true;
         for (size_t i=0; i<n && search; i++) {
             if (A[i][j] != 0) {
-                if (A[i][j] == 1 && !ident_pivots[i] && search) {
+                if (A[i][j] == 1 && !ident_pivots[i] && search && !is_ident) {
                     is_ident = true;
                     pivot = i;
                 }
@@ -967,7 +968,7 @@ find_pivots_in_Zbasis(const std::vector<std::vector<int>>& A,
             ident_pivots[pivot] = true;
             selected_vars[j] = true;
             if (verbose)
-                cout << "variable x"<<(j+1)<<" is a pivot candidate for row "<<pivot<<endl;
+                cout << "variable x"<<(j+1)<<" is a pivot candidate for row "<<(pivot+1)<<endl;
             ++num_idents;
             pivot_vars.push_back(j);
             // pivots.bind_var2lvl(pos--, j); 
