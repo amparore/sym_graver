@@ -901,8 +901,8 @@ void pivot_order_from_matrix_iter(variable_order& pivots,
     // first put all fixed vars
     size_t pos = 0;
     for (size_t j=0; j<fixed_vars.size(); j++) {
-        // pivots.bind_var2lvl(pos++, fixed_vars[j]); 
-        pivots.bind_var2lvl(pos++, fixed_vars[fixed_vars.size()-j-1]); 
+        pivots.bind_var2lvl(pos++, fixed_vars[j]); 
+        // pivots.bind_var2lvl(pos++, fixed_vars[fixed_vars.size()-j-1]); 
     }
     // then put all the other vars, in weighted order
     for (size_t j=0; j<m; j++) {
