@@ -626,28 +626,25 @@ int main(int argc, char** argv)
             break;
     }
 
-    if (svo != selected_varorder::NONE) {
-        if (pparams.verbose) {
-            cout << "MDD variable order:\n";
-            vorder.print();
-        }
-        if (pparams.very_verbose)
-            cout << "Initial iRank: " << irank(*p_reorder_mat) << endl;
-        if (pparams.very_verbose) {
-            std::vector<std::vector<int>> reorderedA = reorder_matrix(*p_reorder_mat, vorder);
-            row_footprint_form(reorderedA);
-            cout << "iRank after reordering: " << irank(reorderedA) << endl;
-            cout << "Reordered Input matrix:" << endl; print_mat(reorderedA, true); cout << endl;
-        }
+    if (pparams.verbose) {
+        cout << "MDD variable order:\n";
+        vorder.print();
+    }
+    if (pparams.very_verbose) {
+        cout << "Initial iRank: " << irank(*p_reorder_mat) << endl;
+        std::vector<std::vector<int>> reorderedA = reorder_matrix(*p_reorder_mat, vorder);
+        row_footprint_form(reorderedA);
+        cout << "iRank after reordering: " << irank(reorderedA) << endl;
+        cout << "Reordered Input matrix:" << endl; print_mat(reorderedA, true); cout << endl;
+    }
 
-        // Reorder the problem variables according to the DD variable order *vorder
-        lattice_Zgenerators = reorder_matrix(lattice_Zgenerators, vorder);
-        for (size_t i=0; i<leading_cols.size(); i++) {
-            assert(leading_cols[i] < num_variables);
-            size_t p = vorder.var2lvl(leading_cols[i]);
-            // cout << "i="<<i<<"  leading="<<(leading_cols[i]+1)<<" -> "<< (p+1) << endl;
-            leading_cols[i] = p;
-        }
+    // Reorder the problem variables according to the DD variable order *vorder
+    lattice_Zgenerators = reorder_matrix(lattice_Zgenerators, vorder);
+    for (size_t i=0; i<leading_cols.size(); i++) {
+        assert(leading_cols[i] < num_variables);
+        size_t p = vorder.var2lvl(leading_cols[i]);
+        // cout << "i="<<i<<"  leading="<<(leading_cols[i]+1)<<" -> "<< (p+1) << endl;
+        leading_cols[i] = p;
     }
 
     // // bring the Z-generator in HNF form using the selected variable order

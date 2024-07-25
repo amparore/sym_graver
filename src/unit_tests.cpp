@@ -85,18 +85,28 @@ void unit_test_svectors() {
 
 void unit_test_reduce() {
     const std::vector<std::vector<int>> mA = {
-        { 0, 3, 1 },
-        { 0,-3, 1 },
-        { 7, 0, 0 },
-        { -7,0, 1 },
+        { 0,0,0,0, 1, 1, 1, 0},
+        // { 0,0,0,0, -1, -1, -1, 0},
+        // { 0, -1, -1, 0 },
+
+        // { 0, 3, 1 },
+        // { 0,-3, 1 },
+        // { 7, 0, 0 },
+        // { -7,0, 1 },
+
         // { -2, -2, 2 },
         // { 0, 3, 1, 1 }
      };
-    const std::vector<std::vector<int>> mB = {      
-        { 0, 4, 1 },
-        { 0, 1, 1 },
-        { 7, 0, 0 },
-        { 0, -1, 0 },
+    const std::vector<std::vector<int>> mB = {     
+        { 0,0,0,0, 0, 1, 1, 1}
+        // { 0,0,0,0, 0, 1, 1, 1}
+        // { 0, 0, 1, 1 },
+
+        // { 0, 4, 1 },
+        // { 0, 1, 1 },
+        // { 7, 0, 0 },
+        // { 0, -1, 0 },
+
         // { 0, 2, 1, 1 },
         // { 0, 1, 2, 1 },
         // { 2, 1, 1, 0 },
@@ -104,6 +114,7 @@ void unit_test_reduce() {
         // { 0, 0, 1, 2 },
     };
     const size_t num_levels = mA[0].size();
+    const size_t level = 6;
     variable_order vorder(num_levels), pivot_order(num_levels);
     std::vector<bool> pivot_variables(num_levels, false);
 
@@ -117,16 +128,16 @@ void unit_test_reduce() {
     cout << "B:\n" << print_mdd(B, vorder) << endl;
     cout << "----------------------------------\n";
 
-    MEDDLY::dd_edge C(ctx.forestMDD), S(ctx.forestMDD);
-    LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, 0, C);
-    LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, 0, S);
-    cout << "A \\ C:\n" << print_mdd(sym_difference(A, C), vorder) << endl;
-    cout << "C:\n" << print_mdd(C, vorder) << endl;
-    cout << "S:\n" << print_mdd(S, vorder) << endl;
-    cout << "----------------------------------\n";
+    // MEDDLY::dd_edge C(ctx.forestMDD), S(ctx.forestMDD);
+    // LEQ_NEQ_SQ_COMPARE->computeDDEdge(A, B, true, true, level, C);
+    // LEQ_NEQ_SQ_SUBTRACT->computeDDEdge(A, B, true, true, level, S);
+    // cout << "A \\ C:\n" << print_mdd(sym_difference(A, C), vorder) << endl;
+    // cout << "C:\n" << print_mdd(C, vorder) << endl;
+    // cout << "S:\n" << print_mdd(S, vorder) << endl;
+    // cout << "----------------------------------\n";
 
     MEDDLY::dd_edge I(ctx.forestMDD), R(ctx.forestMDD), D(ctx.forestMDD);
-    REDUCE->computeDDEdge(A, B, true, true, sv_sign::SVS_UNDECIDED, cmp_sign::CMP_UNDECIDED, 0, I, D);
+    REDUCE->computeDDEdge(A, B, true, true, sv_sign::SVS_UNDECIDED, CMP_POS, level, I, D);
     R = sym_difference(A, I);
     cout << "I:\n" << print_mdd(I, vorder) << endl;
     cout << "R:\n" << print_mdd(R, vorder) << endl;

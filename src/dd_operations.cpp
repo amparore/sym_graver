@@ -1556,8 +1556,8 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
             if (b_full && 0==B->down(j))
                 continue;
             int b_val = NodeToZ(b_full ? j : B->index(j));
-            if (abs(b_val) > abs(a_val))
-                continue; // there are no more j that can reduce i.
+            // if (abs(b_val) > abs(a_val))
+            //     continue; // there are no more j that can reduce i.
 
             bool ij_reduce;
             bool ij_pot_eq = rf.bf.is_potentially_equal;
@@ -1567,6 +1567,9 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
                 ij_reduce = true;
             }
             else {
+                if (abs(b_val) > abs(a_val))
+                    continue; // there are no more j that can reduce i.
+
                 if (ij_cmp_sign == CMP_UNDECIDED) {
                     if      (b_val * a_val > 0)   ij_cmp_sign = CMP_POS;
                     else if (b_val * a_val < 0)   ij_cmp_sign = CMP_NEG;
@@ -1580,6 +1583,7 @@ reduce::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, const int flags)
             if (ij_reduce)
             {
                 int b_cmp_sign = (ij_cmp_sign == CMP_NEG ? -1 : 1);
+                // assert(b_val * a_val==0 || ij_cmp_sign!=CMP_UNDECIDED); // TODO: enable again
                 int a_minus_b = subtract_exact(a_val, b_val * b_cmp_sign);
                 // decide the sign of the result (if still undecided)
                 sv_sign curr_sign_of_sum = (sv_sign)rf.bf.sign_of_sum;
