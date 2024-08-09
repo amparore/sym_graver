@@ -815,18 +815,18 @@ sym_pottier_grad(const meddly_context& ctx,
                                 SV = sym_canonicalize_gcd(ctx, SV);
                             }
 
-                            if (repeat_for_deg0) {
-                                cout << "rep0 ";
-                                cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
-                                cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
-                                cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
-                                cout << endl;
-                                cout << "F"<<signI<<"("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
-                                cout << "F"<<signJ<<"("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
-                                cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
-                                cout << endl << endl;
-                                exit(0);
-                            }
+                            // if (repeat_for_deg0) {
+                            //     cout << "rep0 ";
+                            //     cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
+                            //     cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
+                            //     cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
+                            //     cout << endl;
+                            //     cout << "F"<<signI<<"("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
+                            //     cout << "F"<<signJ<<"("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
+                            //     cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
+                            //     cout << endl << endl;
+                            //     // exit(0);
+                            // }
 
                             if (pparams.very_verbose) {
                                 pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
