@@ -727,162 +727,163 @@ sym_pottier_grad(const meddly_context& ctx,
 
         // Generate the S-Vectors of degree k
         // bool added = false;
-        bool repeat_for_deg0 = false;
-        do {
-            bool added_using_deg0 = false;
-            for (size_t turn=0; turn<(pparams.target==compute_target::GRAVER_BASIS ? 3 : 1); turn++) {
-                const std::vector<int> *degreesI, *degreesJ;
-                const MEDDLY::dd_edge *FI, *FJ;
-                char signI, signJ;
-                ab_sum_t svect_op;
-                sv_sign svs;
-                std::vector<MEDDLY::dd_edge> *FIK, *FJK;
-                std:vector<bool> *haveIK, *haveJK;
-                switch (turn) {
-                    case 0: // (F+) + (F-)
-                        degreesI = &degreesPos;     degreesJ = &degreesNeg;
-                        FI = &Fpos;                 FJ = &Fneg;
-                        signI = '+';                signJ = '-';
-                        svect_op = ab_sum_t::A_PLUS_B;
-                        svs = SVS_POS;
-                        FIK = &FposK;   haveIK = &havePosK;
-                        FJK = &FnegK;   haveJK = &haveNegK;
-                        break;
+        // bool repeat_for_deg0 = false;
+        // do {
+        bool added_using_deg0 = false;
+        for (size_t turn=0; turn<(pparams.target==compute_target::GRAVER_BASIS ? 3 : 1); turn++) {
+            const std::vector<int> *degreesI, *degreesJ;
+            const MEDDLY::dd_edge *FI, *FJ;
+            char signI, signJ;
+            ab_sum_t svect_op;
+            sv_sign svs;
+            std::vector<MEDDLY::dd_edge> *FIK, *FJK;
+            std:vector<bool> *haveIK, *haveJK;
+            switch (turn) {
+                case 0: // (F+) + (F-)
+                    degreesI = &degreesPos;     degreesJ = &degreesNeg;
+                    FI = &Fpos;                 FJ = &Fneg;
+                    signI = '+';                signJ = '-';
+                    svect_op = ab_sum_t::A_PLUS_B;
+                    svs = SVS_POS;
+                    FIK = &FposK;   haveIK = &havePosK;
+                    FJK = &FnegK;   haveJK = &haveNegK;
+                    break;
 
-                    case 1: // (F+) - (F+)
-                        degreesI = degreesJ = &degreesPos;
-                        FI = FJ = &Fpos;
-                        signI = signJ = '+';
-                        svect_op = ab_sum_t::A_MINUS_B;
-                        svs = SVS_UNDECIDED;
-                        FIK = &FposK;   haveIK = &havePosK;
-                        FJK = &FposK;   haveJK = &havePosK;
-                        break;
+                case 1: // (F+) - (F+)
+                    degreesI = degreesJ = &degreesPos;
+                    FI = FJ = &Fpos;
+                    signI = signJ = '+';
+                    svect_op = ab_sum_t::A_MINUS_B;
+                    svs = SVS_UNDECIDED;
+                    FIK = &FposK;   haveIK = &havePosK;
+                    FJK = &FposK;   haveJK = &havePosK;
+                    break;
 
-                    case 2: // (F-) - (F-)
-                        degreesI = degreesJ = &degreesNeg;
-                        FI = FJ = &Fneg;
-                        signI = signJ = '-';
-                        svect_op = ab_sum_t::A_MINUS_B;
-                        svs = SVS_UNDECIDED;
-                        FIK = &FnegK;   haveIK = &haveNegK;
-                        FJK = &FnegK;   haveJK = &haveNegK;
-                        break;
-                }
+                case 2: // (F-) - (F-)
+                    degreesI = degreesJ = &degreesNeg;
+                    FI = FJ = &Fneg;
+                    signI = signJ = '-';
+                    svect_op = ab_sum_t::A_MINUS_B;
+                    svs = SVS_UNDECIDED;
+                    FIK = &FnegK;   haveIK = &haveNegK;
+                    FJK = &FnegK;   haveJK = &haveNegK;
+                    break;
+            }
 
-                // Generate the combinations of i+j = k
-                for (int i : *degreesI) {
-                    for (int j : *degreesJ) {
-                        if (i + j == k) {
-                            // skip useless pairs for Graver semi-basis when subtracting from the same sets 
-                            if (pparams.target==compute_target::GRAVER_BASIS && svect_op==ab_sum_t::A_MINUS_B && i>j)
-                                continue;
+            // Generate the combinations of i+j = k
+            for (int i : *degreesI) {
+                for (int j : *degreesJ) {
+                    if (i + j == k) {
+                        // skip useless pairs for Graver semi-basis when subtracting from the same sets 
+                        if (pparams.target==compute_target::GRAVER_BASIS && svect_op==ab_sum_t::A_MINUS_B && i>j)
+                            continue;
 
-                            if (repeat_for_deg0 && (i!=0 && j!=0))
-                                continue;
+                        // if (repeat_for_deg0 && (i!=0 && j!=0))
+                        //     continue;
 
-                            // if (i==0 || j==0)
-                            //     continue;
+                        // if (i==0 || j==0)
+                        //     continue;
 
-                            // MEDDLY::dd_edge Fi(ctx.forestMDD), Fj(ctx.forestMDD);
+                        // MEDDLY::dd_edge Fi(ctx.forestMDD), Fj(ctx.forestMDD);
 
-                            if (!(*haveIK)[i] || i==k) {
-                                DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FI, i, (*FIK)[i]);
-                                (*haveIK)[i] = true;
-                            }
-                            if (!(*haveJK)[j] || j==k) {
-                                DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FJ, j, (*FJK)[j]);
-                                (*haveJK)[j] = true;
-                            }
-                            MEDDLY::dd_edge Fi = (*FIK)[i];
-                            MEDDLY::dd_edge Fj = (*FJK)[j];
+                        if (!(*haveIK)[i] || i==k) {
+                            DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FI, i, (*FIK)[i]);
+                            (*haveIK)[i] = true;
+                        }
+                        if (!(*haveJK)[j] || j==k) {
+                            DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FJ, j, (*FJK)[j]);
+                            (*haveJK)[j] = true;
+                        }
+                        MEDDLY::dd_edge Fi = (*FIK)[i];
+                        MEDDLY::dd_edge Fj = (*FJK)[j];
 
-                            // DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FI, i, Fi);
-                            // DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FJ, j, Fj);
-                            // if (is_emptyset(Fi) || is_emptyset(Fj)) // should not happen...
-                            //     continue;
+                        // DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FI, i, Fi);
+                        // DEGREE_SELECTOR_TABLE->get_op(level, degtype)->computeDDEdge(*FJ, j, Fj);
+                        // if (is_emptyset(Fi) || is_emptyset(Fj)) // should not happen...
+                        //     continue;
 
-                            // S-Vectors of degree k
-                            // we can set level=0 since Fi and Fj are already sign-disjoint, so there is no need
-                            // to use the sym_s_vectors_at_level() to split values and signs
-                            MEDDLY::dd_edge SV(ctx.forestMDD);
-                            S_VECTORS->computeDDEdge(Fi, Fj, true, svect_op, svs, level, SV);
-                            SV = sym_difference(SV, ctx.vzero);
-                            pparams.perf_C(SV);
-                            if (pparams.target == compute_target::EXTREME_RAYS && pparams.primitive_extremal_rays) {
-                                // Canonicalize the summed entries (this passes from smallest lattice 
-                                // representatives to primitive extremal rays)
-                                SV = sym_canonicalize_gcd(ctx, SV);
-                            }
+                        // S-Vectors of degree k
+                        // we can set level=0 since Fi and Fj are already sign-disjoint, so there is no need
+                        // to use the sym_s_vectors_at_level() to split values and signs
+                        MEDDLY::dd_edge SV(ctx.forestMDD);
+                        S_VECTORS->computeDDEdge(Fi, Fj, true, svect_op, svs, level, SV);
+                        SV = sym_difference(SV, ctx.vzero);
+                        pparams.perf_C(SV);
+                        if (pparams.target == compute_target::EXTREME_RAYS && pparams.primitive_extremal_rays) {
+                            // Canonicalize the summed entries (this passes from smallest lattice 
+                            // representatives to primitive extremal rays)
+                            SV = sym_canonicalize_gcd(ctx, SV);
+                        }
 
-                            // if (repeat_for_deg0) {
-                            //     cout << "rep0 ";
-                            //     cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
-                            //     cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
-                            //     cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
-                            //     cout << endl;
-                            //     cout << "F"<<signI<<"("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
-                            //     cout << "F"<<signJ<<"("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
-                            //     cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
-                            //     cout << endl << endl;
-                            //     // exit(0);
-                            // }
+                        // if (repeat_for_deg0) {
+                        //     cout << "rep0 ";
+                        //     cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
+                        //     cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
+                        //     cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
+                        //     cout << endl;
+                        //     cout << "F"<<signI<<"("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
+                        //     cout << "F"<<signJ<<"("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
+                        //     cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
+                        //     cout << endl << endl;
+                        //     // exit(0);
+                        // }
 
-                            if (pparams.very_verbose) {
-                                pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
-                                cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
-                                cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
-                                cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
-                                cout << endl;
-                            }
+                        if (pparams.very_verbose) {
+                            pottier_iter_banner_start(ctx, pparams, level, rem_neg_step, iter);
+                            cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
+                            cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
+                            cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
+                            cout << endl;
+                        }
 
-                            // normalize
-                            SV = sym_normal_form(ctx, pparams, SV, F, level, false, qnf_op::LEQ);
-                            if (k==0) {
-                                SV = sym_normal_form(ctx, pparams, SV, SV, level, false, qnf_op::LEQ_NEQ);
-                            }
+                        // normalize
+                        SV = sym_normal_form(ctx, pparams, SV, F, level, false, qnf_op::LEQ);
+                        if (k==0) {
+                            SV = sym_normal_form(ctx, pparams, SV, SV, level, false, qnf_op::LEQ_NEQ);
+                        }
 
-                            // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<dd_cardinality(SV2)
-                            //      << "  normForm(SV)="<<dd_cardinality(SV)<<endl;
+                        // cout << "  i:"<<i<<" j:"<<j<<"   SV="<<dd_cardinality(SV2)
+                        //      << "  normForm(SV)="<<dd_cardinality(SV)<<endl;
 
-                            if (pparams.very_verbose) {
-                                cout << "F"<<signI<<"("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
-                                cout << "F"<<signJ<<"("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
-                                cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
-                                cout << endl << endl;
-                            }
+                        if (pparams.very_verbose) {
+                            cout << "F"<<signI<<"("<<i<<"):\n" << print_mdd_lambda(Fi, ctx.vorder, ctx.pivot_order, level);
+                            cout << "F"<<signJ<<"("<<j<<"):\n" << print_mdd_lambda(Fj, ctx.vorder, ctx.pivot_order, level);
+                            cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
+                            cout << endl << endl;
+                        }
 
-                            if (!is_emptyset(SV)) {
-                                MEDDLY::dd_edge oldF(F);
-                                F = sym_union(F, SV);
-                                if (oldF != F) {
-                                    // added = true;
-                                    if (i==0 || j==0)
-                                        added_using_deg0 = true;
-                                }
+                        if (!is_emptyset(SV)) {
+                            MEDDLY::dd_edge oldF(F);
+                            F = sym_union(F, SV);
+                            if (oldF != F) {
+                                // added = true;
+                                if (i==0 || j==0)
+                                    added_using_deg0 = true;
                             }
                         }
                     }
                 }
             }
+        }
 
-            if (pparams.very_verbose)
-                cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl << endl;
+        if (pparams.very_verbose)
+            cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl << endl;
 
-            // repeat if we have not reached the fixed point yet and either k==0, 
-            // or for some elemenet k=i+0 (or k=0+j)
-            if (added_using_deg0) {
-                // repeat for the same k until fixpoint is reached.
-                repeat_for_deg0 = true;
-                cout << "repeat_for_deg0" << endl;
-            }
-            else {
-                repeat_for_deg0 = false;
-            }
-            iter++;
-        } while (repeat_for_deg0);
+        // repeat if we have not reached the fixed point yet and either k==0, 
+        // or for some elemenet k=i+0 (or k=0+j)
+        if (added_using_deg0) {
+            // repeat for the same k until fixpoint is reached.
+            // repeat_for_deg0 = true;
+            cout << "repeat_for_deg0" << endl;
+        }
+        // else {
+        //     repeat_for_deg0 = false;
+        // }
+        iter++;
+        // } while (repeat_for_deg0);
 
-        k++;
+        if (!added_using_deg0)
+            k++;
     }
 
     if (pparams.verbose && iter==0) {

@@ -818,6 +818,8 @@ int main(int argc, char** argv)
     if (pparams.perf) {
         cout << "Total S-Vectors processed: "<<pparams.perf->counter_C<<endl;
         cout << "Basis: " << card_G << endl;
+        cout << "Basis MDD Nodes: " << G.getNodeCount() << endl;
+        cout << "Basis MDD Edges: " << G.getEdgeCount() << endl;
     }
 
     if (print_rusage)
