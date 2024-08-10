@@ -31,6 +31,7 @@ struct pottier_params_t {
     bool graded_order = false;
     bool primitive_extremal_rays = true;
     bool graded_EaC = false;
+    bool perf_exact_svectors_degree = false;
     compute_target target = compute_target::HILBERT_BASIS;
 
     // At which step in the by-gen process it becomes possible 

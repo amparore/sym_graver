@@ -726,10 +726,8 @@ sym_pottier_grad(const meddly_context& ctx,
 
 
         // Generate the S-Vectors of degree k
-        // bool added = false;
-        // bool repeat_for_deg0 = false;
-        // do {
         bool added_using_deg0 = false;
+        MEDDLY::dd_edge all_SV(ctx.forestMDD);
         for (size_t turn=0; turn<(pparams.target==compute_target::GRAVER_BASIS ? 3 : 1); turn++) {
             const std::vector<int> *degreesI, *degreesJ;
             const MEDDLY::dd_edge *FI, *FJ;
@@ -808,7 +806,12 @@ sym_pottier_grad(const meddly_context& ctx,
                         MEDDLY::dd_edge SV(ctx.forestMDD);
                         S_VECTORS->computeDDEdge(Fi, Fj, true, svect_op, svs, level, SV);
                         SV = sym_difference(SV, ctx.vzero);
-                        pparams.perf_C(SV);
+                        if (pparams.perf && pparams.perf_exact_svectors_degree) {
+                            all_SV = sym_union(all_SV, SV); // count # of S-vectors for the entire degree k
+                        }
+                        else {
+                            pparams.perf_C(SV); // count immediately
+                        }
                         if (pparams.target == compute_target::EXTREME_RAYS && pparams.primitive_extremal_rays) {
                             // Canonicalize the summed entries (this passes from smallest lattice 
                             // representatives to primitive extremal rays)
@@ -826,6 +829,13 @@ sym_pottier_grad(const meddly_context& ctx,
                         //     cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
                         //     cout << endl << endl;
                         //     // exit(0);
+                        // }
+
+                        // if (!is_emptyset(SV)) {
+                        //     cout << "  i="<<i<<" |Fi"<<signI<<"|=" << dd_cardinality(Fi) << ",n="<< Fi.getNodeCount();
+                        //     cout << "  j="<<j<<" |Fj"<<signJ<<"|=" << dd_cardinality(Fj) << ",n="<< Fj.getNodeCount();
+                        //     cout << "  k="<<k<<" |SV|=" << dd_cardinality(SV) << ",n="<< SV.getNodeCount();
+                        //     cout << "SV("<<k<<"):\n" << print_mdd_lambda(SV, ctx.vorder, ctx.pivot_order, level);
                         // }
 
                         if (pparams.very_verbose) {
@@ -871,19 +881,20 @@ sym_pottier_grad(const meddly_context& ctx,
 
         // repeat if we have not reached the fixed point yet and either k==0, 
         // or for some elemenet k=i+0 (or k=0+j)
-        if (added_using_deg0) {
+        if (added_using_deg0) { // TODO: debug, remove
             // repeat for the same k until fixpoint is reached.
-            // repeat_for_deg0 = true;
-            cout << "repeat_for_deg0" << endl;
+            cout << "added_using_deg0" << endl;
         }
-        // else {
-        //     repeat_for_deg0 = false;
-        // }
-        iter++;
-        // } while (repeat_for_deg0);
-
-        if (!added_using_deg0)
+        else {
+            // go to the next degree
             k++;
+
+            if (pparams.perf && pparams.perf_exact_svectors_degree) {
+                pparams.perf_C(all_SV); // count s-vectors for degree k (without duplicates)
+                all_SV = emptySet;
+            }
+        }
+        iter++;
     }
 
     if (pparams.verbose && iter==0) {

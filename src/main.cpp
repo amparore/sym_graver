@@ -309,6 +309,10 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-p")) {
             pparams.perf = &perf_counters;
         }
+        else if (0==strcmp(argv[ii], "-ps")) { // TODO: undocumented
+            pparams.perf = &perf_counters;
+            pparams.perf_exact_svectors_degree = true;
+        }
         else if (0==strcmp(argv[ii], "-g")) {
             pparams.target = compute_target::GRAVER_BASIS;
         }
