@@ -21,7 +21,7 @@ enum class compute_target {
 
 struct pottier_params_t {
     bool by_levels = true;
-    bool normalize_by_levels = true;
+    bool normalize_by_levels = false;
     bool by_generators = false;
     bool verbose = false;
     bool very_verbose = false;

@@ -193,11 +193,12 @@ sym_s_vectors(const meddly_context& ctx, const pottier_params_t& pparams,
               const size_t level) 
 {
     MEDDLY::dd_edge SV(ctx.forestMDD);
-    bool s_vectors_split_at_levels = false;
-    if (level != 0 && s_vectors_split_at_levels/*&& pparams.target == compute_target::EXTREME_RAYS*/) {
+    bool s_vectors_split_at_levels = true;
+    if (level != 0 && s_vectors_split_at_levels && pparams.target == compute_target::EXTREME_RAYS) {
         // TODO: while s-vectors @ level appears to be faster in benchmark, this should be
         //   disabled through a command-line option.
         // Compute the S-Vectors at the specified level only
+        // NOTE: this is essential for extremal rays
         SV = sym_s_vectors_at_level(ctx, pparams, A, B, level);
     }
     else {
@@ -532,6 +533,8 @@ sym_pottier(const meddly_context& ctx,
             if (pparams.by_degree && degree>=0)
                 cout << "  |C("<<degree<<")|=" << dd_cardinality(S) << ",n="<< S.getNodeCount();
             cout << endl;
+
+            // cout << "S:\n" << print_mdd_lambda(C, ctx.vorder, ctx.pivot_order, level) << endl;
         }
 
         prevC = C;
@@ -542,6 +545,7 @@ sym_pottier(const meddly_context& ctx,
         if (!pparams.by_degree)
             S = sym_normal_form(ctx, pparams, S, S, level, false, qnf_op::LEQ_NEQ);
         // S = sym_difference(S, F);
+        // cout << "norm(S):\n" << print_mdd_lambda(C, ctx.vorder, ctx.pivot_order, level) << endl;
 
         if (pparams.very_verbose)
             cout << "F:\n" << print_mdd_lambda(F, ctx.vorder, ctx.pivot_order, level) << endl;
@@ -932,8 +936,11 @@ sym_pottier_PnL(const meddly_context& ctx,
             MEDDLY::dd_edge nnz_sel = selector_for_nonzeroes_at_level(ctx.forestMDD, level);
             MEDDLY::dd_edge init_level = sym_intersection(N, nnz_sel);
             N = sym_difference(N, init_level);
+            double init_card = dd_cardinality(init_level);
 
-            if (dd_cardinality(init_level) > 1) {
+            if ((pparams.target == compute_target::GRAVER_BASIS && init_card > 1) ||
+                (pparams.target != compute_target::GRAVER_BASIS && init_card > 2))
+            {
                 cout << "ERROR: selecting more than one initial vector!" << endl;
                 const std::string& var_name = ctx.forestMDD->getDomain()->getVar(level)->getName();
                 cout << "Before start of level "<<level<<"["<<var_name<<(ctx.leading_variables[level-1]?"*":"")<<"]"<<endl; 
@@ -1019,7 +1026,7 @@ sym_pottier_bygen(const meddly_context& ctx,
     const MEDDLY::dd_edge empty_set(ctx.forestMDD);
     // We should start with the symmetrized HNF generators only when computing the Graver basis
     const bool make_sign_canonic = (pparams.target == compute_target::GRAVER_BASIS);
-    const bool make_gen_sym = false;//(pparams.target != compute_target::GRAVER_BASIS);
+    const bool make_gen_sym = (pparams.target != compute_target::GRAVER_BASIS);
     if (lattice_Zgenerators.empty())
         return G;
 

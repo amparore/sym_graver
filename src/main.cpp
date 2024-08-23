@@ -451,6 +451,11 @@ int main(int argc, char** argv)
     if (pparams.target == compute_target::EXTREME_RAYS) {
         // TODO: check if it is needed.
         pparams.by_levels = true; // extreme rays can only be computed by variables
+        if (pparams.graded_order) {
+            cerr << "ERR: cannot use graded order for extremal rays." << endl;
+            exit(1);
+        }
+        pparams.graded_order = false; // disable graded order
     }
     // if (pparams.target == compute_target::GRAVER_BASIS) {
     //     pparams.dynamic_svectors = false; // degree is defined only for Hilbert/rays
