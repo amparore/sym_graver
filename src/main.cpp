@@ -820,7 +820,7 @@ int main(int argc, char** argv)
         save_mat_dd(base_fname, op.dd_ext, ctx.forestMDD, G);
     }
     if (pparams.perf) {
-        cout << "Total S-Vectors processed: "<<pparams.perf->counter_C<<endl;
+        cout << "Total S-Vectors processed: "<<double(pparams.perf->counter_C)<<endl;
         cout << "Basis: " << card_G << endl;
         cout << "Basis MDD Nodes: " << G.getNodeCount() << endl;
         cout << "Basis MDD Edges: " << G.getEdgeCount() << endl;
