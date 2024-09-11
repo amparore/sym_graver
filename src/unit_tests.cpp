@@ -207,3 +207,41 @@ void unit_test_minimal_supports() {
     
 /////////////////////////////////////////////////////////////////////////////////////////
 
+void unit_test_generate_matrix() {
+    srand(time(nullptr));
+
+    const size_t nR = 8, nC = 10;
+    const size_t K = 3;
+    std::vector<std::vector<int>> mat(nR);
+    for (size_t i=0; i<nR; i++) {
+        mat[i].resize(nC);
+        for (size_t j=0; j<nC; j++) {
+            int value = 0;
+            if ((rand() % 100) > 80)
+                value = (rand() % (2*K+1)) - K;
+            mat[i][j] = value;
+        }
+    }
+    cout << "Random matrix:" << endl; print_mat(mat); cout << endl;
+
+    std::vector<size_t> leading_cols;
+    std::vector<std::vector<int>> U, H1, H2, H3, H4, H5;
+    H1 = integral_kernel_Zgens(mat, leading_cols, false);
+    cout << "H1:" << endl; print_mat(H1); cout << endl;
+
+    H2 = integral_kernel_Zgens(H1, leading_cols, false);
+    cout << "H2:" << endl; print_mat(H2); cout << endl;
+
+    H3 = integral_kernel_Zgens(H2, leading_cols, false);
+    cout << "H3:" << endl; print_mat(H3); cout << endl;
+
+    H4 = integral_kernel_Zgens(H3, leading_cols, false); // A
+    cout << "H4:" << endl; print_mat(H4); cout << endl;
+
+    H5 = integral_kernel_Zgens(H4, leading_cols, false);
+    cout << "H5:" << endl; print_mat(H5); cout << endl;
+    // assert(H5 == H3);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+

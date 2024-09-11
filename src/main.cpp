@@ -210,6 +210,7 @@ void unit_test_svectors();
 void unit_test_reduce();
 void unit_test_sign_canon();
 void unit_test_minimal_supports();
+void unit_test_generate_matrix();
 
 void do_unit_tests(int argc, char** argv) {
     int ii=1;
@@ -228,6 +229,9 @@ void do_unit_tests(int argc, char** argv) {
         }
         else if (0==strcmp(argv[ii], "-unit-test-minimal-supports")) { 
             unit_test_minimal_supports(); 
+        }
+        else if (0==strcmp(argv[ii], "-unit-test-generate-matrix")) { 
+            unit_test_generate_matrix(); 
         }
         ++ii;
     }
