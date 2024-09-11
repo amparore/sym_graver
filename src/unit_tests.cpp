@@ -207,39 +207,61 @@ void unit_test_minimal_supports() {
     
 /////////////////////////////////////////////////////////////////////////////////////////
 
-void unit_test_generate_matrix() {
+void unit_test_generate_matrix(const size_t nR, const size_t nC, const char* out_fname)
+{
     srand(time(nullptr));
 
-    const size_t nR = 8, nC = 10;
+    // const size_t nR = 8, nC = 10;
     const size_t K = 3;
-    std::vector<std::vector<int>> mat(nR);
-    for (size_t i=0; i<nR; i++) {
-        mat[i].resize(nC);
-        for (size_t j=0; j<nC; j++) {
-            int value = 0;
-            if ((rand() % 100) > 80)
-                value = (rand() % (2*K+1)) - K;
-            mat[i][j] = value;
+    size_t freq = 1000; // initial frequency
+    for (size_t num_tentatives=0; num_tentatives<1000*3; num_tentatives++) {
+        // randomly sample numbers
+        std::vector<std::vector<int>> mat(nR);
+        for (size_t i=0; i<nR; i++) {
+            mat[i].resize(nC);
+            for (size_t j=0; j<nC; j++) {
+                int value = 0;
+                if ((rand() % 1000) < freq)
+                    value = (rand() % (2*K+1)) - K;
+                mat[i][j] = value;
+            }
         }
+        // cout << "*";
+
+        std::vector<size_t> leading_cols;
+        std::vector<std::vector<int>> U, H1, H2, H3, H4, H5;
+        H1 = integral_kernel_Zgens(mat, leading_cols, false);
+        H2 = integral_kernel_Zgens(H1, leading_cols, false);
+        H3 = integral_kernel_Zgens(H2, leading_cols, false);
+        H4 = integral_kernel_Zgens(H3, leading_cols, false); // A
+        H5 = integral_kernel_Zgens(H4, leading_cols, false); // Z-generators of A
+
+        // determine the properties of the Z-generators
+        int max_Zgen_val = 0;
+        for (const auto& row : H5)
+            for (int val : row)
+                max_Zgen_val = max(max_Zgen_val, abs(val));
+
+        // cout << "max_Zgen_val = " << max_Zgen_val << endl;        
+        if (max_Zgen_val >= 6) {
+            freq--; // make the next matrix more sparse
+            continue; // generate a new matrix
+        }
+
+        cout << endl;
+        cout << "max_Zgen_val = " << max_Zgen_val << ", freq="<<freq<< endl;        
+        // cout << "Random matrix:" << endl; print_mat(mat); cout << endl;
+        // cout << "H1:" << endl; print_mat(H1); cout << endl;
+        // cout << "H2:" << endl; print_mat(H2); cout << endl;
+        // cout << "H3:" << endl; print_mat(H3); cout << endl;
+        cout << "H4:" << endl; print_mat(H4); cout << endl;
+        cout << "H5:" << endl; print_mat(H5); cout << endl;
+
+        ofstream ofs(out_fname);
+        ofs << H4.size() << " " << H4.front().size() << endl;
+        print_mat(H4, false, &ofs);
+        break;
     }
-    cout << "Random matrix:" << endl; print_mat(mat); cout << endl;
-
-    std::vector<size_t> leading_cols;
-    std::vector<std::vector<int>> U, H1, H2, H3, H4, H5;
-    H1 = integral_kernel_Zgens(mat, leading_cols, false);
-    cout << "H1:" << endl; print_mat(H1); cout << endl;
-
-    H2 = integral_kernel_Zgens(H1, leading_cols, false);
-    cout << "H2:" << endl; print_mat(H2); cout << endl;
-
-    H3 = integral_kernel_Zgens(H2, leading_cols, false);
-    cout << "H3:" << endl; print_mat(H3); cout << endl;
-
-    H4 = integral_kernel_Zgens(H3, leading_cols, false); // A
-    cout << "H4:" << endl; print_mat(H4); cout << endl;
-
-    H5 = integral_kernel_Zgens(H4, leading_cols, false);
-    cout << "H5:" << endl; print_mat(H5); cout << endl;
     // assert(H5 == H3);
 }
 

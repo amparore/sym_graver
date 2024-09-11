@@ -51,7 +51,8 @@ void account_col_space(std::vector<size_t>& col_spaces, const int *const data);
 
 // print matrix
 void print_mat(const std::vector<std::vector<int>>& A,
-               bool highlight_spans = false);
+               bool highlight_spans = false,
+               std::basic_ostream<char>* p_os = nullptr);
 
 bool
 integral_kernel_old(const std::vector<std::vector<int>>& A,

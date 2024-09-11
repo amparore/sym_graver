@@ -210,7 +210,7 @@ void unit_test_svectors();
 void unit_test_reduce();
 void unit_test_sign_canon();
 void unit_test_minimal_supports();
-void unit_test_generate_matrix();
+void unit_test_generate_matrix(const size_t nR, const size_t nC, const char* out_fname);
 
 void do_unit_tests(int argc, char** argv) {
     int ii=1;
@@ -230,8 +230,11 @@ void do_unit_tests(int argc, char** argv) {
         else if (0==strcmp(argv[ii], "-unit-test-minimal-supports")) { 
             unit_test_minimal_supports(); 
         }
-        else if (0==strcmp(argv[ii], "-unit-test-generate-matrix")) { 
-            unit_test_generate_matrix(); 
+        else if (0==strcmp(argv[ii], "-unit-test-generate-matrix") && ii+2 < argc) { 
+            int nR = (int)atoi(argv[++ii]);
+            int nC = (int)atoi(argv[++ii]);
+            const char* out_fname = argv[++ii];
+            unit_test_generate_matrix(nR, nC, out_fname); 
         }
         ++ii;
     }

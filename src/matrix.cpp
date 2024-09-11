@@ -105,10 +105,13 @@ void account_col_space(std::vector<size_t>& col_spaces, const int *const data) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 void print_mat(const std::vector<std::vector<int>>& A,
-               bool highlight_spans) 
+               bool highlight_spans,
+               std::basic_ostream<char>* p_os) 
 {
     if (A.empty())
         return;
+
+    std::basic_ostream<char>& os = (p_os ? *p_os : cout);
     const size_t m = A.front().size();
     std::vector<size_t> col_spaces(m);
     for (const auto& row : A) {
@@ -118,11 +121,11 @@ void print_mat(const std::vector<std::vector<int>>& A,
         size_t l = leading(row), t = trailing(row);
         for (size_t i=0; i<row.size(); i++) {
             if (highlight_spans && l!=size_t(-1) && (i<l || i>t))
-                cout << setw(col_spaces[i]) << "." << " ";
+                os << setw(col_spaces[i]) << "." << " ";
             else
-                cout << setw(col_spaces[i]) << row[i] << " ";
+                os << setw(col_spaces[i]) << row[i] << " ";
         }
-        cout << endl;
+        os << endl;
     }
 }
 
