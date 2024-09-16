@@ -209,7 +209,7 @@ void unit_test_minimal_supports() {
 
 void unit_test_generate_matrix(const size_t nR, const size_t nC, const char* out_fname)
 {
-    srand(time(nullptr));
+    srand(time(nullptr) + clock());
 
     // const size_t nR = 8, nC = 10;
     const size_t K = 3;
@@ -226,6 +226,14 @@ void unit_test_generate_matrix(const size_t nR, const size_t nC, const char* out
                 mat[i][j] = value;
             }
         }
+
+        // for (size_t nd=0; nd<5; nd++) {
+        //     size_t j = rand() % nC;
+        //     for (size_t i=0; i<nR; i++)
+        //         mat[i][j] = 0;
+        //     mat[rand() % nR][j] = 1;
+        //     mat[rand() % nR][j] = -1;
+        // }
         // cout << "*";
 
         std::vector<size_t> leading_cols;
@@ -250,7 +258,7 @@ void unit_test_generate_matrix(const size_t nR, const size_t nC, const char* out
 
         cout << endl;
         cout << "max_Zgen_val = " << max_Zgen_val << ", freq="<<freq<< endl;        
-        // cout << "Random matrix:" << endl; print_mat(mat); cout << endl;
+        cout << "Random matrix:" << endl; print_mat(mat); cout << endl;
         // cout << "H1:" << endl; print_mat(H1); cout << endl;
         // cout << "H2:" << endl; print_mat(H2); cout << endl;
         // cout << "H3:" << endl; print_mat(H3); cout << endl;
@@ -263,6 +271,7 @@ void unit_test_generate_matrix(const size_t nR, const size_t nC, const char* out
         break;
     }
     // assert(H5 == H3);
+    exit(0);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

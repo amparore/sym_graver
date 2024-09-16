@@ -482,7 +482,7 @@ public:
     virtual MEDDLY::node_handle compute(MEDDLY::node_handle a, MEDDLY::node_handle b, 
                                         const bool is_potentially_conformant, 
                                         const ab_sum_t sum_or_diff, 
-                                        const sv_sign sign_of_sum, const size_t lambda);
+                                        sv_sign sign_of_sum, const size_t lambda);
 
     void 
     computeDDEdge(const MEDDLY::dd_edge &ar1, const MEDDLY::dd_edge &ar2, 

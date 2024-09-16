@@ -901,20 +901,26 @@ s_vectors::s_vectors(MEDDLY::opname* opcode, MEDDLY::forest* arg1,
 MEDDLY::node_handle s_vectors::compute(MEDDLY::node_handle a, MEDDLY::node_handle b, 
                                        const bool is_potentially_conformant, 
                                        const ab_sum_t sum_or_diff, 
-                                       const sv_sign sign_of_sum, const size_t lambda) 
+                                       sv_sign sign_of_sum, const size_t lambda) 
 {
     if (a==0 || b==0) return 0;
     if (a==-1 && b==-1) return is_potentially_conformant ? 0 : -1;
+
+    // Commutativity (only for sum)
+    if (sum_or_diff==ab_sum_t::A_PLUS_B && a < b)
+        std::swap(a, b);
+
+    if (sum_or_diff==ab_sum_t::A_MINUS_B && sign_of_sum!=sv_sign::SVS_UNDECIDED && a < b) {
+        // cout << "*" <<endl;
+        std::swap(a, b);
+        sign_of_sum = (sign_of_sum==sv_sign::SVS_POS) ? sv_sign::SVS_NEG : sv_sign::SVS_POS;
+    }
 
     s_vector_flags_t svf;
     svf.bf.is_potentially_conformant = is_potentially_conformant;
     svf.bf.subtract_b = (sum_or_diff==ab_sum_t::A_MINUS_B ? 1 : 0);
     svf.bf.sign_of_sum = sign_of_sum;
     svf.bf.lambda = lambda;
-
-    // Commutativity (only for sum)
-    if (sum_or_diff==ab_sum_t::A_PLUS_B && a < b)
-        std::swap(a, b);
 
     MEDDLY::node_handle result;
     MEDDLY::ct_entry_key* key = findResult(a, b, svf.value, result);
