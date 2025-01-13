@@ -767,6 +767,7 @@ int main(int argc, char** argv)
         // cout << "RRFF(Kernel(A)):" << endl; print_mat(rrffKerA, true); cout << endl;
     // exit(0);
     if (pparams.perf) {
+        cout << "Matrix-rows: " << A.size() << endl;
         cout << "Z-Generators: " << lattice_Zgenerators.size() << endl;
         cout << "Variables: " << num_variables << endl;
     }
