@@ -200,6 +200,24 @@ void write_dd_as_pdf(const MEDDLY::dd_edge& e,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// Statistics for a DD
+struct dd_stats {
+    // values appearing at each level
+    std::vector<std::map<int, size_t>> domain_values_per_lvl;
+    std::vector<size_t> num_nodes_per_lvl;
+    std::vector<size_t> num_edges_per_lvl;
+
+    void generate_stats(const MEDDLY::dd_edge& e);
+    void write(std::ostream& os) const;
+
+private:
+    std::set<MEDDLY::node_handle> visited;
+    MEDDLY::forest *forest;
+
+    void visit(const MEDDLY::node_handle node);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 
 

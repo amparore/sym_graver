@@ -323,6 +323,93 @@ double dd_cardinality(const MEDDLY::dd_edge& dd) {
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void dd_stats::generate_stats(const MEDDLY::dd_edge& e) {
+    forest = e.getForest();
+    const int max_levels = abs(e.getLevel());
+    domain_values_per_lvl.resize(max_levels + 1);
+    num_nodes_per_lvl.resize(max_levels + 1);
+    num_edges_per_lvl.resize(max_levels + 1);
+    visit(e.getNode());
+    visited.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void dd_stats::visit(const MEDDLY::node_handle node) {
+    if (visited.count(node) > 0)
+        return;
+    if (node == forest->handleForValue(false) || 
+        node == forest->handleForValue(true))
+        return; // terminal node
+    visited.insert(node);
+    const int node_level = forest->getNodeLevel(node);
+
+    MEDDLY::unpacked_node *rnode = MEDDLY::unpacked_node::New(forest);
+    forest->unpackNode(rnode, node, MEDDLY::FULL_ONLY);
+    assert(rnode->isFull());
+
+    // get stats for this node
+    ++num_nodes_per_lvl[node_level];
+    for (int i = 0; i < rnode->getSize(); i++) {
+        if (rnode->down(i) != forest->handleForValue(false)) {
+            ++num_edges_per_lvl[node_level];
+            int a_val = NodeToZ(i);
+
+            if (domain_values_per_lvl[node_level].count(a_val) == 0)
+                domain_values_per_lvl[node_level][a_val] = 0;
+
+            ++domain_values_per_lvl[node_level][a_val];
+
+            visit(rnode->down(i)); // recurse
+        }
+    }
+
+    MEDDLY::unpacked_node::Recycle(rnode);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void dd_stats::write(std::ostream& os) const {
+    // for (int i=1; i<num_nodes_per_lvl.size(); i++) {
+    //     os << "Lvl " << i << ": ";
+    //     os << "nodes: " << num_nodes_per_lvl[i] << " ";
+    //     os << "edges: " << num_edges_per_lvl[i] << " ";
+    //     os << "ratio: " << (double(num_edges_per_lvl[i]) / num_nodes_per_lvl[i]);
+
+    //     os << " dom: [";
+    //     for (auto v : domain_values_per_lvl[i]) {
+    //         os << " " << v.first;
+    //     }
+    //     os << " ]";
+
+    //     os << std::endl;
+    // }
+    os << (num_nodes_per_lvl.size() - 1) << std::endl;
+    for (int i=1; i<num_nodes_per_lvl.size(); i++) {
+        os << num_nodes_per_lvl[i] << " ";
+        os << num_edges_per_lvl[i] << " ";
+        os << domain_values_per_lvl[i].size() << " ";
+        for (auto v : domain_values_per_lvl[i])
+            os << v.first << " " << v.second << " ";
+        os << std::endl;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

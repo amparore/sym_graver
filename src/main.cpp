@@ -257,6 +257,7 @@ int main(int argc, char** argv)
     bool save_dd = false;
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
+    bool output_stats_dd = false;
     selected_pivoting pivoting = selected_pivoting::MAT_HEUR; //MAT_HEUR;
     bool print_rusage = false;
     bool hnf_Zbasis = false;
@@ -382,6 +383,9 @@ int main(int argc, char** argv)
         }
         else if (0==strcmp(argv[ii], "-od")) {
             output_mat_dd = true;
+        }
+        else if (0==strcmp(argv[ii], "-os")) {
+            output_stats_dd = true;
         }
         else if (0==strcmp(argv[ii], "-np")) {
             pivoting = selected_pivoting::NONE;
@@ -837,6 +841,17 @@ int main(int argc, char** argv)
         cout << "Basis: " << card_G << endl;
         cout << "Basis MDD Nodes: " << G.getNodeCount() << endl;
         cout << "Basis MDD Edges: " << G.getEdgeCount() << endl;
+        // dd_stats stats;
+        // stats.generate_stats(G);
+        // stats.write(cout);    
+    }
+    if (output_stats_dd) {
+        std::string stats_fname = base_fname + ".stats" + op.dd_ext;
+        cout << "Saving " << stats_fname << " ..." << endl;
+        ofstream ofs(stats_fname);
+        dd_stats stats;
+        stats.generate_stats(G);
+        stats.write(ofs);    
     }
 
     if (print_rusage)
