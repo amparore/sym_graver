@@ -1106,6 +1106,7 @@ sym_pottier_bygen(const meddly_context& ctx,
     // guarantees that G is a superset of the Graver basis, and 
     // we do not proceed by a graded order
     G = sym_normal_form(ctx, pparams, G, G, 0, false, qnf_op::LEQ_NEQ);
+    pparams.perf_peak_DD(G);
     pparams.perf_final_DD(G);
     
     return G;
