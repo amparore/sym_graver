@@ -11,6 +11,8 @@
 
 struct perf_counters_t {
     double counter_C = 0;
+    std::unique_ptr<dd_stats> peak_stats;
+    std::unique_ptr<dd_stats> final_stats;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,6 +34,7 @@ struct pottier_params_t {
     bool primitive_extremal_rays = true;
     bool graded_EaC = false;
     bool perf_exact_svectors_degree = false;
+    bool perf_collect_dd_stats = false;
     compute_target target = compute_target::HILBERT_BASIS;
 
     // At which step in the by-gen process it becomes possible 
@@ -42,6 +45,12 @@ struct pottier_params_t {
 
     inline void perf_C(const MEDDLY::dd_edge& C) const {
         if (perf) {  perf->counter_C += dd_cardinality(C);  }
+    }
+    inline void perf_peak_DD(const MEDDLY::dd_edge& e) const {
+        if (perf_collect_dd_stats) { perf->peak_stats->get_stats(e); }
+    }
+    inline void perf_final_DD(const MEDDLY::dd_edge& e) const {
+        if (perf_collect_dd_stats) { perf->final_stats->get_stats(e); }
     }
 
     inline bool verbose_show_mat(const std::vector<std::vector<int>>& A) const {
@@ -149,12 +158,12 @@ sym_pottier_bygen(const meddly_context& ctx,
                   const pottier_params_t& pparams,
                   const std::vector<std::vector<int>>& lattice_Zgenerators);
 
-MEDDLY::dd_edge
-sym_pottier_EaC_graded(const meddly_context& ctx, 
-                       const pottier_params_t& pparams,
-                       MEDDLY::dd_edge initGraver, // Graver basis not including N
-                       MEDDLY::dd_edge g, // new generator
-                       size_t gen_counter);
+// MEDDLY::dd_edge
+// sym_pottier_EaC_graded(const meddly_context& ctx, 
+//                        const pottier_params_t& pparams,
+//                        MEDDLY::dd_edge initGraver, // Graver basis not including N
+//                        MEDDLY::dd_edge g, // new generator
+//                        size_t gen_counter);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #endif // __SYMBOLIC_POTTIER_H__

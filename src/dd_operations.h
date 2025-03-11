@@ -206,13 +206,17 @@ struct dd_stats {
     std::vector<std::map<int, size_t>> domain_values_per_lvl;
     std::vector<size_t> num_nodes_per_lvl;
     std::vector<size_t> num_edges_per_lvl;
+    size_t max_nodes = 0;
+    size_t max_edges = 0;
 
-    void generate_stats(const MEDDLY::dd_edge& e);
+    dd_stats(MEDDLY::forest*);
+    void get_stats(const MEDDLY::dd_edge& e);
     void write(std::ostream& os) const;
 
 private:
     std::set<MEDDLY::node_handle> visited;
     MEDDLY::forest *forest;
+    const int num_vars;
 
     void visit(const MEDDLY::node_handle node);
 };

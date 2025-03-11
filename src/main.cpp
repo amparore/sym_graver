@@ -257,7 +257,6 @@ int main(int argc, char** argv)
     bool save_dd = false;
     bool output_mat_explicit = false;
     bool output_mat_dd = false;
-    bool output_stats_dd = false;
     selected_pivoting pivoting = selected_pivoting::MAT_HEUR; //MAT_HEUR;
     bool print_rusage = false;
     bool hnf_Zbasis = false;
@@ -307,10 +306,10 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-ye")) {
             pparams.by_generators = true;
         }
-        else if (0==strcmp(argv[ii], "-yeg")) {
-            pparams.by_generators = true;
-            pparams.graded_EaC = true;
-        }
+        // else if (0==strcmp(argv[ii], "-yeg")) {
+        //     pparams.by_generators = true;
+        //     pparams.graded_EaC = true;
+        // }
         else if (0==strcmp(argv[ii], "-ne")) {
             pparams.by_generators = false;
         }
@@ -320,6 +319,10 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-ps")) { // TODO: undocumented
             pparams.perf = &perf_counters;
             pparams.perf_exact_svectors_degree = true;
+        }
+        else if (0==strcmp(argv[ii], "-pdd")) { // TODO: undocumented
+            pparams.perf = &perf_counters;
+            pparams.perf_collect_dd_stats = true;
         }
         else if (0==strcmp(argv[ii], "-g")) {
             pparams.target = compute_target::GRAVER_BASIS;
@@ -383,9 +386,6 @@ int main(int argc, char** argv)
         }
         else if (0==strcmp(argv[ii], "-od")) {
             output_mat_dd = true;
-        }
-        else if (0==strcmp(argv[ii], "-os")) {
-            output_stats_dd = true;
         }
         else if (0==strcmp(argv[ii], "-np")) {
             pivoting = selected_pivoting::NONE;
@@ -783,6 +783,11 @@ int main(int argc, char** argv)
     meddly_context ctx(num_variables, vorder, pivot_order, std::move(leading_variables));
     ctx.initialize(meddly_cache_size);
 
+    if (pparams.perf_collect_dd_stats) {
+        pparams.perf->peak_stats = make_unique<dd_stats>(ctx.forestMDD);
+        pparams.perf->final_stats = make_unique<dd_stats>(ctx.forestMDD);
+    }
+
     //----------------------------------------------------
     // Symbolic computation of the Graver basis
     //----------------------------------------------------
@@ -845,13 +850,17 @@ int main(int argc, char** argv)
         // stats.generate_stats(G);
         // stats.write(cout);    
     }
-    if (output_stats_dd) {
+    if (pparams.perf_collect_dd_stats) {
         std::string stats_fname = base_fname + ".stats" + op.dd_ext;
         cout << "Saving " << stats_fname << " ..." << endl;
         ofstream ofs(stats_fname);
-        dd_stats stats;
-        stats.generate_stats(G);
-        stats.write(ofs);    
+        ofs << "PEAK\n";
+        pparams.perf->peak_stats->write(ofs);
+        ofs << "FINAL\n";
+        pparams.perf->final_stats->write(ofs);
+        // dd_stats stats(ctx.forestMDD);
+        // stats.get_stats(G);
+        // stats.write(ofs);
     }
 
     if (print_rusage)

@@ -325,14 +325,28 @@ double dd_cardinality(const MEDDLY::dd_edge& dd) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-void dd_stats::generate_stats(const MEDDLY::dd_edge& e) {
-    forest = e.getForest();
-    const int max_levels = abs(e.getLevel());
-    domain_values_per_lvl.resize(max_levels + 1);
-    num_nodes_per_lvl.resize(max_levels + 1);
-    num_edges_per_lvl.resize(max_levels + 1);
+dd_stats::dd_stats(MEDDLY::forest *pF)
+    : forest(pF), num_vars(pF->getDomain()->getNumVariables())
+{
+    domain_values_per_lvl.resize(num_vars + 1);
+    num_nodes_per_lvl.resize(num_vars + 1);
+    num_edges_per_lvl.resize(num_vars + 1);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void dd_stats::get_stats(const MEDDLY::dd_edge& e) {
+    size_t curr_max_nodes = max_nodes;
+    size_t curr_max_edges = max_edges;
+    max_nodes = max_edges = 0;
+
     visit(e.getNode());
     visited.clear();
+
+    if (curr_max_nodes >= max_nodes)
+        max_nodes = curr_max_nodes;
+    if (curr_max_edges >= max_edges)
+        max_edges = curr_max_edges;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -344,7 +358,9 @@ void dd_stats::visit(const MEDDLY::node_handle node) {
         node == forest->handleForValue(true))
         return; // terminal node
     visited.insert(node);
+    max_nodes++;
     const int node_level = forest->getNodeLevel(node);
+    assert(node_level>=0 && node_level < num_nodes_per_lvl.size());
 
     MEDDLY::unpacked_node *rnode = MEDDLY::unpacked_node::New(forest);
     forest->unpackNode(rnode, node, MEDDLY::FULL_ONLY);
@@ -355,6 +371,7 @@ void dd_stats::visit(const MEDDLY::node_handle node) {
     for (int i = 0; i < rnode->getSize(); i++) {
         if (rnode->down(i) != forest->handleForValue(false)) {
             ++num_edges_per_lvl[node_level];
+            ++max_edges;
             int a_val = NodeToZ(i);
 
             if (domain_values_per_lvl[node_level].count(a_val) == 0)
@@ -386,14 +403,14 @@ void dd_stats::write(std::ostream& os) const {
 
     //     os << std::endl;
     // }
-    os << (num_nodes_per_lvl.size() - 1) << std::endl;
+    os << (num_nodes_per_lvl.size() - 1) << " " << max_nodes << " " << max_edges << "\n";
     for (int i=1; i<num_nodes_per_lvl.size(); i++) {
         os << num_nodes_per_lvl[i] << " ";
         os << num_edges_per_lvl[i] << " ";
         os << domain_values_per_lvl[i].size() << " ";
         for (auto v : domain_values_per_lvl[i])
             os << v.first << " " << v.second << " ";
-        os << std::endl;
+        os << "\n";
     }
 }
 
