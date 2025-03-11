@@ -407,7 +407,7 @@ void dd_stats::write(std::ostream& os) const {
     for (int i=1; i<num_nodes_per_lvl.size(); i++) {
         os << num_nodes_per_lvl[i] << " ";
         os << num_edges_per_lvl[i] << " ";
-        os << domain_values_per_lvl[i].size() << " ";
+        os << domain_values_per_lvl[i].size() << "\n";
         for (auto v : domain_values_per_lvl[i])
             os << v.first << " " << v.second << " ";
         os << "\n";
