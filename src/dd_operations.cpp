@@ -331,6 +331,7 @@ dd_stats::dd_stats(MEDDLY::forest *pF)
     domain_values_per_lvl.resize(num_vars + 1);
     num_nodes_per_lvl.resize(num_vars + 1);
     num_edges_per_lvl.resize(num_vars + 1);
+    max_outedges_per_lvl.resize(num_vars + 1);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -368,10 +369,12 @@ void dd_stats::visit(const MEDDLY::node_handle node) {
 
     // get stats for this node
     ++num_nodes_per_lvl[node_level];
+    size_t out_edges = 0;
     for (int i = 0; i < rnode->getSize(); i++) {
         if (rnode->down(i) != forest->handleForValue(false)) {
             ++num_edges_per_lvl[node_level];
             ++max_edges;
+            ++out_edges;
             int a_val = NodeToZ(i);
 
             if (domain_values_per_lvl[node_level].count(a_val) == 0)
@@ -382,6 +385,7 @@ void dd_stats::visit(const MEDDLY::node_handle node) {
             visit(rnode->down(i)); // recurse
         }
     }
+    max_outedges_per_lvl[node_level] = max(max_outedges_per_lvl[node_level], out_edges);
 
     MEDDLY::unpacked_node::Recycle(rnode);
 }
@@ -389,24 +393,13 @@ void dd_stats::visit(const MEDDLY::node_handle node) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 void dd_stats::write(std::ostream& os) const {
-    // for (int i=1; i<num_nodes_per_lvl.size(); i++) {
-    //     os << "Lvl " << i << ": ";
-    //     os << "nodes: " << num_nodes_per_lvl[i] << " ";
-    //     os << "edges: " << num_edges_per_lvl[i] << " ";
-    //     os << "ratio: " << (double(num_edges_per_lvl[i]) / num_nodes_per_lvl[i]);
-
-    //     os << " dom: [";
-    //     for (auto v : domain_values_per_lvl[i]) {
-    //         os << " " << v.first;
-    //     }
-    //     os << " ]";
-
-    //     os << std::endl;
-    // }
+    // header
     os << (num_nodes_per_lvl.size() - 1) << " " << max_nodes << " " << max_edges << "\n";
+    // per-level data
     for (int i=1; i<num_nodes_per_lvl.size(); i++) {
         os << num_nodes_per_lvl[i] << " ";
         os << num_edges_per_lvl[i] << " ";
+        os << max_outedges_per_lvl[i] << " ";
         os << domain_values_per_lvl[i].size() << "\n";
         for (auto v : domain_values_per_lvl[i])
             os << v.first << " " << v.second << " ";

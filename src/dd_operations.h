@@ -206,6 +206,7 @@ struct dd_stats {
     std::vector<std::map<int, size_t>> domain_values_per_lvl;
     std::vector<size_t> num_nodes_per_lvl;
     std::vector<size_t> num_edges_per_lvl;
+    std::vector<size_t> max_outedges_per_lvl;
     size_t max_nodes = 0;
     size_t max_edges = 0;
 
