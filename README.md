@@ -1,4 +1,4 @@
-# Symbolic Computation of the Graver basis of a matrix
+# Symbolic Computation of the Graver basis of a rational lattice
 
 The tool `sym_hilbert` is a tool that computes the Graver basis, the Hilbert basis or the set of extremal rays of a system of equations, using a symbolic data structure (Decision Diagrams) to perform the computation.
 The tool implements several variations of the algorithm described by Loïc Pottier for the computation of the Graver basis of a matrix.
