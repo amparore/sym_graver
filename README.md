@@ -89,18 +89,22 @@ As already said before, the default target is the Hilbert basis of **A** in the 
 
 This is the main computational step of the tool, which performs the Pottier algorithm. Several options are available, divided in these groups>
 
-- Compute by generators:
+<!-- - Compute by generators:
   - Use **-ne** to start from all generators at once (*default*);
-  - Use **-ye** to add one generator at a time, incrementally.
+  - Use **-ye** to add one generator at a time, incrementally. -->
 
-- Compute by variables:
+- Pottier algorithm: use **-pottier** for basic Pottier algorithm (all variables at once);
+- Project & Lift: use **-pnl** to perform completions/reductions one variable at a time, following the pivot order  (*default*);
+- Graded order: use **-deg** to compute project and lift in graded order (*most efficient*).
+
+<!-- - Compute by variables:
   - Use **-nl** to perform completions/reductions to all variables at once;
-  - Use **-yl** to perform completions/reductions one variable at a time, following the pivot order  (*default*).
+  - Use **-yl** to perform completions/reductions one variable at a time, following the pivot order  (*default*). -->
 
-- Pottier completion/reduction algorithm:
+<!-- - Pottier completion/reduction algorithm:
   - Normalize all levels at once (*default*) or just the projected levels (use **-z**);
   - Perform S-Vectors operations in graded order (use **-d**) using the set of candidate vectors **C**;
-  - Perform S-Vectors operations dynamically generating the candidate vectors in graded order (use **-s**).
+  - Perform S-Vectors operations dynamically generating the candidate vectors in graded order (use **-s**). -->
 
 #### Output
 
@@ -110,6 +114,7 @@ Once the target has been computed, it can be saved to the disk.
 - Use **-dd** to save also a representation of the Decision Diagram, as a PDF (requires the GraphViz tool);
 - Use **-od** to save the computed matrix Decision Diagram in MEDDLY format;
 - Use **-p** to show some performance statistics;
+- Use **-pdd** to save extended decision diagram statistics;
 - Use **-c** to check the results against a saved file (for regression tests).
 
 #### Other options

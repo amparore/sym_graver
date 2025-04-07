@@ -288,18 +288,18 @@ int main(int argc, char** argv)
         else if (0==strcmp(argv[ii], "-k")) {
             compute_Zgenerators = false;
         }
-        else if (0==strcmp(argv[ii], "-yl")) {
+        else if (0==strcmp(argv[ii], "-yl") || 0==strcmp(argv[ii], "-pnl")) {
             pparams.by_levels = true;
             pparams.normalize_by_levels = true;
         }
-        else if (0==strcmp(argv[ii], "-nl")) {
+        else if (0==strcmp(argv[ii], "-nl") || 0==strcmp(argv[ii], "-pottier")) {
             pparams.by_levels = false;
         }
         // else if (0==strcmp(argv[ii], "-z")) { // TODO: disable
         //     pparams.by_levels = true;
         //     pparams.normalize_by_levels = true;
         // }
-        else if (0==strcmp(argv[ii], "-s")) { // TODO: should be the default method for Hilbert/rays
+        else if (0==strcmp(argv[ii], "-s") || 0==strcmp(argv[ii], "-deg")) { // TODO: should be the default method for Hilbert/rays
             pparams.by_levels = true;
             pparams.graded_order = true;
         }
@@ -432,14 +432,16 @@ int main(int argc, char** argv)
                  "         -srx     Compute the smallest representative of extremal rays (default: primitive).\n"
                  "         -cs <x>  Set Meddly cache size as <x>.\n"
                  "         -hg      Use Hermite normal form of the Z-basis.\n"
-                 "Method:  -yl      Computate by levels. [default]\n"
-                 "         -nl      Disable computation by levels.\n"
-                 "         -z       Compute by levels and normalize by levels.\n"
-                 "         -yd      Evaluate candidates in graded order (by levels) [default].\n"
-                 "         -nd      Do not evaluate candidates in graded order (by levels).\n"
-                 "         -s       Generate candidates in graded order (by levels).\n"
-                 "         -ye      Compute by generators.\n"
-                 "         -ne      Disable computation by generators. [default]\n"
+                 "Method:  -pottier Use Pottier algorithm.\n"
+                 "         -pnl     Use Project & Lift algorithm. [default]\n"
+                 "         -deg     Use Project & Lift in graded order. (most efficient)\n"
+                //  "         -nl      Disable computation by levels.\n"
+                //  "         -z       Compute by levels and normalize by levels.\n"
+                //  "         -yd      Evaluate candidates in graded order (by levels) [default].\n"
+                //  "         -nd      Do not evaluate candidates in graded order (by levels).\n"
+                //  "         -s       Generate candidates in graded order (by levels).\n"
+                //  "         -ye      Compute by generators.\n"
+                //  "         -ne      Disable computation by generators. [default]\n"
                  "         -np      Disable level pivoting.\n"
                  "         -pf      Read pivot order from file <basename>.piv\n"
                  "Output:  -dd      Save decision diagrams as PDFs.\n"
